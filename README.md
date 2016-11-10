@@ -11,4 +11,4 @@ display on the TV screen tweets regarding the program you are watching!
 - **Player control ID**: allows to send commands (play, pause, seek) to the player of all the addons that share the some id.
 
 ##Send message and manage
-You can send message throught the web page at www.teamwatch.tk 
+You can send message throught the web page at www.maxxam.tk/teamwatch
