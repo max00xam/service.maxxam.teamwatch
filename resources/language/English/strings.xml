@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<strings>
+    <!-- General -->
+    <string id="32100">General</string>
+    <string id="32110">Feeds</string>
+    <string id="32111">separate feeds with colons</string>
+    <string id="32120">TeamWatch ID</string>
+    <string id="32130">Player control ID</string>
+    <string id="32140">Show messages only on fulllscrren video</string>
+
+    <!-- Twitter -->
+    <string id="32200">Twitter</string>
+    <string id="32210">Twitter enabled</string>
+    <string id="32220">Language</string>
+    <string id="32230">Filter out retweets</string>
+    <string id="32240">Result type</string>
+    <string id="32241">mixed: Include both popular and real time results in the response.[br]recent: return only the most recent results in the response[br]popular: return only the most popular results in the response.</string>
+    
+    <!-- Addon -->
+    <string id="32000">TeamWatch added feed [%s]</string>
+    <string id="32001">TeamWatch removed feed [%s]</string>
+    <string id="32002">TeamWatch switched off messages display</string>
+    <string id="32003">TeamWatch switched on messages display</string>
+    <string id="32004">Invite received</string>
+    <string id="32005">[COLOR yellow][B]%s[/B][/COLOR] has invited you to watch [COLOR yellow][B]%s[/B][/COLOR], do you accept?</string>
+    <string id="32006">Invite received", "[COLOR yellow][B]%s[/B][/COLOR] has invited you to watch [COLOR yellow][B]%s[/B][/COLOR] %s, do you accept?</string>
+    <string id="32007">Send TeamWatch invite</string>
+    <string id="32008">Send invite to watch: [COLOR yellow][B]%s[/B][/COLOR] %s?</string>
+    <string id="32009">Send invite to watch: [COLOR yellow][B]%s[/B][/COLOR]?</string>
+</strings>

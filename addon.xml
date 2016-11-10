@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon 
+    id="service.maxxam.teamwatch"
+    name="TeamWatch"
+    version="0.0.1"
+    provider-name="MaXXaM">
+    
+    <requires>
+        <import addon="xbmc.python" version="2.14.0"/>
+    </requires>
+    
+    <extension point="xbmc.service" library="service.py" start="login"/>
+
+    <extension point="kodi.context.item">
+        <menu id="kodi.core.main">
+        <item library="contextmenu.py">
+        <label>TeamWatch</label>
+        <visible>true</visible>
+        </item>
+        </menu>
+    </extension>
+    
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en">TeamWatch make your TV social.</summary>
+        <description lang="en">TeamWatch is a Kodi add-on that will change the way you watch TV, TV becomes 'social' allowing you to comment live with friends what you see on the screen. TeamWatch also gives you the opportunity to display on the TV screen tweets regarding the program you are watching!</description>
+        <disclaimer lang="en">GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</disclaimer>
+        <platform>all</platform>
+    </extension>
+</addon>
+

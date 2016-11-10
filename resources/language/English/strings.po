@@ -1,0 +1,102 @@
+# XBMC Media Center language file
+msgid ""
+msgstr ""
+"Project-Id-Version: TeamWatch\n"
+"Report-Msgid-Bugs-To: teamwatch@teamwatch.tk\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Mind your business\n"
+"Language-Team: English\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#32100"
+msgid "General"
+msgstr ""
+
+msgctxt "#32110"
+msgid "Feeds"
+msgstr ""
+
+msgctxt "#32111"
+msgid "separate feeds with colons"
+msgstr ""
+
+msgctxt "#32120"
+msgid "TeamWatch ID"
+msgstr ""
+
+msgctxt "#32130"
+msgid "Player control ID"
+msgstr ""
+
+msgctxt "#32140"
+msgid "Show messages only on fulllscrren video"
+msgstr ""
+
+msgctxt "#32200"
+msgid "Twitter"
+msgstr ""
+
+msgctxt "#32210"
+msgid "Twitter enabled"
+msgstr ""
+
+msgctxt "#32220"
+msgid "Language"
+msgstr ""
+
+msgctxt "#32230"
+msgid "Filter out retweets"
+msgstr ""
+
+msgctxt "#32240"
+msgid "Result type"
+msgstr ""
+
+msgctxt "#32241"
+msgid "mixed: Include both popular and real time results in the response.[br]recent: return only the most recent results in the response[br]popular: return only the most popular results in the response."
+msgstr ""
+
+msgctxt "#32000"
+msgid "TeamWatch added feed [%s]"
+msgstr ""
+
+msgctxt "#32001"
+msgid "TeamWatch removed feed [%s]"
+msgstr ""
+
+msgctxt "#32002"
+msgid "TeamWatch switched off messages display"
+msgstr ""
+
+msgctxt "#32003"
+msgid "TeamWatch switched on messages display"
+msgstr ""
+
+msgctxt "#32004"
+msgid "Invite received"
+msgstr ""
+
+msgctxt "#32005"
+msgid "[COLOR yellow][B]%s[/B][/COLOR] has invited you to watch [COLOR yellow][B]%s[/B][/COLOR], do you accept?"
+msgstr ""
+
+msgctxt "#32006"
+msgid "[COLOR yellow][B]%s[/B][/COLOR] has invited you to watch [COLOR yellow][B]%s[/B][/COLOR] %s, do you accept?"
+msgstr ""
+
+msgctxt "#32007"
+msgid "Send TeamWatch invite"
+msgstr ""
+
+msgctxt "#32008"
+msgid "Send invite to watch: [COLOR yellow][B]%s[/B][/COLOR] %s?"
+msgstr ""
+
+msgctxt "#32009"
+msgid "Send invite to watch: [COLOR yellow][B]%s[/B][/COLOR]?"
+msgstr ""
