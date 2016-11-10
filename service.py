@@ -14,7 +14,6 @@ import xbmcaddon
 
 from tools.xbmc_helpers import localize
 from tools import xbmc_helpers
-import youtube_dl
 
 SERVER = "maxxam.tk"
 WINDOW_FULLSCREEN_VIDEO = 12005
@@ -202,26 +201,36 @@ class TeamWatch():
                     self._log('Poster    : %s' % thumb)
                     self._log('Url       : %s' % url)
 
-                    old_stdout = sys.stdout
-                    old_stderr = sys.stderr
-
-                    redirected_output = sys.stdout = StringIO()
-                    redirected_error = sys.stderr = StringIO()
-
-                    ydl = youtube_dl.YoutubeDL({'ignoreerrors': True, 'no_color': True})
+                    yt_out = None
+                    yt_err = None
+                    scraper_error = None
                     
-                    result = None
                     try:
-                        result = ydl.extract_info(url, download=False)
-                    except:
-                        pass
+                        import youtube_dl
+
+                        old_stdout = sys.stdout
+                        old_stderr = sys.stderr
+
+                        redirected_output = sys.stdout = StringIO()
+                        redirected_error = sys.stderr = StringIO()
                         
-                    err = redirected_error.getvalue()
-                    sys.stdout = old_stdout
+                        ydl = youtube_dl.YoutubeDL({'ignoreerrors': True, 'no_color': True})
+                        
+                        result = None
+                        try:
+                            result = ydl.extract_info(url, download=False)
+                        except:
+                            pass
+                            
+                        yt_err = redirected_error.getvalue()
+                        sys.stdout = old_stdout
 
-                    out = redirected_output.getvalue()
-                    sys.stderr = old_stderr
-
+                        yt_out = redirected_output.getvalue()
+                        sys.stderr = old_stderr
+                    except:
+                        self._log('youtube_dl error')
+                        result = None
+                        
                     if result:
                         if 'url' in result:
                             video_url = result['url']
@@ -234,71 +243,84 @@ class TeamWatch():
                         
                         from scrapers.abysstream import get_video_url
                         status, result = get_video_url(url)
+                        
                         if status:
                             video_url = result
                         else:
+                            scraper_error = '[abysstream] ' + result
                             self._log("abysstream scraper result: %s" % result)
                     elif 'backin' in url:
                         self._log("backin scrape: %s" % url)
                         
                         from scrapers.backin import get_video_url
                         status, result = get_video_url(url)
+                        
                         if status:
                             video_url = result
                         else:
+                            scraper_error = '[backin] ' + result
                             self._log("backin scraper result: %s" % result)
                     elif 'speedvideo' in url:
                         self._log("speedvideo scrape: %s" % url)
                         
                         from scrapers.speedvideo import get_video_url
                         status, result = get_video_url(url)
+                        
                         if status:
                             video_url = result
                         else:
+                            scraper_error = '[speedvideo] ' + result
                             self._log("speedvideo scraper result: %s" % result)
                     elif 'nowvideo' in url:
                         self._log("nowvideo scrape: %s" % url)
                         
                         from scrapers.nowvideo import get_video_url
                         status, result = get_video_url(url)
+                        
                         if status:
                             video_url = result
                         else:
+                            scraper_error = '[nowvideo] ' + result
                             self._log("nowvideo scraper result: %s" % result)
                     elif 'megahd' in url:
                         self._log("megahd scrape: %s" % url)
                         
                         from scrapers.megahd import get_video_url
                         status, result = get_video_url(url)
+                        
                         if status:
                             video_url = result
                         else:
+                            scraper_error = '[megahd] ' + result
                             self._log("megahd scraper result: %s" % result)
                     elif 'fastvideo' in url:
                         self._log("fastvideo scrape: %s" % url)
                         
                         from scrapers.fastvideo import get_video_url
                         status, result = get_video_url(url)
+                        
                         if status:
                             video_url = result
                         else:
+                            scraper_error = '[fastvideo] ' + result
                             self._log("fastvideo scraper result: %s" % result)
-                    else:
-                        self._log("YTDL_STDOUT: %s" % out)
-                        self._log("YTDL_STDERR: %s" % err)
-                        
-                        #video_url = None
-                        self.player.play(video_url)
-                        
-                        dialog = xbmcgui.Dialog()
-                        dialog.notification('TeamViewer', 'Play stream (youtube-dl error).', xbmcgui.NOTIFICATION_ERROR, 5000)
                         
                     listitem = xbmcgui.ListItem(title, thumbnailImage=thumb, path=video_url)
                     listitem.setInfo('video', {'Title': title})
-
+                    
                     if video_url:
                         self.player.play(video_url, listitem, False)
-                    else:
+                    elif yt_out and yt_err:
+                        self._log("YTDL_STDOUT: %s" % yt_out)
+                        self._log("YTDL_STDERR: %s" % yt_err)
+                        
+                        dialog = xbmcgui.Dialog()
+                        dialog.notification('TeamViewer', 'Play stream (youtube-dl error).', xbmcgui.NOTIFICATION_ERROR, 5000)
+                    elif scraper_error:
+                        dialog = xbmcgui.Dialog()
+                        dialog.notification('TeamViewer', 'Scrape error: %s.' % scraper_error, xbmcgui.NOTIFICATION_ERROR, 5000)
+                        self._log('Scrape error: %s.' % scraper_error)
+                    else:        
                         self._log('No scraper found... trying to play url')
                         self.player.play(url, listitem, False)
                         

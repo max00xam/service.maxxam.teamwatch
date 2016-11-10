@@ -2,7 +2,7 @@
 <addon 
     id="service.maxxam.teamwatch"
     name="TeamWatch"
-    version="0.0.1"
+    version="0.0.2"
     provider-name="MaXXaM">
     
     <requires>
