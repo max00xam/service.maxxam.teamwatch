@@ -310,16 +310,16 @@ class TeamWatch():
                     
                     if video_url:
                         self.player.play(video_url, listitem, False)
+                    elif scraper_error:
+                        dialog = xbmcgui.Dialog()
+                        dialog.notification('TeamViewer', 'Scrape error: %s.' % scraper_error, xbmcgui.NOTIFICATION_ERROR, 5000)
+                        self._log('Scrape error: %s.' % scraper_error)
                     elif yt_out and yt_err:
                         self._log("YTDL_STDOUT: %s" % yt_out)
                         self._log("YTDL_STDERR: %s" % yt_err)
                         
                         dialog = xbmcgui.Dialog()
                         dialog.notification('TeamViewer', 'Play stream (youtube-dl error).', xbmcgui.NOTIFICATION_ERROR, 5000)
-                    elif scraper_error:
-                        dialog = xbmcgui.Dialog()
-                        dialog.notification('TeamViewer', 'Scrape error: %s.' % scraper_error, xbmcgui.NOTIFICATION_ERROR, 5000)
-                        self._log('Scrape error: %s.' % scraper_error)
                     else:        
                         self._log('No scraper found... trying to play url')
                         self.player.play(url, listitem, False)
