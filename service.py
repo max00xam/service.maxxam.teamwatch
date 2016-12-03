@@ -200,45 +200,8 @@ class TeamWatch():
                     self._log('Title     : %s' % title)
                     self._log('Poster    : %s' % thumb)
                     self._log('Url       : %s' % url)
-
-                    yt_out = None
-                    yt_err = None
-                    scraper_error = None
                     
-                    try:
-                        import youtube_dl
-
-                        old_stdout = sys.stdout
-                        old_stderr = sys.stderr
-
-                        redirected_output = sys.stdout = StringIO()
-                        redirected_error = sys.stderr = StringIO()
-                        
-                        ydl = youtube_dl.YoutubeDL({'ignoreerrors': True, 'no_color': True})
-                        
-                        result = None
-                        try:
-                            result = ydl.extract_info(url, download=False)
-                        except:
-                            pass
-                            
-                        yt_err = redirected_error.getvalue()
-                        sys.stdout = old_stdout
-
-                        yt_out = redirected_output.getvalue()
-                        sys.stderr = old_stderr
-                    except:
-                        self._log('youtube_dl error')
-                        result = None
-                        
-                    if result:
-                        if 'url' in result:
-                            video_url = result['url']
-                        else:
-                            video_url = url
-                            
-                        self._log('video_url : %s' % video_url)
-                    elif 'abysstream' in url or 'akstream' in url:
+                    if 'abysstream' in url or 'akstream' in url:
                         self._log("abysstream scrape: %s" % url)
                         
                         from scrapers.abysstream import get_video_url
@@ -304,7 +267,43 @@ class TeamWatch():
                         else:
                             scraper_error = '[fastvideo] ' + result
                             self._log("fastvideo scraper result: %s" % result)
+                
+                    if video_url == '':
+                        try:
+                            sys.path.append('/usr/local/lib/python2.7/dist-packages/')
+                            import youtube_dl
+                        except:
+                            self._log('youtube_dl import error')
+
+                        old_stdout = sys.stdout
+                        old_stderr = sys.stderr
+
+                        redirected_output = sys.stdout = StringIO()
+                        redirected_error = sys.stderr = StringIO()
                         
+                        try:
+                            ydl = youtube_dl.YoutubeDL({'ignoreerrors': True, 'no_color': True})
+                        except:
+                            self._log('youtube_dl error creating object')
+
+                        if ydl:
+                            try:
+                                result = ydl.extract_info(url, download=False)
+                                
+                                if 'url' in result:
+                                    video_url = result['url']
+                                else:
+                                    self._log('youtube_dl: no url in result')
+                                    scraper_error = '[youtube_dl] no url in result'
+                                    video_url = url
+                            except:
+                                scraper_error = '[youtube_dl] ' + redirected_error.getvalue()
+                                self._log('youtube_dl error: ' + redirected_error.getvalue())
+                                self._log('youtube_dl output: ' + redirected_output.getvalue())
+                                
+                    # tutti i campi che si possono mettere nella listitem
+                    # http://romanvm.github.io/Kodistubs/_autosummary/xbmcgui.html#xbmcgui.ListItem
+                    
                     listitem = xbmcgui.ListItem(title, thumbnailImage=thumb, path=video_url)
                     listitem.setInfo('video', {'Title': title})
                     
@@ -314,12 +313,6 @@ class TeamWatch():
                         dialog = xbmcgui.Dialog()
                         dialog.notification('TeamViewer', 'Scrape error: %s.' % scraper_error, xbmcgui.NOTIFICATION_ERROR, 5000)
                         self._log('Scrape error: %s.' % scraper_error)
-                    elif yt_out and yt_err:
-                        self._log("YTDL_STDOUT: %s" % yt_out)
-                        self._log("YTDL_STDERR: %s" % yt_err)
-                        
-                        dialog = xbmcgui.Dialog()
-                        dialog.notification('TeamViewer', 'Play stream (youtube-dl error).', xbmcgui.NOTIFICATION_ERROR, 5000)
                     else:        
                         self._log('No scraper found... trying to play url')
                         self.player.play(url, listitem, False)
