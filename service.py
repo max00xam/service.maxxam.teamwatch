@@ -268,7 +268,7 @@ class TeamWatch():
                             scraper_error = '[fastvideo] ' + result
                             self._log("fastvideo scraper result: %s" % result)
                 
-                    if video_url == '':
+                    if video_url == '': ### no video_url from scrapers try youtube_dl
                         try:
                             sys.path.append('/usr/local/lib/python2.7/dist-packages/')
                             import youtube_dl
