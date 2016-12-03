@@ -275,32 +275,35 @@ class TeamWatch():
                         except:
                             self._log('youtube_dl import error')
 
-                        old_stdout = sys.stdout
-                        old_stderr = sys.stderr
+                        if youtube_dl:
+                            self._log("youtube_dl scrape: %s" % url)
+                            
+                            old_stdout = sys.stdout
+                            old_stderr = sys.stderr
 
-                        redirected_output = sys.stdout = StringIO()
-                        redirected_error = sys.stderr = StringIO()
-                        
-                        try:
-                            ydl = youtube_dl.YoutubeDL({'ignoreerrors': True, 'no_color': True})
-                        except:
-                            self._log('youtube_dl error creating object')
-
-                        if ydl:
+                            redirected_output = sys.stdout = StringIO()
+                            redirected_error = sys.stderr = StringIO()
+                            
                             try:
-                                result = ydl.extract_info(url, download=False)
-                                
-                                if 'url' in result:
-                                    video_url = result['url']
-                                else:
-                                    self._log('youtube_dl: no url in result')
-                                    scraper_error = '[youtube_dl] no url in result'
-                                    video_url = url
+                                ydl = youtube_dl.YoutubeDL({'ignoreerrors': True, 'no_color': True})
                             except:
-                                scraper_error = '[youtube_dl] ' + redirected_error.getvalue()
-                                self._log('youtube_dl error: ' + redirected_error.getvalue())
-                                self._log('youtube_dl output: ' + redirected_output.getvalue())
-                                
+                                self._log('youtube_dl error creating object')
+
+                            if ydl:
+                                try:
+                                    result = ydl.extract_info(url, download=False)
+                                    
+                                    if 'url' in result:
+                                        video_url = result['url']
+                                    else:
+                                        self._log('youtube_dl: no url in result')
+                                        scraper_error = '[youtube_dl] no url in result'
+                                        video_url = url
+                                except:
+                                    scraper_error = '[youtube_dl] ' + redirected_error.getvalue()
+                                    self._log('youtube_dl error: ' + redirected_error.getvalue())
+                                    self._log('youtube_dl output: ' + redirected_output.getvalue())
+                                    
                     # tutti i campi che si possono mettere nella listitem
                     # http://romanvm.github.io/Kodistubs/_autosummary/xbmcgui.html#xbmcgui.ListItem
                     
