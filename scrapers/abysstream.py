@@ -9,7 +9,7 @@ def get_video_url(url, DEBUG=0):
         html = response.content
 
         data = {}
-        m = re.search('<input type="hidden" name="streamLink" value="([^"]+)">', html)
+        m = re.search('<input type="hidden" name="streamLink" value="([^"]*)">', html)
         if m: 
             data['streamLink'] = m.group(1)
         else:
