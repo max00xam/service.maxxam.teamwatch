@@ -151,6 +151,7 @@ class TeamWatch():
                     self.id_chat = jresult['idc']
                     self.id_twitter = jresult['idt']
                 elif param == "#tw:playerctl:playpause":
+                    self._log('#tw:playerctl:playpause')
                     xbmc.executebuiltin("Action(PlayPause)")
                     self.id_chat = jresult['id']
                 elif param == "#tw:playerctl:sshot":
@@ -286,7 +287,7 @@ class TeamWatch():
         else:
             self.background.setImage(os.path.join(self.__resources__, '1280_chat.png'))
             
-        if id!=-1:
+        if DEBUG and id!=-1:
             self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: [%d] %s' % (user, id, text))
         else:
             self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: %s' % (user, text))
