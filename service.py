@@ -17,7 +17,7 @@ WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
 REFRESH_TIME_SECS = 2
 SOCKET_TIMEOUT = 2.0
-DEBUG = 2
+DEBUG = 0
 
 ICON_CHAT = 1
 ICON_TWITTER = 2
@@ -213,7 +213,7 @@ class TeamWatch():
                     self.id_chat = -1
                     
                 
-    def get_feed(self, timeout=0.5):
+    def get_feed(self, timeout=1.5):
         start = time.time()
         
         params = {'idt':self.id_twitter, 'idc':self.id_chat, 'twid':self.id_teamwatch, 'pcid':self.id_playerctl}
@@ -228,8 +228,8 @@ class TeamWatch():
         else:
             params['notweet'] = 1
             
-        server = 'teamwatch.atwebpages.com'
-        args = '/get.php?%s' % urllib.urlencode(params)
+        server = '64.137.160.68'
+        args = '/teamwatch/get.php?%s' % urllib.urlencode(params)
         
         if DEBUG > 1: self._log(args)
         

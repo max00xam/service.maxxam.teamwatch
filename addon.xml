@@ -2,22 +2,20 @@
 <addon 
     id="service.maxxam.teamwatch"
     name="TeamWatch"
-    version="0.0.10"
+    version="0.0.1"
     provider-name="MaXXaM">
     
     <requires>
         <import addon="xbmc.python" version="2.14.0"/>
     </requires>
     
-    <extension point="xbmc.service" library="service.py" start="login"/>
+    <extension point="xbmc.service" library="service.py" start="contextmenu.py"/>
 
-    <extension point="kodi.context.item">
-        <menu id="kodi.core.main">
-        <item library="contextmenu.py">
-        <label>TeamWatch</label>
-        <visible>true</visible>
+    <extension point="kodi.context.item" library="contextmenu.py">		
+        <item>
+            <label>Send TeamWatch invite</label>
+            <visible>StringCompare(ListItem.dbtype, movie) | StringCompare(ListItem.dbtype, episode)</visible>
         </item>
-        </menu>
     </extension>
     
     <extension point="xbmc.addon.metadata">
