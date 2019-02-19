@@ -37,6 +37,10 @@ msgctxt "#32140"
 msgid "Show messages only on fulllscrren video"
 msgstr ""
 
+msgctxt "#32150"
+msgid "Nickname"
+msgstr ""
+
 msgctxt "#32200"
 msgid "Twitter"
 msgstr ""
