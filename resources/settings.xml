@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
     <category label="32100">
+        <setting id="nickname" type="text" label="32150" default="Nick"/>
         <setting id="feed" type="text" label="32110" default="#teamwatch"/>
         <setting label="32111" type="lsep"/>
         <setting id="twid" type="text" label="32120" default=""/>
