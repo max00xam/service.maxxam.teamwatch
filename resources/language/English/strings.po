@@ -42,11 +42,11 @@ msgid "Nickname"
 msgstr ""
 
 msgctxt "#32160"
-msgid "Messagebar top"
+msgid "Screen height"
 msgstr ""
 
 msgctxt "#32170"
-msgid "Messagebar width"
+msgid "Screen width"
 msgstr ""
 
 msgctxt "#32200"
