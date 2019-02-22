@@ -7,8 +7,8 @@
         <setting id="twid" type="text" label="32120" default=""/>
         <setting id="pcid" type="text" label="32130" default=""/>
         <setting id="showallways" type="bool" label="32140" default="true"/>
-        <setting id="message_bar_top" type="text" label="32160" default=""/>
-        <setting id="message_bar_width" type="text" label="32170" default=""/>         
+        <setting id="screen_height" type="text" label="32160" default=""/>
+        <setting id="screen_width" type="text" label="32170" default=""/>         
     </category>
     
     <category label="32200">
