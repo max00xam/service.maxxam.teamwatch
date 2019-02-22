@@ -265,7 +265,7 @@ class TeamWatch():
         else:
             self.background.setImage(os.path.join(self.__resources__, '1280_chat.png'))
             
-        if id!=-1:
+        if DEBUG:
             self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: [%d] %s' % (user, id, text))
         else:
             self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: %s' % (user, text))
