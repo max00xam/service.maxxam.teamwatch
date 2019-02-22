@@ -142,6 +142,7 @@ class TeamWatch():
                 self._log(url)
 
             try:
+		jresult = {}
                 jresult = json.loads(urllib.urlopen(url).read())
             except:
                 self._log("error opening %s" % url)
