@@ -41,6 +41,14 @@ msgctxt "#32150"
 msgid "Nickname"
 msgstr ""
 
+msgctxt "#32160"
+msgid "Messagebar top"
+msgstr ""
+
+msgctxt "#32170"
+msgid "Messagebar width"
+msgstr ""
+
 msgctxt "#32200"
 msgid "Twitter"
 msgstr ""
