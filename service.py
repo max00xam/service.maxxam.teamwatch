@@ -252,9 +252,6 @@ class TeamWatch():
     def show_message (self, user, text, icon = ICON_CHAT, id=-1):
         if DEBUG: self._log(user + " " + text)
         
-        self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
-        self.window.addControls([self.background, self.feedtext])
-        
         if icon == ICON_TWITTER:
             self.background.setImage(os.path.join(self.__resources__, '1280_tweet.png'))
         elif icon == ICON_SETTING:
@@ -268,6 +265,9 @@ class TeamWatch():
             self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: [%d] %s' % (user, id, text))
         else:
             self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: %s' % (user, text))
+        
+        self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
+        self.window.addControls([self.background, self.feedtext])
         
         self.feed_is_shown = True
         self.feed_show_time = time.time()
