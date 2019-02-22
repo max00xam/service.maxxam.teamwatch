@@ -13,7 +13,7 @@ import xbmcaddon
 from tools.xbmc_helpers import localize
 from tools import xbmc_helpers
 
-import web_pdb; # web_pdb.set_trace()
+# import web_pdb;
 
 WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
@@ -62,10 +62,16 @@ class TeamWatch():
     log_prog = 1
     
     def __init__(self):
-        self.background = xbmcgui.ControlImage(0, xbmcgui.getScreenHeight()-75, xbmcgui.getScreenWidth(), 75, os.path.join(self.__resources__, '1280_settings.png'))
-        self.background.setVisible(True)
-        self.feedtext = xbmcgui.ControlLabel(80, xbmcgui.getScreenHeight()-70, xbmcgui.getScreenWidth()-90, 75, '', font='font45', textColor='0xFFFFFFFF')
-        self.feedtext.setVisible(True)
+        try:
+            self.background = xbmcgui.ControlImage(0, xbmcgui.getScreenHeight()-75, xbmcgui.getScreenWidth(), 75, os.path.join(self.__resources__, '1280_settings.png'))
+            self.background.setVisible(True)
+            self.feedtext = xbmcgui.ControlLabel(80, xbmcgui.getScreenHeight()-70, xbmcgui.getScreenWidth()-90, 75, '', font='font45', textColor='0xFFFFFFFF')
+            self.feedtext.setVisible(True)
+        except:
+            self.background = xbmcgui.ControlImage(0, 768-75, 1024, 75, os.path.join(self.__resources__, '1280_settings.png'))
+            self.background.setVisible(True)
+            self.feedtext = xbmcgui.ControlLabel(80, 768-70, 1024-90, 75, '', font='font45', textColor='0xFFFFFFFF')
+            self.feedtext.setVisible(True)
         
         self.id_teamwatch = self.__addon__.getSetting('twid')
         
@@ -109,11 +115,14 @@ class TeamWatch():
                 continue
             
             self.start_time = time.time()
-
-            file = open("/storage/.kodi/userdata/addon_data/service.maxxam.teamwatch/idc.txt", "r")
-            self.id_chat = int(file.read())
-            file.close()
             
+            try:
+                file = open("/storage/.kodi/userdata/addon_data/service.maxxam.teamwatch/idc.txt", "r")
+                self.id_chat = int(file.read())
+                file.close()
+            except:
+                self.id_chat = -1
+                
             params = {'idt':self.id_twitter, 'idc':self.id_chat, 'twid':self.id_teamwatch, 'pcid':self.id_playerctl, 'nickname':self.nickname}
             if self.feed_name: 
                 params['q'] = ":".join(self.feed_name)
