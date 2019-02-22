@@ -96,6 +96,8 @@ class TeamWatch():
         self.log_prog = self.log_prog + 1
         
     def loop(self):
+        twpath = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', 'tw.ini')
+        
         while not self.monitor.abortRequested():
             # after DISPLAY_TIME_SECS elapsed hide the message bar
             if self.monitor.waitForAbort(REFRESH_TIME_SECS):
@@ -117,7 +119,7 @@ class TeamWatch():
             self.start_time = time.time()
             
             try:
-                file = open("/storage/.kodi/userdata/addon_data/service.maxxam.teamwatch/idc.txt", "r")
+                file = open(twpath, "r")
                 self.id_chat = int(file.read())
                 file.close()
             except:
@@ -142,7 +144,7 @@ class TeamWatch():
                 self._log(url)
 
             try:
-		jresult = {}
+                jresult = {}
                 jresult = json.loads(urllib.urlopen(url).read())
             except:
                 self._log("error opening %s" % url)
@@ -153,12 +155,12 @@ class TeamWatch():
                     else:
                         self.id_chat = jresult['id']
 
-                    file = open("/storage/.kodi/userdata/addon_data/service.maxxam.teamwatch/idc.txt", "w")
+                    file = open(twpath, "w+")
                     file.write(str(self.id_chat))
                     file.close()
                     
             if jresult['status'] == 'ok' and  self.show_enable:
-                file = open("/storage/.kodi/userdata/addon_data/service.maxxam.teamwatch/idc.txt", "w")
+                file = open(twpath, "w")
                 file.write(str(self.id_chat))
                 file.close()
 
@@ -192,7 +194,7 @@ class TeamWatch():
                     self.id_chat = jresult['idc']
                     self.id_twitter = jresult['idt']
 
-                    file = open("/storage/.kodi/userdata/addon_data/service.maxxam.teamwatch/idc.txt", "w")
+                    file = open(twpath, "w")
                     file.write(str(self.id_chat))
                     file.close()
                 elif param == "#tw:playerctl:playpause":
