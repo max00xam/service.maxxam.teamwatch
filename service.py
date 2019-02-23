@@ -46,6 +46,14 @@ class TeamWatch():
     
     show_allways = not (__addon__.getSetting('showallways') == "true")
 
+    screen_height = __addon__.getSetting('screen_height')
+    if screen_height == "": screen_height = xbmcgui.getScreenHeight()
+    
+    screen_width = __addon__.getSetting('screen_width')
+    if screen_width == "": screen_width = xbmcgui.getScreenWidth()
+    
+    bartop = screen_height - 75
+    
     id_chat = -1
     id_twitter = -1
     id_invite = ""
@@ -56,23 +64,11 @@ class TeamWatch():
     feed_is_shown = False;
     show_disable_after = False
     start_time = time.time()
-    
     player = None
     
     log_prog = 1
     
     def __init__(self):
-        try:
-            self.background = xbmcgui.ControlImage(0, xbmcgui.getScreenHeight()-75, xbmcgui.getScreenWidth(), 75, os.path.join(self.__resources__, '1280_settings.png'))
-            self.background.setVisible(True)
-            self.feedtext = xbmcgui.ControlLabel(80, xbmcgui.getScreenHeight()-70, xbmcgui.getScreenWidth()-90, 75, '', font='font45', textColor='0xFFFFFFFF')
-            self.feedtext.setVisible(True)
-        except:
-            self.background = xbmcgui.ControlImage(0, 768-75, 1024, 75, os.path.join(self.__resources__, '1280_settings.png'))
-            self.background.setVisible(True)
-            self.feedtext = xbmcgui.ControlLabel(80, 768-70, 1024-90, 75, '', font='font45', textColor='0xFFFFFFFF')
-            self.feedtext.setVisible(True)
-        
         self.id_teamwatch = self.__addon__.getSetting('twid')
         
         for feed in self.__addon__.getSetting('feed').split(":"):
@@ -86,10 +82,17 @@ class TeamWatch():
         self.feed_show_time = time.time()
         self.feed_is_shown = False;
         self.show_disable_after = False
-		
+        self.bartop = self.screen_height - 75
+        
         self.player = xbmc.Player()
         self._log("start [" + ":".join(self.feed_name) + "]")
         self._log(self.show_allways)
+        
+        self.bartop = self.screen_height - 75
+        self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, '1280_settings.png'))
+        self.background.setVisible(False)
+        self.feedtext = xbmcgui.ControlLabel(80, self.bartop + 5, self.screen_width-90, 75, '', font='font45', textColor='0xFFFFFFFF')
+        self.feedtext.setVisible(False)
         
     def _log(self, text):
         xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
@@ -190,6 +193,12 @@ class TeamWatch():
                 elif param == "#tw:on":
                     self.show_enable = True
                     self.show_message('TeamWatch', localize(32003), ICON_SETTING)
+                elif param == "#tw:bar:top":
+                    self.bartop = 0
+                    self.show_message('TeamWatch', "Bar position set to top", ICON_SETTING)
+                elif param == "#tw:bar:bottom":
+                    self.bartop = self.screen_height - 75
+                    self.show_message('TeamWatch', "Bar position set to bottom", ICON_SETTING)
                 elif param == "#tw:id":
                     self.id_chat = jresult['idc']
                     self.id_twitter = jresult['idt']
@@ -265,8 +274,14 @@ class TeamWatch():
         if DEBUG: self._log(user + " " + text)
         
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
+        self.background.setPosition(0, self.bartop)
+        self.background.setVisible(False)
+        self.window.addControl(self.background)
+        
+        self.feedtext.setPosition(80, self.bartop + 5)
         self.feedtext.setLabel('')
-        self.window.addControls([self.background, self.feedtext])
+        self.feedtext.setVisible(False)        
+        self.window.addControl(self.feedtext)
         
         if icon == ICON_TWITTER:
             self.background.setImage(os.path.join(self.__resources__, '1280_tweet.png'))
@@ -281,6 +296,9 @@ class TeamWatch():
             self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: [%d] %s' % (user, id, text))
         else:
             self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: %s' % (user, text))
+        
+        self.background.setVisible(True)
+        self.feedtext.setVisible(True)
         
         self.feed_is_shown = True
         self.feed_show_time = time.time()
