@@ -140,7 +140,7 @@ class TeamWatch():
             else:
                 params['    notweet'] = 1
                 
-            url = 'http://www.teamwatch.it/get.php?%s' % urllib.urlencode(params)
+            url = 'https://www.teamwatch.it/get.php?%s' % urllib.urlencode(params)
             
             if DEBUG > 1: 
                 self._log("id_chat: " + str(self.id_chat))
