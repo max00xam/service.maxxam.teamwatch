@@ -13,13 +13,13 @@ import xbmcaddon
 from tools.xbmc_helpers import localize
 from tools import xbmc_helpers
 
-# import web_pdb;
+# import web_pdb; # una modifica a caso
 
 WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
 REFRESH_TIME_SECS = 2
 SOCKET_TIMEOUT = 0.5
-DEBUG = 0
+DEBUG = 2
 
 ICON_CHAT = 1
 ICON_TWITTER = 2
@@ -46,10 +46,10 @@ class TeamWatch():
     
     show_allways = not (__addon__.getSetting('showallways') == "true")
 
-    screen_height = __addon__.getSetting('screen_height')
+    screen_height = int(__addon__.getSetting('screen_height'))
     if screen_height == "": screen_height = xbmcgui.getScreenHeight()
     
-    screen_width = __addon__.getSetting('screen_width')
+    screen_width = int(__addon__.getSetting('screen_width'))
     if screen_width == "": screen_width = xbmcgui.getScreenWidth()
     
     bartop = screen_height - 75
@@ -151,6 +151,7 @@ class TeamWatch():
                 jresult = json.loads(urllib.urlopen(url).read())
             except:
                 self._log("error opening %s" % url)
+                jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
             finally:
                 if 'id' in jresult:
                     if 'is_twitter' in jresult and jresult['is_twitter'] == 1:
@@ -169,6 +170,8 @@ class TeamWatch():
 
                 user = jresult['user'].encode('utf-8')
                 text = jresult['text'].encode('utf-8')
+        
+                self._log('messaggio ricevuto da %s: %s' % (user, text))
                 
                 if self.show_allways or xbmcgui.getCurrentWindowId() == WINDOW_FULLSCREEN_VIDEO:
                     if DEBUG > 1:
@@ -234,17 +237,19 @@ class TeamWatch():
                         self._log("after movie search")
 
                         if movie:
-                            # dialog = xbmcgui.Dialog()
-                            # res = dialog.yesno(localize(32004), localize(32005, (invite[1], movie["title"])))
                             if DEBUG: self._log("invite received for movie: %s" % movie["title"])
                             
-                            player = xbmc.Player()
-                            player.play(movie["file"])
+                            dialog = xbmcgui.Dialog()
+                            res = dialog.yesno(localize(32004), localize(32005, (invite[1], movie["title"])))
                             
-                            if player.isPlaying():
-                                self._log('playing...')
-                            else:
-                                self._log('not playing...')
+                            if res:
+                                player = xbmc.Player()
+                                player.play(movie["file"])
+                                
+                                if player.isPlaying():
+                                    self._log('playing...')
+                                else:
+                                    self._log('not playing...')
                         else:
                             if DEBUG: self._log("invite received for non existent movie %s" % invite[1])
                             
@@ -271,8 +276,10 @@ class TeamWatch():
                     self.id_chat = -1
                    
     def show_message (self, user, text, icon = ICON_CHAT, id=-1):
-        if DEBUG: self._log(user + " " + text)
-        
+        if DEBUG>1: 
+            self._log("show_message: " + user + " " + text)
+            self._log("bartop: " + str(self.bartop))
+            
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
         self.background.setPosition(0, self.bartop)
         self.background.setVisible(False)
