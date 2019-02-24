@@ -46,11 +46,17 @@ class TeamWatch():
     
     show_allways = not (__addon__.getSetting('showallways') == "true")
 
-    screen_height = int(__addon__.getSetting('screen_height'))
-    if screen_height == "": screen_height = xbmcgui.getScreenHeight()
-    
-    screen_width = int(__addon__.getSetting('screen_width'))
-    if screen_width == "": screen_width = xbmcgui.getScreenWidth()
+    screen_height = __addon__.getSetting('screen_height')
+    if screen_height == "": 
+        screen_height = xbmcgui.getScreenHeight()
+    else:
+        screen_height = int(__addon__.getSetting('screen_height'))
+        
+    screen_width = __addon__.getSetting('screen_width')
+    if screen_width == "": 
+        screen_width = xbmcgui.getScreenWidth()
+    else:
+        screen_width = int(__addon__.getSetting('screen_width'))
     
     bartop = screen_height - 75
     
