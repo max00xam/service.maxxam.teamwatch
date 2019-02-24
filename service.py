@@ -13,7 +13,7 @@ import xbmcaddon
 from tools.xbmc_helpers import localize
 from tools import xbmc_helpers
 
-# import web_pdb; # una modifica a caso
+# import web_pdb;
 
 WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
