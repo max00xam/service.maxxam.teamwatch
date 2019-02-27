@@ -127,13 +127,17 @@ class TeamWatch():
             
             self.start_time = time.time()
             
-            try:
-                file = open(twpath, "r")
-                self.id_chat = int(file.read())
-                file.close()
-            except:
-                self.id_chat = -1
-                
+            if self.id_chat != -1:
+                try:
+                    file = open(twpath, "r")
+                    tmp = file.read().split(":")
+                    self.id_chat = int(tmp[0])
+                    if len(tmp) == 2: self.id_twitter = int(tmp[1])
+                    file.close()
+                except:
+                    self.id_chat = -1
+                    self.id_twitter = -1
+                    
             params = {'idt':self.id_twitter, 'idc':self.id_chat, 'twid':self.id_teamwatch, 'pcid':self.id_playerctl, 'nickname':self.nickname}
             if self.feed_name: 
                 params['q'] = ":".join(self.feed_name)
@@ -144,14 +148,31 @@ class TeamWatch():
                 params['tqp'] = "&lang=%s&result_type=%s" % (self.twitter_language, self.twitter_result_type)
                 params['tl'] = self.twitter_language
             else:
-                params['    notweet'] = 1
+                params['notweet'] = 1
                 
             url = 'https://www.teamwatch.it/get.php?%s' % urllib.urlencode(params)
             
             if DEBUG > 1: 
                 self._log("id_chat: " + str(self.id_chat))
+                self._log("id_twitter: " + str(self.id_twitter))
                 self._log(url)
 
+            try:
+                jresult = {}
+                jresult = json.loads(urllib.urlopen(url).read())
+                if 'id' in jresult:
+                    if 'is_twitter' in jresult and jresult['is_twitter'] == 1:
+                        self.id_twitter = jresult['id']
+                    else:
+                        self.id_chat = jresult['id']
+
+                    file = open(twpath, "w+")
+                    file.write(str(self.id_chat) + ":" + str(self.id_twitter))
+                    file.close()
+            except:
+                jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
+                
+            """
             try:
                 jresult = {}
                 jresult = json.loads(urllib.urlopen(url).read())
@@ -166,12 +187,13 @@ class TeamWatch():
                         self.id_chat = jresult['id']
 
                     file = open(twpath, "w+")
-                    file.write(str(self.id_chat))
+                    file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                     file.close()
-                    
-            if jresult['status'] == 'ok' and  self.show_enable:
+            """
+            self._log(jresult)        
+            if 'status' in jresult and jresult['status'] == 'ok' and  self.show_enable:
                 file = open(twpath, "w")
-                file.write(str(self.id_chat))
+                file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                 file.close()
 
                 user = jresult['user'].encode('utf-8')
@@ -184,7 +206,7 @@ class TeamWatch():
                         self.show_message(user, text, [ICON_CHAT, ICON_TWITTER][jresult['is_twitter']]) #, jresult['id'])
                     else:
                         self.show_message(user, text, [ICON_CHAT, ICON_TWITTER][jresult['is_twitter']])
-            elif jresult['status'] == 'settings':
+            elif 'status' in jresult and jresult['status'] == 'settings':
                 param = jresult['param'].encode('utf-8')
                 if param.startswith("#tw:addfeed:"):
                     if not param[12:] in self.feed_name: 
@@ -213,7 +235,7 @@ class TeamWatch():
                     self.id_twitter = jresult['idt']
 
                     file = open(twpath, "w")
-                    file.write(str(self.id_chat))
+                    file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                     file.close()
                 elif param == "#tw:playerctl:playpause":
                     self._log('esecuzione #tw:playerctl:playpause')
@@ -270,17 +292,13 @@ class TeamWatch():
                         else:
                             if DEBUG: self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]))
                     else:
-                        pass
+                        if DEBUG: self._log("invite received invalid param %s" % invite[0])
                 else:
-                    pass
+                    if DEBUG: self._log("invalid command %s" % str(jresult))
             else:
-                if DEBUG and jresult['status'] == "fail" and jresult['reason'] != "no feeds" and not jresult['reason'].startswith('waiting'): 
+                if DEBUG and 'status' in jresult and jresult['status'] == "fail" and jresult['reason'] != "no feeds" and not jresult['reason'].startswith('waiting'): 
                     self._log(jresult)
-                    
-                if DEBUG and jresult['reason'].startswith('json parse error'):
-                    self.id_twitter = -1
-                    self.id_chat = -1
-                   
+                                      
     def show_message (self, user, text, icon = ICON_CHAT, id=-1):
         if DEBUG>1: 
             self._log("show_message: " + user + " " + text)
