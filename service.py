@@ -19,7 +19,7 @@ WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
 REFRESH_TIME_SECS = 2
 SOCKET_TIMEOUT = 0.5
-DEBUG = 2
+DEBUG = 1
 
 ICON_CHAT = 1
 ICON_TWITTER = 2
@@ -152,14 +152,19 @@ class TeamWatch():
                 
             url = 'https://www.teamwatch.it/get.php?%s' % urllib.urlencode(params)
             
-            if DEBUG > 1: 
+            if DEBUG > 0: 
                 self._log("id_chat: " + str(self.id_chat))
                 self._log("id_twitter: " + str(self.id_twitter))
                 self._log(url)
 
-            try:
-                jresult = {}
-                jresult = json.loads(urllib.urlopen(url).read())
+            jresult = {}
+            tmp = urllib.urlopen(url)
+            if tmp == None: 
+                jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
+            else:
+                json_response = tmp.read().replace('\n', ' ').replace('\r', '')
+                self._log("json_response: " + json_response)
+                jresult = json.loads(json_response)
                 if 'id' in jresult:
                     if 'is_twitter' in jresult and jresult['is_twitter'] == 1:
                         self.id_twitter = jresult['id']
@@ -169,8 +174,6 @@ class TeamWatch():
                     file = open(twpath, "w+")
                     file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                     file.close()
-            except:
-                jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
                 
             """
             try:
@@ -190,19 +193,19 @@ class TeamWatch():
                     file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                     file.close()
             """
-            self._log(jresult)        
+            # self._log(jresult)        
             if 'status' in jresult and jresult['status'] == 'ok' and  self.show_enable:
                 file = open(twpath, "w")
                 file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                 file.close()
 
-                user = jresult['user'].encode('utf-8')
+                user = jresult['user'].encode('utf-8')[:15]
                 text = jresult['text'].encode('utf-8')
         
                 self._log('messaggio ricevuto da %s: %s' % (user, text))
                 
                 if self.show_allways or xbmcgui.getCurrentWindowId() == WINDOW_FULLSCREEN_VIDEO:
-                    if DEBUG > 1:
+                    if DEBUG > 0:
                         self.show_message(user, text, [ICON_CHAT, ICON_TWITTER][jresult['is_twitter']]) #, jresult['id'])
                     else:
                         self.show_message(user, text, [ICON_CHAT, ICON_TWITTER][jresult['is_twitter']])
@@ -300,7 +303,7 @@ class TeamWatch():
                     self._log(jresult)
                                       
     def show_message (self, user, text, icon = ICON_CHAT, id=-1):
-        if DEBUG>1: 
+        if DEBUG > 0: 
             self._log("show_message: " + user + " " + text)
             self._log("bartop: " + str(self.bartop))
             
