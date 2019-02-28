@@ -163,7 +163,7 @@ class TeamWatch():
                 jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
             else:
                 json_response = tmp.read().replace('\n', ' ').replace('\r', '')
-                self._log("json_response: " + json_response)
+                if DEBUG: self._log("json_response: " + json_response)
                 jresult = json.loads(json_response)
                 if 'id' in jresult:
                     if 'is_twitter' in jresult and jresult['is_twitter'] == 1:
