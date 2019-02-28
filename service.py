@@ -9,12 +9,26 @@ import httplib
 import xbmc
 import xbmcgui
 import xbmcaddon
+import pastebin
 
 from tools.xbmc_helpers import localize
 from tools import xbmc_helpers
 
+error_lines = False
+
+def checkline(line):
+    global error_lines
+    
+    if "ERROR: EXCEPTION Thrown (PythonToCppException)" in line:
+        error_lines = True
+    elif "-->End of Python script error report<--" in line:
+        error_lines = False
+        
+    return "service.maxxam.teamwatch" in line or error_lines
+        
 # import web_pdb;
 
+VERSION = "0.0.5"
 WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
 REFRESH_TIME_SECS = 2
@@ -296,6 +310,68 @@ class TeamWatch():
                             if DEBUG: self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]))
                     else:
                         if DEBUG: self._log("invite received invalid param %s" % invite[0])
+                elif param.startswith("#tw:sendlog"):
+                    # API Settings
+                    api_dev_key  = '8ad7b020994f2abf1d8631bf4ea3de6c' # please don't steal these passwords!
+                    api_user_key = '764fa208bd3ab14806273da932daf68e' # make a new account it's free
+
+                    # Define API
+                    if api_user_key:
+                        api = pastebin.PasteBin(api_dev_key, api_user_key)
+                    else:
+                        api = pastebin.PasteBin(api_dev_key)
+                        api_user_key = api.create_user_key('teamwatch', 'n0DPeu2cuhZY7o5JfdRD')
+                        if 'Bad API request' not in api_user_key:
+                            api = pastebin.PasteBin(api_dev_key, api_user_key)
+                        else:
+                            raise SystemExit('[!] - Failed to create API user key! ({0})'.format(api_user_key.split(', ')[1]))
+                    
+                    version_number = xbmc.getInfoLabel("System.BuildVersion")[0:2]
+                    if version_number < 12:
+                        if xbmc.getCondVisibility("system.platform.osx"):
+                            if xbmc.getCondVisibility("system.platform.atv2"):
+                                log_path = "/var/mobile/Library/Preferences"
+                            else:
+                                log_path = os.path.join(os.path.expanduser("~"), "Library/Logs")
+                        elif xbmc.getCondVisibility("system.platform.ios"):
+                            log_path = "/var/mobile/Library/Preferences"
+                        elif xbmc.getCondVisibility("system.platform.windows"):
+                            log_path = xbmc.translatePath("special://home")
+                        elif xbmc.getCondVisibility("system.platform.linux"):
+                            log_path = xbmc.translatePath("special://home/temp")
+                        else:
+                            log_path = xbmc.translatePath("special://logpath")
+                    else:
+                        log_path = xbmc.translatePath("special://logpath")
+
+                    if version_number < 14:
+                        filename = "xbmc.log"
+                    else:
+                        filename = "kodi.log"
+
+                    if not os.path.exists(os.path.join(log_path, filename)):
+                        if os.path.exists(os.path.join(log_path, "spmc.log")):
+                            filename = "spmc.log"
+
+                    log_path = os.path.join(log_path, filename)
+
+                    # Create a Paste
+                    data = "TeamWatch version: %s from: %d\r\n" % (VERSION, self.id_chat)
+                    filepath = log_path.decode("utf-8")
+                    with open(filepath) as fp:  
+                       line = fp.readline()
+                       if checkline(line): 
+                           data += line
+
+                       while line:
+                           line = fp.readline()
+                           if checkline(line): data += line
+
+                    result = api.paste(data, guest=False, name='kodi teamwatch log', format='text', private='2', expire='10M')
+                    if 'Bad API request' in result: 
+                        self._log('[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]))
+                    else:
+                        self._log(result)
                 else:
                     if DEBUG: self._log("invalid command %s" % str(jresult))
             else:
