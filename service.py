@@ -10,24 +10,36 @@ import xbmc
 import xbmcgui
 import xbmcaddon
 import pastebin
+import random
 
 from tools.xbmc_helpers import localize
 from tools import xbmc_helpers
 
+from datetime import datetime
+import time
+
+# import web_pdb;
+
 error_lines = False
 
-def checkline(line):
+def checkline(line, time_now):
     global error_lines
     
+    try:
+        time_line=int(line[:2])*3600 + int(line[3:5])*60+int(line[6:8])
+    except:
+        return False
+        
+    if (time_now-time_line) > 5*60: 
+        return False
+        
     if "ERROR: EXCEPTION Thrown (PythonToCppException)" in line:
         error_lines = True
     elif "-->End of Python script error report<--" in line:
         error_lines = False
-        
+    
     return "service.maxxam.teamwatch" in line or error_lines
         
-# import web_pdb;
-
 VERSION = "0.0.5"
 WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
@@ -118,7 +130,7 @@ class TeamWatch():
         xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
         self.log_prog = self.log_prog + 1
         
-    def loop(self):
+    def loop(self):        
         twpath = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', 'tw.ini')
         
         while not self.monitor.abortRequested():
@@ -354,30 +366,28 @@ class TeamWatch():
                             filename = "spmc.log"
 
                     log_path = os.path.join(log_path, filename)
-
                     # Create a Paste
-                    data = "TeamWatch version: %s from: %d\r\n" % (VERSION, self.id_chat)
+                    t = time.strftime('%H:%M:%S', time.localtime())
+                    time_now=int(t[:2])*3600 + int(t[3:5])*60+int(t[6:])
+                    data = "TeamWatch version: %s from: %s\r\n" % (VERSION, self.nickname)
                     filepath = log_path.decode("utf-8")
                     with open(filepath) as fp:  
-                       line = fp.readline()
-                       if checkline(line): 
-                           data += line
-
-                       while line:
-                           line = fp.readline()
-                           if checkline(line): data += line
-
+                        line = fp.readline()
+                        if checkline(line, time_now): data += line
+                        
+                        while line:
+                            line = fp.readline()
+                            if checkline(line, time_now): data += line
+                            
                     result = api.paste(data, guest=False, name='kodi teamwatch log', format='text', private='2', expire='10M')
                     if 'Bad API request' in result: 
                         self._log('[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]))
                     else:
                         self._log(result)
-                else:
-                    if DEBUG: self._log("invalid command %s" % str(jresult))
-            else:
-                if DEBUG and 'status' in jresult and jresult['status'] == "fail" and jresult['reason'] != "no feeds" and not jresult['reason'].startswith('waiting'): 
-                    self._log(jresult)
-                                      
+                        
+                    url = 'https://www.teamwatch.it/add.php?%s' % urllib.urlencode({'user':self.nickname, 'text':result.replace("https://pastebin.com/", ""), 'feed':''.join(random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(20))})
+                    tmp = urllib.urlopen(url)
+                    
     def show_message (self, user, text, icon = ICON_CHAT, id=-1):
         if DEBUG > 0: 
             self._log("show_message: " + user + " " + text)
