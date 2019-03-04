@@ -4,6 +4,7 @@ import time
 import socket
 import urllib
 import urllib2
+import ssl
 import json
 import httplib
 import xbmc
@@ -40,7 +41,7 @@ def checkline(line, time_now):
     
     return "service.maxxam.teamwatch" in line or error_lines
         
-VERSION = "0.0.5"
+VERSION = "0.0.6"
 WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
 REFRESH_TIME_SECS = 2
@@ -184,7 +185,8 @@ class TeamWatch():
                 self._log(url)
 
             jresult = {}
-            tmp = urllib.urlopen(url)
+            context=ssl._create_unverified_context()
+            tmp = urllib.urlopen(url, context=context)
             if tmp == None: 
                 jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
             else:

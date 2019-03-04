@@ -4,3 +4,6 @@ v0.0.1
 v0.0.5
 - Added command #tw:sendlog
 - Minor bug fix
+
+v0.0.6
+- Added send messages from telegram with feed #tw_send
