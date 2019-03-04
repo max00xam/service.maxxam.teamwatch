@@ -4,7 +4,6 @@ import time
 import socket
 import urllib
 import urllib2
-import ssl
 import json
 import httplib
 import xbmc
@@ -185,8 +184,7 @@ class TeamWatch():
                 self._log(url)
 
             jresult = {}
-            context=ssl._create_unverified_context()
-            tmp = urllib.urlopen(url, context=context)
+            tmp = urllib.urlopen(url)
             if tmp == None: 
                 jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
             else:
