@@ -184,11 +184,16 @@ class TeamWatch():
                 self._log(url)
 
             jresult = {}
-            tmp = urllib.urlopen(url)
+            try:
+                tmp = urllib.urlopen(url).read()
+            except:
+                tmp = None
+                pass
+                
             if tmp == None: 
                 jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
             else:
-                json_response = tmp.read().replace('\n', ' ').replace('\r', '')
+                json_response = tmp.replace('\n', ' ').replace('\r', '')
                 if DEBUG: self._log("json_response: " + json_response)
                 jresult = json.loads(json_response)
                 if 'id' in jresult:
