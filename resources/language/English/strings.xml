@@ -8,8 +8,8 @@
     <string id="32130">Player control ID</string>
     <string id="32140">Show messages only on fulllscrren video</string>
     <string id="32150">Nickname</string>
-    <string id="32160">Messagebar top</string>
-    <string id="32170">Messagebar width</string>
+    <string id="32160">Messagebar top (only for Windows)</string>
+    <string id="32170">Messagebar width (only for Windows)</string>
 
     <!-- Twitter -->
     <string id="32200">Twitter</string>
