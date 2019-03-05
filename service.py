@@ -268,7 +268,7 @@ class TeamWatch():
                     self.id_chat = jresult['idc']
                     self.id_twitter = jresult['idt']
 
-                    file = open(twpath, "w")
+                    file = open(twpath, "w+")
                     file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                     file.close()
                 elif param == "#tw:playerctl:playpause":
