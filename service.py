@@ -45,7 +45,7 @@ WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
 REFRESH_TIME_SECS = 2
 SOCKET_TIMEOUT = 0.5
-DEBUG = 1
+DEBUG = 0
 
 ICON_CHAT = 1
 ICON_TWITTER = 2
@@ -201,32 +201,18 @@ class TeamWatch():
                         self.id_twitter = jresult['id']
                     else:
                         self.id_chat = jresult['id']
-
+                    
+                    directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
+                    if not os.path.exists(directory): os.makedirs(directory)
                     file = open(twpath, "w+")
                     file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                     file.close()
                 
-            """
-            try:
-                jresult = {}
-                jresult = json.loads(urllib.urlopen(url).read())
-            except:
-                self._log("error opening %s" % url)
-                jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
-            finally:
-                if 'id' in jresult:
-                    if 'is_twitter' in jresult and jresult['is_twitter'] == 1:
-                        self.id_twitter = jresult['id']
-                    else:
-                        self.id_chat = jresult['id']
-
-                    file = open(twpath, "w+")
-                    file.write(str(self.id_chat) + ":" + str(self.id_twitter))
-                    file.close()
-            """
             # self._log(jresult)        
             if 'status' in jresult and jresult['status'] == 'ok' and  self.show_enable:
-                file = open(twpath, "w")
+                directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
+                if not os.path.exists(directory): os.makedirs(directory)
+                file = open(twpath, "w+")
                 file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                 file.close()
 
@@ -268,6 +254,8 @@ class TeamWatch():
                     self.id_chat = jresult['idc']
                     self.id_twitter = jresult['idt']
 
+                    directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
+                    if not os.path.exists(directory): os.makedirs(directory)
                     file = open(twpath, "w+")
                     file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                     file.close()
@@ -314,7 +302,7 @@ class TeamWatch():
                                     self._log('not playing...')
                         else:
                             if DEBUG: self._log("invite received for non existent movie %s" % invite[1])
-                            
+                            self.show_message('TeamWatch', "invite received for non existent movie %s" % invite[1], ICON_SETTING)
                     elif invite[0] == "e":
                         episode = xbmc_helpers.search_episode(invite[1], invite[2], invite[3])
                         
@@ -325,9 +313,15 @@ class TeamWatch():
                             if DEBUG: self._log("invite received for episode id: %d" % episode["episodeid"])
                         else:
                             if DEBUG: self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]))
+                            self.show_message('TeamWatch', "invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]), ICON_SETTING)
                     else:
                         if DEBUG: self._log("invite received invalid param %s" % invite[0])
+                        self.show_message('TeamWatch', "invite received invalid param %s" % invite[0], ICON_SETTING)
                 elif param.startswith("#tw:sendlog"):
+                    if DEBUG == 0:
+                        self.show_message('TeamWatch', "Please activate debug log in Kodi settings", ICON_SETTING)
+                        continue
+                    
                     # API Settings
                     api_dev_key  = '8ad7b020994f2abf1d8631bf4ea3de6c' # please don't steal these passwords!
                     api_user_key = '764fa208bd3ab14806273da932daf68e' # make a new account it's free
@@ -387,8 +381,10 @@ class TeamWatch():
                     result = api.paste(data, guest=False, name='kodi teamwatch log', format='text', private='2', expire='10M')
                     if 'Bad API request' in result: 
                         self._log('[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]))
+                        self.show_message('TeamWatch', '[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]), ICON_SETTING)
                     else:
                         self._log(result)
+                        self.show_message('TeamWatch', result, ICON_SETTING)
                         
                     url = 'https://www.teamwatch.it/add.php?%s' % urllib.urlencode({'user':self.nickname, 'text':result.replace("https://pastebin.com/", ""), 'feed':'#tw:' + ''.join(random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(20))})
                     tmp = urllib.urlopen(url)
