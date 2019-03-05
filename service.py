@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
+import os, re
 import time
 import socket
 import urllib
@@ -59,6 +59,7 @@ class TeamWatch():
 
     window = None
     background = None
+    icon = None
     feedtext = None
     
     id_teamwatch = __addon__.getSetting('twid')
@@ -125,6 +126,19 @@ class TeamWatch():
         self.background.setVisible(False)
         self.feedtext = xbmcgui.ControlLabel(80, self.bartop + 5, self.screen_width-90, 75, '', font='font45', textColor='0xFFFFFFFF')
         self.feedtext.setVisible(False)
+        
+        """
+        if self.bartop < 50:
+            self.icon = xbmcgui.ControlImage(self.screen_width-70, self.bartop + 30, 50, 50, os.path.join(self.__resources__, 'icon.png'))
+        else:
+            self.icon = xbmcgui.ControlImage(self.screen_width-70, self.bartop - 50, 50, 50, os.path.join(self.__resources__, 'icon.png'))
+        """
+        
+        directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
+        if not os.path.exists(directory): os.makedirs(directory)
+
+        self.icon = xbmcgui.ControlImage(0, 0, 100, 100, "") # os.path.join(self.__resources__, 'icon.png'))
+        self.icon.setVisible(False)
         
     def _log(self, text):
         xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
@@ -403,6 +417,35 @@ class TeamWatch():
         self.feedtext.setLabel('')
         self.feedtext.setVisible(False)        
         self.window.addControl(self.feedtext)
+
+        if self.bartop < 50:
+            self.icon.setPosition(self.screen_width-70, self.bartop + 30)
+        else:
+            self.icon.setPosition(self.screen_width-70, self.bartop - 50)
+        
+        try:
+            url = re.findall('\[(https?://.+)\]', text)[0]
+        except:
+            url = ""            
+        self._log(url)
+        
+        if url:
+            text = text.replace('[' + url + ']', '').replace('  ',' ')
+        
+            icon_file = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache', url[url.rfind("/")+1:])
+            self._log("icon file: %s" % icon_file)
+            if not os.path.exists(icon_file):
+                try:                
+                    testfile = urllib.URLopener()
+                    testfile.retrieve(url, icon_file)
+                except:
+                    icon_file = os.path.join(self.__resources__, 'icon.png')
+        
+            self._log("icon file: %s" % icon_file)
+            self.icon.setPosition(1800, self.bartop - 110)        
+            if icon_file: self.icon.setImage(icon_file, useCache=True)
+            self.icon.setVisible(False)
+            self.window.addControl(self.icon)
         
         if icon == ICON_TWITTER:
             self.background.setImage(os.path.join(self.__resources__, '1280_tweet.png'))
@@ -412,7 +455,7 @@ class TeamWatch():
             self.background.setImage(os.path.join(self.__resources__, '1280_chat.png'))
         else:
             self.background.setImage(os.path.join(self.__resources__, '1280_chat.png'))
-            
+
         if DEBUG:
             self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: [%d] %s' % (user, id, text))
         else:
@@ -420,13 +463,22 @@ class TeamWatch():
         
         self.background.setVisible(True)
         self.feedtext.setVisible(True)
+        self.icon.setVisible(True)
         
         self.feed_is_shown = True
         self.feed_show_time = time.time()
     
     def hide_message(self):
         if self.feed_is_shown:
-            self.window.removeControls([self.feedtext, self.background])
+            self.feedtext.setVisible(False)
+            self.background.setVisible(False)
+            self.icon.setVisible(False)
+            
+            self.window.removeControls([self.feedtext, self.background]) 
+            try:
+                self.window.removeControls([self.icon])
+            except:
+                pass
             self.feed_is_shown = False
     
 if __name__ == '__main__':
