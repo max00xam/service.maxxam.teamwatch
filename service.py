@@ -127,17 +127,10 @@ class TeamWatch():
         self.feedtext = xbmcgui.ControlLabel(80, self.bartop + 5, self.screen_width-90, 75, '', font='font45', textColor='0xFFFFFFFF')
         self.feedtext.setVisible(False)
         
-        """
-        if self.bartop < 50:
-            self.icon = xbmcgui.ControlImage(self.screen_width-70, self.bartop + 30, 50, 50, os.path.join(self.__resources__, 'icon.png'))
-        else:
-            self.icon = xbmcgui.ControlImage(self.screen_width-70, self.bartop - 50, 50, 50, os.path.join(self.__resources__, 'icon.png'))
-        """
-        
         directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
         if not os.path.exists(directory): os.makedirs(directory)
 
-        self.icon = xbmcgui.ControlImage(500, 50, 100, 100, os.path.join(self.__resources__, 'icon.png')) # os.path.join(self.__resources__, 'icon.png'))
+        self.icon = xbmcgui.ControlImage(0, 0, 100, 100, os.path.join(self.__resources__, 'icon.png'))
         self.icon.setVisible(False)       
         
     def _log(self, text):
