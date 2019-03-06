@@ -40,7 +40,7 @@ def checkline(line, time_now):
     
     return "service.maxxam.teamwatch" in line or error_lines
         
-VERSION = "0.0.6"
+VERSION = "0.0.7"
 WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
 REFRESH_TIME_SECS = 2
@@ -137,8 +137,8 @@ class TeamWatch():
         directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
         if not os.path.exists(directory): os.makedirs(directory)
 
-        self.icon = xbmcgui.ControlImage(0, 0, 100, 100, "") # os.path.join(self.__resources__, 'icon.png'))
-        self.icon.setVisible(False)
+        self.icon = xbmcgui.ControlImage(500, 50, 100, 100, os.path.join(self.__resources__, 'icon.png')) # os.path.join(self.__resources__, 'icon.png'))
+        self.icon.setVisible(False)       
         
     def _log(self, text):
         xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
@@ -407,6 +407,21 @@ class TeamWatch():
         if DEBUG > 0: 
             self._log("show_message: " + user + " " + text)
             self._log("bartop: " + str(self.bartop))
+
+        try:
+            self.window.removeControls([self.feedtext])
+        except:
+            pass
+            
+        try:
+            self.window.removeControls([self.background])
+        except:
+            pass
+            
+        try:
+            self.window.removeControls([self.icon])
+        except:
+            pass
             
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
         self.background.setPosition(0, self.bartop)
@@ -417,36 +432,38 @@ class TeamWatch():
         self.feedtext.setLabel('')
         self.feedtext.setVisible(False)        
         self.window.addControl(self.feedtext)
-
+        
         if self.bartop < 50:
-            self.icon.setPosition(self.screen_width-70, self.bartop + 30)
+            self.icon.setPosition(self.screen_width-120, self.bartop + 30)
         else:
-            self.icon.setPosition(self.screen_width-70, self.bartop - 50)
+            self.icon.setPosition(self.screen_width-120, self.bartop-50)        
+        self.icon.setImage(os.path.join(self.__resources__, 'icon.png'), useCache=True)
+        self.icon.setVisible(False)
+        self.window.addControl(self.icon)
         
         try:
             url = re.findall('\[(https?://.+)\]', text)[0]
         except:
-            url = ""            
-        self._log(url)
+            url = ""
+            
+        if DEBUG: self._log(url)
         
+        icon_file = os.path.join(self.__resources__, 'icon.png')
         if url:
             text = text.replace('[' + url + ']', '').replace('  ',' ')
         
             icon_file = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache', url[url.rfind("/")+1:])
-            self._log("icon file: %s" % icon_file)
             if not os.path.exists(icon_file):
                 try:                
                     testfile = urllib.URLopener()
                     testfile.retrieve(url, icon_file)
+                    self.icon.setImage(icon_file, useCache=True)
                 except:
-                    icon_file = os.path.join(self.__resources__, 'icon.png')
-        
-            self._log("icon file: %s" % icon_file)
-            self.icon.setPosition(1800, self.bartop - 110)        
-            if icon_file: self.icon.setImage(icon_file, useCache=True)
-            self.icon.setVisible(False)
-            self.window.addControl(self.icon)
-        
+                    pass
+                    
+        self.icon.setImage(icon_file, useCache=True)            
+        if DEBUG: self._log("icon file: %s" % icon_file)
+       
         if icon == ICON_TWITTER:
             self.background.setImage(os.path.join(self.__resources__, '1280_tweet.png'))
         elif icon == ICON_SETTING:
@@ -456,10 +473,7 @@ class TeamWatch():
         else:
             self.background.setImage(os.path.join(self.__resources__, '1280_chat.png'))
 
-        if DEBUG:
-            self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: [%d] %s' % (user, id, text))
-        else:
-            self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: %s' % (user, text))
+        self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: %s' % (user, text))
         
         self.background.setVisible(True)
         self.feedtext.setVisible(True)
@@ -474,11 +488,21 @@ class TeamWatch():
             self.background.setVisible(False)
             self.icon.setVisible(False)
             
-            self.window.removeControls([self.feedtext, self.background]) 
+            try:
+                self.window.removeControls([self.feedtext])
+            except:
+                pass
+                
+            try:
+                self.window.removeControls([self.background])
+            except:
+                pass
+                
             try:
                 self.window.removeControls([self.icon])
             except:
                 pass
+                
             self.feed_is_shown = False
     
 if __name__ == '__main__':
