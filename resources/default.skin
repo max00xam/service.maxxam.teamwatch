@@ -1,0 +1,9 @@
+# -- default.skin --
+text_color=0xff000000
+nickname_color=0xff006600
+margin_left=120
+font=font45
+bar_chat=default_chat.png
+bar_settings=default_settings.png
+bar_telegram=default_telegram.png
+bar_twitter=default_tweet.png

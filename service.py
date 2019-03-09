@@ -40,7 +40,7 @@ def checkline(line, time_now):
     
     return "service.maxxam.teamwatch" in line or error_lines
         
-VERSION = "0.0.7"
+VERSION = "0.0.8"
 WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
 REFRESH_TIME_SECS = 2
@@ -50,6 +50,9 @@ DEBUG = 1 # lasciare a uno!
 ICON_CHAT = 1
 ICON_TWITTER = 2
 ICON_SETTING = 3
+ICON_TELEGRAM = 4
+
+SKIN_CONFIG = 'default.skin'
 
 class TeamWatch():
     __addon__ = xbmcaddon.Addon()
@@ -72,7 +75,7 @@ class TeamWatch():
     twitter_result_type = __addon__.getSetting('result_type')
     
     show_allways = not (__addon__.getSetting('showallways') == "true")
-
+    
     screen_height = __addon__.getSetting('screen_height')
     if screen_height == "": 
         screen_height = xbmcgui.getScreenHeight()
@@ -90,6 +93,17 @@ class TeamWatch():
     id_chat = -1
     id_twitter = -1
     id_invite = ""
+    
+    skin = {}
+    skin['text_color'] = '0xff000000'
+    skin['nickname_color'] = 'blue'
+    skin['margin_left'] = '100'
+    skin['font'] = 'font45'
+    skin['bar_chat'] = 'default_chat.png'
+    skin['bar_settings'] = 'default_settings.png'
+    skin['bar_telegram'] = 'default_telegram.png'
+    skin['bar_twitter'] = 'default_tweet.png'
+    skin['icon'] = 'icon.png'
     
     show_enable = True
     feed_show_time = None
@@ -122,15 +136,24 @@ class TeamWatch():
         self._log(self.show_allways)
         
         self.bartop = self.screen_height - 75
-        self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, '1280_settings.png'))
+        self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_settings']))
         self.background.setVisible(False)
-        self.feedtext = xbmcgui.ControlLabel(80, self.bartop + 5, self.screen_width-90, 75, '', font='font45', textColor='0xFFFFFFFF')
+        self.feedtext = xbmcgui.ControlLabel(int(self.skin['margin_left']), self.bartop + 5, self.screen_width-90, 75, '', font=self.skin['font'], textColor=self.skin['text_color'])
         self.feedtext.setVisible(False)
+
+        skin_filename = self.__addon__.getSetting('skin')
+        f = open(os.path.join(self.__resources__, skin_filename), 'r')
+        for row in f:
+            if row[0] != '#':
+                d = row.replace(' ','').replace('\r','').replace('\n','').split('=')
+                self.skin[d[0]] = d[1]
+        f.close()
+        self._log(str(self.skin))
         
         directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
         if not os.path.exists(directory): os.makedirs(directory)
 
-        self.icon = xbmcgui.ControlImage(0, 0, 100, 100, os.path.join(self.__resources__, 'icon.png'))
+        self.icon = xbmcgui.ControlImage(0, 0, 100, 100, os.path.join(self.__resources__, self.skin['icon']))
         self.icon.setVisible(False)       
         
     def _log(self, text):
@@ -201,7 +224,7 @@ class TeamWatch():
                 jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
             else:
                 json_response = tmp.replace('\n', ' ').replace('\r', '')
-                if DEBUG: self._log("json_response: " + json_response)
+                if DEBUG > 0: self._log("json_response: " + json_response)
                 jresult = json.loads(json_response)
                 if 'id' in jresult:
                     if 'is_twitter' in jresult and jresult['is_twitter'] == 1:
@@ -229,8 +252,8 @@ class TeamWatch():
                 self._log('messaggio ricevuto da %s: %s' % (user, text))
                 
                 if self.show_allways or xbmcgui.getCurrentWindowId() == WINDOW_FULLSCREEN_VIDEO:
-                    if DEBUG > 0:
-                        self.show_message(user, text, [ICON_CHAT, ICON_TWITTER][jresult['is_twitter']]) #, jresult['id'])
+                    if text[:8] == '#tw_send':
+                        self.show_message(user, text[9:], ICON_TELEGRAM)
                     else:
                         self.show_message(user, text, [ICON_CHAT, ICON_TWITTER][jresult['is_twitter']])
             elif 'status' in jresult and jresult['status'] == 'settings':
@@ -276,7 +299,7 @@ class TeamWatch():
                     t = [int("0"+filter(str.isdigit, x)) for x in param[19:].split(":")]
                     if len(t) == 4:
                         xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "method": "Player.Seek", "params": {"playerid":1, "value": {"hours":%d, "minutes":%d, "seconds":%d, "milliseconds":%d}}, "id": 1 }' % tuple(t))
-                    elif DEBUG:
+                    elif DEBUG > 0:
                         self._log('#tw:playerctl:seek invalid time')
                 elif param.startswith("#tw:playstream:"):
                     self._log('*** playstream received ***')
@@ -285,7 +308,7 @@ class TeamWatch():
                     player.play(param[15:])
                 elif param.startswith("#tw:invite:"):
                     # web_pdb.set_trace()
-                    if DEBUG: self._log("#tw:invite")
+                    if DEBUG > 0: self._log("#tw:invite")
                     invite = param[11:].split(":")
                     
                     if invite[0] == "m":
@@ -294,7 +317,7 @@ class TeamWatch():
                         self._log("after movie search")
 
                         if movie:
-                            if DEBUG: self._log("invite received for movie: %s" % movie["title"])
+                            if DEBUG > 0: self._log("invite received for movie: %s" % movie["title"])
                             
                             dialog = xbmcgui.Dialog()
                             res = dialog.yesno(localize(32004), localize(32005, (invite[1], movie["title"])))
@@ -308,7 +331,7 @@ class TeamWatch():
                                 else:
                                     self._log('not playing...')
                         else:
-                            if DEBUG: self._log("invite received for non existent movie %s" % invite[1])
+                            if DEBUG > 0: self._log("invite received for non existent movie %s" % invite[1])
                             self.show_message('TeamWatch', "invite received for non existent movie %s" % invite[1], ICON_SETTING)
                     elif invite[0] == "e":
                         episode = xbmc_helpers.search_episode(invite[1], invite[2], invite[3])
@@ -317,12 +340,12 @@ class TeamWatch():
                             dialog = xbmcgui.Dialog()
                             s_ep = "S[COLOR green][B]%02d[/B][/COLOR]E[COLOR green][B]%02d[/B][/COLOR]" % (int(episode["season"]), int(episode["episode"]))
                             res = dialog.yesno(localize(32004), localize(32006, (invite[1], episode["showtitle"], s_ep)))
-                            if DEBUG: self._log("invite received for episode id: %d" % episode["episodeid"])
+                            if DEBUG > 0: self._log("invite received for episode id: %d" % episode["episodeid"])
                         else:
-                            if DEBUG: self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]))
+                            if DEBUG > 0: self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]))
                             self.show_message('TeamWatch', "invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]), ICON_SETTING)
                     else:
-                        if DEBUG: self._log("invite received invalid param %s" % invite[0])
+                        if DEBUG > 0: self._log("invite received invalid param %s" % invite[0])
                         self.show_message('TeamWatch', "invite received invalid param %s" % invite[0], ICON_SETTING)
                 elif param.startswith("#tw:sendlog"):
                     if DEBUG == 0:
@@ -331,7 +354,7 @@ class TeamWatch():
                     
                     # API Settings
                     api_dev_key  = '8ad7b020994f2abf1d8631bf4ea3de6c' # please don't steal these passwords!
-                    api_user_key = '764fa208bd3ab14806273da932daf68e' # make a new account it's free
+                    api_user_key = '764fa208bd3ab14806273da932daf68e' # make a new account it's for free
 
                     # Define API
                     if api_user_key:
@@ -398,9 +421,10 @@ class TeamWatch():
                     
     def show_message (self, user, text, icon = ICON_CHAT, id=-1):
         if DEBUG > 0: 
-            self._log("show_message: " + user + " " + text)
+            self._log("show_message: {} {} [{}]".format(user, text, icon))
             self._log("bartop: " + str(self.bartop))
 
+        if DEBUG > 0: self._log("removing controls")
         try:
             self.window.removeControls([self.feedtext])
         except:
@@ -415,33 +439,37 @@ class TeamWatch():
             self.window.removeControls([self.icon])
         except:
             pass
-            
+        
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
-        self.background.setPosition(0, self.bartop)
-        self.background.setVisible(False)
+        
+        if DEBUG > 0: self._log("adding background")
         self.window.addControl(self.background)
+        self.background.setPosition(0, self.bartop)
+        self.background.setVisible(False)        
         
-        self.feedtext.setPosition(80, self.bartop + 5)
-        self.feedtext.setLabel('')
-        self.feedtext.setVisible(False)        
+        if DEBUG > 0: self._log("adding feedtext")
         self.window.addControl(self.feedtext)
+        self.feedtext.setPosition(int(self.skin['margin_left']), self.bartop + 5)
+        self.feedtext.setLabel('')
+        self.feedtext.setVisible(False)               
         
+        if DEBUG > 0: self._log("adding icon")
+        self.window.addControl(self.icon)
         if self.bartop < 50:
             self.icon.setPosition(self.screen_width-120, self.bartop + 30)
         else:
             self.icon.setPosition(self.screen_width-120, self.bartop-50)        
-        self.icon.setImage(os.path.join(self.__resources__, 'icon.png'), useCache=True)
-        self.icon.setVisible(False)
-        self.window.addControl(self.icon)
+        self.icon.setImage(os.path.join(self.__resources__, self.skin['icon']), useCache=True)
+        self.icon.setVisible(False)        
         
+        if DEBUG > 0: self._log("looking for url")
         try:
             url = re.findall('\[(https?://.+)\]', text)[0]
+            if DEBUG > 0: self._log("url: " + url)
         except:
             url = ""
             
-        if DEBUG: self._log(url)
-        
-        icon_file = os.path.join(self.__resources__, 'icon.png')
+        icon_file = os.path.join(self.__resources__, self.skin['icon'])
         if url:
             text = text.replace('[' + url + ']', '').replace('  ',' ')
         
@@ -454,19 +482,23 @@ class TeamWatch():
                 except:
                     pass
                     
-        self.icon.setImage(icon_file, useCache=True)            
-        if DEBUG: self._log("icon file: %s" % icon_file)
-       
+        self.icon.setImage(icon_file, useCache=True)  
+        
+        if DEBUG > 0: self._log("icon file: %s" % icon_file)
+        if DEBUG > 0: self._log("icon: %s" % icon)
+        
         if icon == ICON_TWITTER:
-            self.background.setImage(os.path.join(self.__resources__, '1280_tweet.png'))
+            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_twitter']))
         elif icon == ICON_SETTING:
-            self.background.setImage(os.path.join(self.__resources__, '1280_settings.png'))
+            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_settings']))
         elif icon == ICON_CHAT:
-            self.background.setImage(os.path.join(self.__resources__, '1280_chat.png'))
+            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_chat']))
+        elif icon == ICON_TELEGRAM:
+            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_telegram']))
         else:
-            self.background.setImage(os.path.join(self.__resources__, '1280_chat.png'))
+            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_chat']))
 
-        self.feedtext.setLabel('[COLOR yellow][B]%s[/B][/COLOR]: %s' % (user, text))
+        self.feedtext.setLabel('[COLOR %s][B]%s[/B][/COLOR]: [B]%s[/B]' % (self.skin['nickname_color'], user, text))
         
         self.background.setVisible(True)
         self.feedtext.setVisible(True)

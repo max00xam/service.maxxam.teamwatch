@@ -49,6 +49,10 @@ msgctxt "#32170"
 msgid "Screen width"
 msgstr ""
 
+msgctxt "#32180"
+msgid "Skin"
+msgstr ""
+
 msgctxt "#32200"
 msgid "Twitter"
 msgstr ""

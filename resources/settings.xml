@@ -4,6 +4,7 @@
         <setting id="nickname" type="text" label="32150" default="Nick"/>
         <setting id="feed" type="text" label="32110" default="#teamwatch"/>
         <setting label="32111" type="lsep"/>
+        <setting id="skin" type="text" label="32180" default="default.skin"/>
         <setting id="twid" type="text" label="32120" default=""/>
         <setting id="pcid" type="text" label="32130" default=""/>
         <setting id="showallways" type="bool" label="32140" default="true"/>
