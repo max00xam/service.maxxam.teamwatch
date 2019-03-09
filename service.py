@@ -51,7 +51,6 @@ ICON_CHAT = 1
 ICON_TWITTER = 2
 ICON_SETTING = 3
 ICON_TELEGRAM = 4
-
 SKIN_CONFIG = 'default.skin'
 
 class TeamWatch():
@@ -135,21 +134,24 @@ class TeamWatch():
         self._log("start [" + ":".join(self.feed_name) + "]")
         self._log(self.show_allways)
         
+        try:
+            SKIN_CONFIG = self.__addon__.getSetting('skin')
+            f = open(os.path.join(self.__resources__, SKIN_CONFIG), 'r')
+            for row in f:
+                if row[0] != '#':
+                    d = row.replace(' ','').replace('\r','').replace('\n','').split('=')
+                    self.skin[d[0]] = d[1]
+            f.close()
+            self._log(str(self.skin))
+        except:
+            pass
+            
         self.bartop = self.screen_height - 75
         self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_settings']))
         self.background.setVisible(False)
         self.feedtext = xbmcgui.ControlLabel(int(self.skin['margin_left']), self.bartop + 5, self.screen_width-90, 75, '', font=self.skin['font'], textColor=self.skin['text_color'])
         self.feedtext.setVisible(False)
 
-        skin_filename = self.__addon__.getSetting('skin')
-        f = open(os.path.join(self.__resources__, skin_filename), 'r')
-        for row in f:
-            if row[0] != '#':
-                d = row.replace(' ','').replace('\r','').replace('\n','').split('=')
-                self.skin[d[0]] = d[1]
-        f.close()
-        self._log(str(self.skin))
-        
         directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
         if not os.path.exists(directory): os.makedirs(directory)
 
@@ -423,7 +425,8 @@ class TeamWatch():
         if DEBUG > 0: 
             self._log("show_message: {} {} [{}]".format(user, text, icon))
             self._log("bartop: " + str(self.bartop))
-
+            self._log("text_color: " + self.skin['text_color'])
+            
         if DEBUG > 0: self._log("removing controls")
         try:
             self.window.removeControls([self.feedtext])
