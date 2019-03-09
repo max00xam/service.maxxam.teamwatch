@@ -7,3 +7,6 @@ v0.0.5
 
 v0.0.6
 - Added send messages from telegram with feed #tw_send
+
+v0.0.8
+- Added skins support
