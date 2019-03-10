@@ -57,7 +57,7 @@ class TeamWatch():
     __addon__ = xbmcaddon.Addon()
     __resources__ = os.path.join(__addon__.getAddonInfo('path'),'resources')
 
-    monitor = xbmc.Monitor()
+    monitor = xbmc.Monitor().__init__(self)
 
     window = None
     background = None
@@ -536,3 +536,4 @@ class TeamWatch():
 if __name__ == '__main__':
     tw = TeamWatch()
     tw.loop()
+    tw._log('TeamWatch stopped')

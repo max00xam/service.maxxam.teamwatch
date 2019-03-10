@@ -5,15 +5,8 @@
         <import addon="xbmc.python" version="2.14.0"/>
     </requires>
     
-    <extension point="xbmc.service" library="service.py" start="contextmenu.py"/>
+    <extension point="xbmc.service" library="service.py"/>
 
-    <extension point="kodi.context.item" library="contextmenu.py">		
-        <item>
-            <label>Send TeamWatch invite</label>
-            <visible>StringCompare(ListItem.dbtype, movie) | StringCompare(ListItem.dbtype, episode)</visible>
-        </item>
-    </extension>
-    
     <extension point="xbmc.addon.metadata">
         <summary lang="en">TeamWatch make your TV social.</summary>
         <description lang="en">TeamWatch is a Kodi add-on that will change the way you watch TV, TV becomes 'social' allowing you to comment live with friends what you see on the screen. TeamWatch also gives you the opportunity to display on the TV screen tweets regarding the program you are watching!</description>
