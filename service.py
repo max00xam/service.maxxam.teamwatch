@@ -57,7 +57,7 @@ class TeamWatch():
     __addon__ = xbmcaddon.Addon()
     __resources__ = os.path.join(__addon__.getAddonInfo('path'),'resources')
 
-    monitor = xbmc.Monitor().__init__(self)
+    monitor = xbmc.Monitor()
 
     window = None
     background = None
