@@ -51,6 +51,7 @@ ICON_CHAT = 1
 ICON_TWITTER = 2
 ICON_SETTING = 3
 ICON_TELEGRAM = 4
+ICON_RSSFEED = 5
 SKIN_CONFIG = 'default.skin'
 
 class TeamWatch():
@@ -102,6 +103,7 @@ class TeamWatch():
     skin['bar_settings'] = 'default_settings.png'
     skin['bar_telegram'] = 'default_telegram.png'
     skin['bar_twitter'] = 'default_tweet.png'
+    skin['bar_rssfeed'] = 'default_rss.png'
     skin['icon'] = 'icon.png'
     
     show_enable = True
@@ -146,17 +148,17 @@ class TeamWatch():
         except:
             pass
             
-        self.bartop = self.screen_height - 75
+        self.bartop = self.screen_height - 75        
+        directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
+        if not os.path.exists(directory): os.makedirs(directory)
+
         self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_settings']))
         self.background.setVisible(False)
         self.feedtext = xbmcgui.ControlLabel(int(self.skin['margin_left']), self.bartop + 5, self.screen_width-90, 75, '', font=self.skin['font'], textColor=self.skin['text_color'])
         self.feedtext.setVisible(False)
 
-        directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
-        if not os.path.exists(directory): os.makedirs(directory)
-
-        self.icon = xbmcgui.ControlImage(0, 0, 100, 100, os.path.join(self.__resources__, self.skin['icon']))
-        self.icon.setVisible(False)       
+        self.icon = xbmcgui.ControlImage(0, 0, 150, 150, os.path.join(self.__resources__, self.skin['icon']))
+        self.icon.setVisible(False)
         
     def _log(self, text):
         xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
@@ -220,14 +222,17 @@ class TeamWatch():
                 tmp = urllib.urlopen(url).read()
             except:
                 tmp = None
-                pass
                 
             if tmp == None: 
                 jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
             else:
                 json_response = tmp.replace('\n', ' ').replace('\r', '')
                 if DEBUG > 0: self._log("json_response: " + json_response)
-                jresult = json.loads(json_response)
+                try:
+                    jresult = json.loads(json_response)
+                except:
+                    jresult = {"status":"fail", "reason": "error decoding json result %s " % json_response, "time":""}
+                    
                 if 'id' in jresult:
                     if 'is_twitter' in jresult and jresult['is_twitter'] == 1:
                         self.id_twitter = jresult['id']
@@ -256,8 +261,12 @@ class TeamWatch():
                 if self.show_allways or xbmcgui.getCurrentWindowId() == WINDOW_FULLSCREEN_VIDEO:
                     if text[:8] == '#tw_send':
                         self.show_message(user, text[9:], ICON_TELEGRAM)
+                    elif jresult['is_twitter'] == 1:
+                        self.show_message(user, text, ICON_TWITTER)
+                    elif jresult['is_rss'] == 1:
+                        self.show_message(user, text, ICON_RSSFEED)
                     else:
-                        self.show_message(user, text, [ICON_CHAT, ICON_TWITTER][jresult['is_twitter']])
+                        self.show_message(user, text, ICON_CHAT)
             elif 'status' in jresult and jresult['status'] == 'settings':
                 param = jresult['param'].encode('utf-8')
                 if param.startswith("#tw:addfeed:"):
@@ -426,44 +435,28 @@ class TeamWatch():
             self._log("show_message: {} {} [{}]".format(user, text, icon))
             self._log("bartop: " + str(self.bartop))
             self._log("text_color: " + self.skin['text_color'])
-            
-        if DEBUG > 0: self._log("removing controls")
-        try:
-            self.window.removeControls([self.feedtext])
-        except:
-            pass
-            
-        try:
-            self.window.removeControls([self.background])
-        except:
-            pass
-            
-        try:
-            self.window.removeControls([self.icon])
-        except:
-            pass
-        
+
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
         
-        if DEBUG > 0: self._log("adding background")
-        self.window.addControl(self.background)
-        self.background.setPosition(0, self.bartop)
+        if DEBUG > 0: self._log("adding background")        
         self.background.setVisible(False)        
+        self.background.setPosition(0, self.bartop)
+        self.window.addControl(self.background)
         
         if DEBUG > 0: self._log("adding feedtext")
-        self.window.addControl(self.feedtext)
+        self.feedtext.setVisible(False)                       
         self.feedtext.setPosition(int(self.skin['margin_left']), self.bartop + 5)
         self.feedtext.setLabel('')
-        self.feedtext.setVisible(False)               
+        self.window.addControl(self.feedtext)
         
         if DEBUG > 0: self._log("adding icon")
-        self.window.addControl(self.icon)
-        if self.bartop < 50:
-            self.icon.setPosition(self.screen_width-120, self.bartop + 30)
-        else:
-            self.icon.setPosition(self.screen_width-120, self.bartop-50)        
-        self.icon.setImage(os.path.join(self.__resources__, self.skin['icon']), useCache=True)
         self.icon.setVisible(False)        
+        if self.bartop < 50:
+            self.icon.setPosition(self.screen_width - 180, self.bartop + 30)
+        else:
+            self.icon.setPosition(self.screen_width - 180, self.bartop - 130)        
+        self.icon.setImage(os.path.join(self.__resources__, self.skin['icon']), useCache=True)
+        self.window.addControl(self.icon)
         
         if DEBUG > 0: self._log("looking for url")
         try:
@@ -498,6 +491,8 @@ class TeamWatch():
             self.background.setImage(os.path.join(self.__resources__, self.skin['bar_chat']))
         elif icon == ICON_TELEGRAM:
             self.background.setImage(os.path.join(self.__resources__, self.skin['bar_telegram']))
+        elif icon == ICON_RSSFEED:
+            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_rssfeed']))
         else:
             self.background.setImage(os.path.join(self.__resources__, self.skin['bar_chat']))
 
@@ -512,25 +507,10 @@ class TeamWatch():
     
     def hide_message(self):
         if self.feed_is_shown:
-            self.feedtext.setVisible(False)
             self.background.setVisible(False)
+            self.feedtext.setVisible(False)
             self.icon.setVisible(False)
-            
-            try:
-                self.window.removeControls([self.feedtext])
-            except:
-                pass
-                
-            try:
-                self.window.removeControls([self.background])
-            except:
-                pass
-                
-            try:
-                self.window.removeControls([self.icon])
-            except:
-                pass
-                
+            self.window.removeControls([self.background, self.feedtext, self.icon])
             self.feed_is_shown = False
     
 if __name__ == '__main__':
