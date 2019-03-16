@@ -10,3 +10,8 @@ v0.0.6
 
 v0.0.8
 - Added skins support
+
+v0.0.9
+- Profile icon
+- RSS feeds
+- Minor bug fix

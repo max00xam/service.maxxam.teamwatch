@@ -40,7 +40,7 @@ def checkline(line, time_now):
     
     return "service.maxxam.teamwatch" in line or error_lines
         
-VERSION = "0.0.8"
+VERSION = "0.0.9"
 WINDOW_FULLSCREEN_VIDEO = 12005
 DISPLAY_TIME_SECS = 5
 REFRESH_TIME_SECS = 2
