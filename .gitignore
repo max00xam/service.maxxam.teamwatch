@@ -2,6 +2,8 @@ scrapers/*
 
 release/*
 
+resources/images/*
+
 README.txt
 
 beep.wav
