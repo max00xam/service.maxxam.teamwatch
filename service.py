@@ -156,18 +156,6 @@ class TeamWatch():
         self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_settings']))
         self.background.setVisible(False)
         
-        """
-        Parameters:	
-
-            x – integer - x coordinate of control.
-            y – integer - y coordinate of control.
-            width – integer - width of control.
-            height – integer - height of control.
-            font – [opt] string - font used for label text. (e.g. ‘font13’)
-            textColor – [opt] hexstring - color of fadelabel’s labels. (e.g. ‘0xFFFFFFFF’)
-            alignment – [opt] integer - alignment of labelFlags for alignment used as bits to have several together:
-        """
-        
         self.feedtext = xbmcgui.ControlFadeLabel(
             int(self.skin['margin_left']), 
             self.bartop + 5, 
