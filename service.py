@@ -155,7 +155,27 @@ class TeamWatch():
 
         self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_settings']))
         self.background.setVisible(False)
-        self.feedtext = xbmcgui.ControlLabel(int(self.skin['margin_left']), self.bartop + 5, self.screen_width-90, 75, '', font=self.skin['font'], textColor=self.skin['text_color'])
+        
+        """
+        Parameters:	
+
+            x – integer - x coordinate of control.
+            y – integer - y coordinate of control.
+            width – integer - width of control.
+            height – integer - height of control.
+            font – [opt] string - font used for label text. (e.g. ‘font13’)
+            textColor – [opt] hexstring - color of fadelabel’s labels. (e.g. ‘0xFFFFFFFF’)
+            alignment – [opt] integer - alignment of labelFlags for alignment used as bits to have several together:
+        """
+        
+        self.feedtext = xbmcgui.ControlFadeLabel(
+            int(self.skin['margin_left']), 
+            self.bartop + 5, 
+            self.screen_width-90, 
+            75, 
+            font=self.skin['font'], 
+            textColor=self.skin['text_color']
+        )
         self.feedtext.setVisible(False)
 
         self.icon = xbmcgui.ControlImage(0, 0, 150, 150, os.path.join(self.__resources__, self.skin['icon']))
@@ -475,7 +495,7 @@ class TeamWatch():
         if DEBUG > 0: self._log("adding feedtext")
         self.feedtext.setVisible(False)                       
         self.feedtext.setPosition(int(self.skin['margin_left']), self.bartop + 5)
-        self.feedtext.setLabel('')
+        self.feedtext.reset()
         self.window.addControl(self.feedtext)
         
         if DEBUG > 0: self._log("adding icon")
@@ -537,10 +557,11 @@ class TeamWatch():
             self.background.setImage(os.path.join(self.__resources__, self.skin['bar_chat']))
 
         if user == 'rss':
-            self.feedtext.setLabel(text)
+            self.feedtext.addLabel(text)
         else:
-            self.feedtext.setLabel('[COLOR %s][B]%s[/B][/COLOR]: [B]%s[/B]' % (self.skin['nickname_color'], user, text))
+            self.feedtext.addLabel('[COLOR %s][B]%s[/B][/COLOR]: [B]%s[/B]' % (self.skin['nickname_color'], user, text))
         
+        time.sleep(2)
         self.background.setVisible(True)
         self.feedtext.setVisible(True)
         self.icon.setVisible(True)
