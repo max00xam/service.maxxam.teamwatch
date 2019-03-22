@@ -26,9 +26,9 @@
     <string id="32002">TeamWatch switched off messages display</string>
     <string id="32003">TeamWatch switched on messages display</string>
     <string id="32004">Invite received</string>
-    <string id="32005">[COLOR yellow][B]%s[/B][/COLOR] has invited you to watch [COLOR yellow][B]%s[/B][/COLOR], do you accept?</string>
-    <string id="32006">Invite received", "[COLOR yellow][B]%s[/B][/COLOR] has invited you to watch [COLOR yellow][B]%s[/B][/COLOR] %s, do you accept?</string>
+    <string id="32005">[B]%s[/B] has invited you to watch [B]%s[/B], do you accept?</string>
+    <string id="32006">Invite received", "[B]%s[/B] has invited you to watch [B]%s[/B] %s, do you accept?</string>
     <string id="32007">Send TeamWatch invite</string>
-    <string id="32008">Send invite to watch: [COLOR yellow][B]%s[/B][/COLOR] %s?</string>
-    <string id="32009">Send invite to watch: [COLOR yellow][B]%s[/B][/COLOR]?</string>
+    <string id="32008">Send invite to watch: [B]%s[/B] %s?</string>
+    <string id="32009">Send invite to watch: [B]%s[/B]?</string>
 </strings>

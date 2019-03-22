@@ -245,7 +245,6 @@ class TeamWatch():
                     file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                     file.close()
                 
-            # self._log(jresult)        
             if 'status' in jresult and jresult['status'] == 'ok' and  self.show_enable:
                 directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
                 if not os.path.exists(directory): os.makedirs(directory)
@@ -271,12 +270,12 @@ class TeamWatch():
                 param = jresult['param'].encode('utf-8')
                 if param.startswith("#tw:addfeed:"):
                     if not param[12:] in self.feed_name: 
-                        self.feed_name.append(param[12:])
+                        self.feed_name.append(param[12:].lower())
                         self.__addon__.setSetting('feed', ":".join(self.feed_name))
                         self.show_message('TeamWatch', localize(32000, param[12:]), ICON_SETTING)
                 elif param.startswith("#tw:removefeed:"):
-                    if param[15:] in self.feed_name: 
-                        self.feed_name.remove(param[15:])
+                    if param[15:].lower() in self.feed_name:                         
+                        self.feed_name.remove(param[15:].lower())
                         self.__addon__.setSetting('feed', ":".join(self.feed_name))
                         self.show_message('TeamWatch', localize(32001, param[15:]), ICON_SETTING)
                 elif param == "#tw:off":
@@ -301,9 +300,13 @@ class TeamWatch():
                     file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                     file.close()
                 elif param == "#tw:playerctl:playpause":
-                    self._log('esecuzione #tw:playerctl:playpause')
+                    if DEBUG > 0: self._log('esecuzione #tw:playerctl:playpause')
                     xbmc.executebuiltin("Action(PlayPause)")
-                    self._log('playpause terminated id_chat: ' + str(self.id_chat))
+                    if DEBUG > 0: self._log('playpause terminated id_chat: ' + str(self.id_chat))
+                elif param == "#tw:playerctl:stop":
+                    if DEBUG > 0: self._log('esecuzione #tw:playerctl:stop')
+                    xbmc.executebuiltin("Action(Stop)")
+                    if DEBUG > 0: self._log('stop terminated id_chat: ' + str(self.id_chat))
                 elif param == "#tw:playerctl:sshot":
                     xbmc.executebuiltin("TakeScreenshot")
                 elif param.startswith("#tw:playerctl:seek:"):
@@ -321,6 +324,7 @@ class TeamWatch():
                     # web_pdb.set_trace()
                     if DEBUG > 0: self._log("#tw:invite")
                     invite = param[11:].split(":")
+                    user = "unknown"
                     
                     if invite[0] == "m":
                         self._log("#tw:invite:m: %s" % invite[1])
@@ -331,7 +335,7 @@ class TeamWatch():
                             if DEBUG > 0: self._log("invite received for movie: %s" % movie["title"])
                             
                             dialog = xbmcgui.Dialog()
-                            res = dialog.yesno(localize(32004), localize(32005, (invite[1], movie["title"])))
+                            res = dialog.yesno(localize(32004), localize(32005, (user, movie["title"])))
                             
                             if res:
                                 player = xbmc.Player()
@@ -346,12 +350,21 @@ class TeamWatch():
                             self.show_message('TeamWatch', "invite received for non existent movie %s" % invite[1], ICON_SETTING)
                     elif invite[0] == "e":
                         episode = xbmc_helpers.search_episode(invite[1], invite[2], invite[3])
+                        self._log(str(episode))
                         
                         if episode:
                             dialog = xbmcgui.Dialog()
-                            s_ep = "S[COLOR green][B]%02d[/B][/COLOR]E[COLOR green][B]%02d[/B][/COLOR]" % (int(episode["season"]), int(episode["episode"]))
-                            res = dialog.yesno(localize(32004), localize(32006, (invite[1], episode["showtitle"], s_ep)))
+                            s_ep = "S[B]%02d[/B]E[B]%02d[/B]" % (int(episode["season"]), int(episode["episode"]))
+                            res = dialog.yesno(localize(32004), localize(32006, (user, episode["showtitle"], s_ep)))
                             if DEBUG > 0: self._log("invite received for episode id: %d" % episode["episodeid"])
+                            if res:
+                                player = xbmc.Player()
+                                player.play(xbmc_helpers.get_episode_details(episode["episodeid"])["file"])
+                                
+                                if player.isPlaying():
+                                    self._log('playing...')
+                                else:
+                                    self._log('not playing...')
                         else:
                             if DEBUG > 0: self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]))
                             self.show_message('TeamWatch', "invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]), ICON_SETTING)
@@ -438,6 +451,21 @@ class TeamWatch():
 
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
         
+        try:
+            self.window.removeControl(self.background)
+        except:
+            pass
+            
+        try:
+            self.window.removeControl(self.feedtext)
+        except:
+            pass
+            
+        try:
+            self.window.removeControl(self.icon)
+        except:
+            pass
+        
         if DEBUG > 0: self._log("adding background")        
         self.background.setVisible(False)        
         self.background.setPosition(0, self.bartop)
@@ -496,7 +524,10 @@ class TeamWatch():
         else:
             self.background.setImage(os.path.join(self.__resources__, self.skin['bar_chat']))
 
-        self.feedtext.setLabel('[COLOR %s][B]%s[/B][/COLOR]: [B]%s[/B]' % (self.skin['nickname_color'], user, text))
+        if user == 'rss':
+            self.feedtext.setLabel(text)
+        else:
+            self.feedtext.setLabel('[COLOR %s][B]%s[/B][/COLOR]: [B]%s[/B]' % (self.skin['nickname_color'], user, text))
         
         self.background.setVisible(True)
         self.feedtext.setVisible(True)
