@@ -16,7 +16,7 @@ Configuration options
 Send message and manage
 -----------------------
 
-You can send message throught the web page at www.teamwatch.it
+You can send message and commands throught the web page at www.teamwatch.it
 
 Commands
 --------
