@@ -12,3 +12,22 @@ display on the TV screen tweets regarding the program you are watching!
 
 ##Send message and manage
 You can send message throught the web page at www.teamwatch.it
+
+##Commands
+**#tw:off** - stop displaying messages
+**#tw:on** - restart displaying messages
+**#tw:bar:top** - the bar will be displayed in the top of the screen
+**#tw:bar:bottom** - the bar will be displayed in the bottom of the screen
+**#tw:sendlog** - send a log to pastebin
+**#tw[pc]:addfeed:<feed>** - add a new feed to follow
+**#tw[pc]:removefeed:<feed>** - remove a feed from your followed feeds
+**#tw[pc]:playerctl:playpause** - pause/resume the current playing video
+**#tw[pc]:playerctl:stop** - stop the current playing video
+**#tw[pc]:playerctl:sshot** - take a screenshot
+**#tw[pc]:playerctl:seek:<hh>:<mm>:<ss>:<cent>** - seek the current video to the time hh:mm:ss:cent
+**#tw[pc]:playstream:<url>** - start playing video stream from url
+**#tw[pc]:invite:m:<title>** - invite other users to watch a movie (all the users must have the movie in the kodi library)
+**#tw[pc]:invite:e:<title>:<season>:<episode>** - invite other users to watch a tvshow (all the users must have the movie in the kodi library)
+
+  
+If the command is used with "#twpc:" instead of "#tw:" it will be sent to all the users that share your "Player control ID"
