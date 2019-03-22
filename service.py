@@ -4,6 +4,7 @@ import time
 import socket
 import urllib
 import urllib2
+import hashlib
 import json
 import httplib
 import xbmc
@@ -497,7 +498,10 @@ class TeamWatch():
         if url:
             text = text.replace('[' + url + ']', '').replace('  ',' ')
         
-            icon_file = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache', str(abs(hash(url))))            
+            h = hashlib.new('md5')
+            h.update(url)
+            
+            icon_file = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache', h.hexdigest())
             if not os.path.exists(icon_file):
                 try:                
                     req = urllib2.Request(url)
