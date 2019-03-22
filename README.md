@@ -47,6 +47,6 @@ Commands
   
 ``#tw[pc]:invite:m:<title>`` - invite other users to watch a movie (all the users must have the movie in the kodi library)
   
-``#tw[pc]:invite:e:<title>:<season>:<episode>`` - invite other users to watch a tvshow (all the users must have the movie in the kodi library)
+``#tw[pc]:invite:e:<title>:<season>:<episode>`` - invite other users to watch a tvshow (all the users must have the tvshow episode in the kodi library)
   
 If the command is used with "#twpc:" instead of "#tw:" it will be sent to all the users that share your "Player control ID"
