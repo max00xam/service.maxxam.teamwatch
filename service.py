@@ -500,11 +500,19 @@ class TeamWatch():
             icon_file = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache', str(abs(hash(url))))            
             if not os.path.exists(icon_file):
                 try:                
-                    testfile = urllib.URLopener()
-                    testfile.retrieve(url, icon_file)
-                except:
-                    self._log("error retrieving icon file url: {}".format(url))
-                    pass
+                    req = urllib2.Request(url)
+                    req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
+                    response = urllib2.urlopen(req)
+
+                    with open(icon_file, "wb") as fcache:
+                        fcache.write(response.read())
+                        fcache.close()
+                    response.close()
+                    
+                except urllib2.HTTPError, e:
+                    self._log("HTTP Error: %s %s" % (e.code, url))
+                except urllib2.URLError, e:
+                    self._log("URL Error: %s %s" % (e.reason, url))
                     
         self.icon.setImage(icon_file, useCache=True)  
         
