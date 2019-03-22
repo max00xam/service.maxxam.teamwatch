@@ -497,12 +497,13 @@ class TeamWatch():
         if url:
             text = text.replace('[' + url + ']', '').replace('  ',' ')
         
-            icon_file = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache', str(hash(url)))            
+            icon_file = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache', str(abs(hash(url))))            
             if not os.path.exists(icon_file):
                 try:                
                     testfile = urllib.URLopener()
                     testfile.retrieve(url, icon_file)
                 except:
+                    self._log("error retrieving icon file url: {}".format(url))
                     pass
                     
         self.icon.setImage(icon_file, useCache=True)  
