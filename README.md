@@ -1,5 +1,5 @@
-service.maxxam.teamwatch |Build Status|
-=======================================
+service.maxxam.teamwatch
+========================
 
 TeamWatch is a Kodi add-on that will change the way you watch TV,
 TV becomes 'social' allowing you to comment live with friends
