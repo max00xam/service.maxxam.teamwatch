@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 import os, re
 import time
-import socket
 import urllib
 import urllib2
 import hashlib
 import json
-import httplib
 import xbmc
 import xbmcgui
 import xbmcaddon
@@ -17,8 +15,6 @@ from tools.xbmc_helpers import localize
 from tools import xbmc_helpers
 
 from datetime import datetime
-import time
-
 # import web_pdb;
 
 error_lines = False
@@ -41,23 +37,26 @@ def checkline(line, time_now):
     
     return "service.maxxam.teamwatch" in line or error_lines
         
-VERSION = "0.0.9"
-WINDOW_FULLSCREEN_VIDEO = 12005
-DISPLAY_TIME_SECS = 5
-REFRESH_TIME_SECS = 2
-SOCKET_TIMEOUT = 0.5
-DEBUG = 1 # lasciare a uno!
-
-ICON_CHAT = 1
-ICON_TWITTER = 2
-ICON_SETTING = 3
-ICON_TELEGRAM = 4
-ICON_RSSFEED = 5
-SKIN_CONFIG = 'default.skin'
-
 class TeamWatch():
     __addon__ = xbmcaddon.Addon()
     __resources__ = os.path.join(__addon__.getAddonInfo('path'),'resources')
+
+    VERSION = "0.0.9"
+    WINDOW_FULLSCREEN_VIDEO = 12005
+    DISPLAY_TIME_SECS = 5
+    REFRESH_TIME_SECS = 2
+    SOCKET_TIMEOUT = 0.5
+    DEBUG = 1 # lasciare a uno!
+
+    ICON_CHAT = 1
+    ICON_TWITTER = 2
+    ICON_SETTING = 3
+    ICON_TELEGRAM = 4
+    ICON_RSSFEED = 5
+    SKIN_CONFIG = 'default.skin'
+
+    TWEETS_OFF = False
+    RSS_OFF = False
 
     monitor = xbmc.Monitor()
 
@@ -65,6 +64,8 @@ class TeamWatch():
     background = None
     icon = None
     feedtext = None
+    icon_rss_off = None
+    icon_tweet_off = None
     
     id_teamwatch = __addon__.getSetting('twid')
     id_playerctl = __addon__.getSetting('pcid')
@@ -138,8 +139,8 @@ class TeamWatch():
         self._log(self.show_allways)
         
         try:
-            SKIN_CONFIG = self.__addon__.getSetting('skin')
-            f = open(os.path.join(self.__resources__, SKIN_CONFIG), 'r')
+            self.SKIN_CONFIG = self.__addon__.getSetting('skin')
+            f = open(os.path.join(self.__resources__, self.SKIN_CONFIG), 'r')
             for row in f:
                 if row[0] != '#':
                     d = row.replace(' ','').replace('\r','').replace('\n','').split('=')
@@ -153,22 +154,6 @@ class TeamWatch():
         directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
         if not os.path.exists(directory): os.makedirs(directory)
 
-        self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_settings']))
-        self.background.setVisible(False)
-        
-        self.feedtext = xbmcgui.ControlFadeLabel(
-            int(self.skin['margin_left']), 
-            self.bartop + 5, 
-            self.screen_width-90, 
-            75, 
-            font=self.skin['font'], 
-            textColor=self.skin['text_color']
-        )
-        self.feedtext.setVisible(False)
-
-        self.icon = xbmcgui.ControlImage(0, 0, 150, 150, os.path.join(self.__resources__, self.skin['icon']))
-        self.icon.setVisible(False)
-        
     def _log(self, text):
         xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
         self.log_prog = self.log_prog + 1
@@ -178,12 +163,12 @@ class TeamWatch():
         
         while not self.monitor.abortRequested():
             # after DISPLAY_TIME_SECS elapsed hide the message bar
-            if self.monitor.waitForAbort(REFRESH_TIME_SECS):
+            if self.monitor.waitForAbort(self.REFRESH_TIME_SECS):
                 self.hide_message()
                 self._log("stop")
                 break
             
-            if self.feed_is_shown and time.time() - self.feed_show_time > DISPLAY_TIME_SECS:
+            if self.feed_is_shown and time.time() - self.feed_show_time > self.DISPLAY_TIME_SECS:
                 self.hide_message()
                 
                 if self.show_disable_after:
@@ -191,7 +176,7 @@ class TeamWatch():
                     self.show_enable = False
                     self.show_disable_after = False
                     
-            if (time.time() - self.start_time) < REFRESH_TIME_SECS or self.feed_is_shown:
+            if (time.time() - self.start_time) < self.REFRESH_TIME_SECS or self.feed_is_shown:
                 continue
             
             self.start_time = time.time()
@@ -221,7 +206,7 @@ class TeamWatch():
                 
             url = 'https://www.teamwatch.it/get.php?%s' % urllib.urlencode(params)
             
-            if DEBUG > 0: 
+            if self.DEBUG > 0: 
                 self._log("id_chat: " + str(self.id_chat))
                 self._log("id_twitter: " + str(self.id_twitter))
                 self._log(url)
@@ -236,7 +221,7 @@ class TeamWatch():
                 jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
             else:
                 json_response = tmp.replace('\n', ' ').replace('\r', '')
-                if DEBUG > 0: self._log("json_response: " + json_response)
+                if self.DEBUG > 0: self._log("json_response: " + json_response)
                 try:
                     jresult = json.loads(json_response)
                 except:
@@ -266,39 +251,55 @@ class TeamWatch():
         
                 self._log('messaggio ricevuto da %s: %s' % (user, text))
                 
-                if self.show_allways or xbmcgui.getCurrentWindowId() == WINDOW_FULLSCREEN_VIDEO:
+                if self.show_allways or xbmcgui.getCurrentWindowId() == self.WINDOW_FULLSCREEN_VIDEO:
                     if text[:8] == '#tw_send':
-                        self.show_message(user, text[9:], ICON_TELEGRAM)
-                    elif jresult['is_twitter'] == 1:
-                        self.show_message(user, text, ICON_TWITTER)
-                    elif jresult['is_rss'] == 1:
-                        self.show_message(user, text, ICON_RSSFEED)
-                    else:
-                        self.show_message(user, text, ICON_CHAT)
+                        self.show_message(user, text[9:], self.ICON_TELEGRAM)
+                    elif jresult['is_twitter'] == 1 and not self.TWEETS_OFF:
+                        self.show_message(user, text, self.ICON_TWITTER)
+                    elif jresult['is_rss'] == 1 and not self.RSS_OFF:
+                        self.show_message(user, text, self.ICON_RSSFEED)
+                    elif jresult['is_rss'] == 0 and jresult['is_twitter'] == 0:
+                        self.show_message(user, text, self.ICON_CHAT)
             elif 'status' in jresult and jresult['status'] == 'settings':
                 param = jresult['param'].encode('utf-8')
                 if param.startswith("#tw:addfeed:"):
                     if not param[12:] in self.feed_name: 
                         self.feed_name.append(param[12:].lower())
                         self.__addon__.setSetting('feed', ":".join(self.feed_name))
-                        self.show_message('TeamWatch', localize(32000, param[12:]), ICON_SETTING)
+                        self.show_message('TeamWatch', localize(32000, param[12:]), self.ICON_SETTING)
                 elif param.startswith("#tw:removefeed:"):
                     if param[15:].lower() in self.feed_name:                         
                         self.feed_name.remove(param[15:].lower())
                         self.__addon__.setSetting('feed', ":".join(self.feed_name))
-                        self.show_message('TeamWatch', localize(32001, param[15:]), ICON_SETTING)
+                        self.show_message('TeamWatch', localize(32001, param[15:]), self.ICON_SETTING)
                 elif param == "#tw:off":
-                    self.show_message('TeamWatch', localize(32002), ICON_SETTING)
+                    self.show_message('TeamWatch', localize(32002), self.ICON_SETTING)
                     self.show_disable_after = True
                 elif param == "#tw:on":
                     self.show_enable = True
-                    self.show_message('TeamWatch', localize(32003), ICON_SETTING)
+                    self.show_message('TeamWatch', localize(32003), self.ICON_SETTING)
+                elif param == '#tw:rss:on':
+                    if self.RSS_OFF:
+                        self.RSS_OFF = not self.RSS_OFF
+                        self.show_message('TeamWatch', "RSS feeds show set to on", self.ICON_SETTING)
+                elif param == '#tw:rss:off':
+                    if not self.RSS_OFF:
+                        self.RSS_OFF = not self.RSS_OFF
+                        self.show_message('TeamWatch', "RSS feeds show set to off", self.ICON_SETTING)
+                elif param == '#tw:tweet:on':
+                    if self.TWEETS_OFF:
+                        self.TWEETS_OFF = not self.TWEETS_OFF
+                        self.show_message('TeamWatch', "Twitter feeds show set to on", self.ICON_SETTING)
+                elif param == '#tw:tweet:off':
+                    if not self.TWEETS_OFF:
+                        self.TWEETS_OFF = not self.TWEETS_OFF
+                        self.show_message('TeamWatch', "Twitter feeds show set to off", self.ICON_SETTING)
                 elif param == "#tw:bar:top":
                     self.bartop = 0
-                    self.show_message('TeamWatch', "Bar position set to top", ICON_SETTING)
+                    self.show_message('TeamWatch', "Bar position set to top", self.ICON_SETTING)
                 elif param == "#tw:bar:bottom":
                     self.bartop = self.screen_height - 75
-                    self.show_message('TeamWatch', "Bar position set to bottom", ICON_SETTING)
+                    self.show_message('TeamWatch', "Bar position set to bottom", self.ICON_SETTING)
                 elif param == "#tw:id":
                     self.id_chat = jresult['idc']
                     self.id_twitter = jresult['idt']
@@ -309,20 +310,20 @@ class TeamWatch():
                     file.write(str(self.id_chat) + ":" + str(self.id_twitter))
                     file.close()
                 elif param == "#tw:playerctl:playpause":
-                    if DEBUG > 0: self._log('esecuzione #tw:playerctl:playpause')
+                    if self.DEBUG > 0: self._log('esecuzione #tw:playerctl:playpause')
                     xbmc.executebuiltin("Action(PlayPause)")
-                    if DEBUG > 0: self._log('playpause terminated id_chat: ' + str(self.id_chat))
+                    if self.DEBUG > 0: self._log('playpause terminated id_chat: ' + str(self.id_chat))
                 elif param == "#tw:playerctl:stop":
-                    if DEBUG > 0: self._log('esecuzione #tw:playerctl:stop')
+                    if self.DEBUG > 0: self._log('esecuzione #tw:playerctl:stop')
                     xbmc.executebuiltin("Action(Stop)")
-                    if DEBUG > 0: self._log('stop terminated id_chat: ' + str(self.id_chat))
+                    if self.DEBUG > 0: self._log('stop terminated id_chat: ' + str(self.id_chat))
                 elif param == "#tw:playerctl:sshot":
                     xbmc.executebuiltin("TakeScreenshot")
                 elif param.startswith("#tw:playerctl:seek:"):
                     t = [int("0"+filter(str.isdigit, x)) for x in param[19:].split(":")]
                     if len(t) == 4:
                         xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "method": "Player.Seek", "params": {"playerid":1, "value": {"hours":%d, "minutes":%d, "seconds":%d, "milliseconds":%d}}, "id": 1 }' % tuple(t))
-                    elif DEBUG > 0:
+                    elif self.DEBUG > 0:
                         self._log('#tw:playerctl:seek invalid time')
                 elif param.startswith("#tw:playstream:"):
                     self._log('*** playstream received ***')
@@ -331,7 +332,7 @@ class TeamWatch():
                     player.play(param[15:])
                 elif param.startswith("#tw:invite:"):
                     # web_pdb.set_trace()
-                    if DEBUG > 0: self._log("#tw:invite")
+                    if self.DEBUG > 0: self._log("#tw:invite")
                     invite = param[11:].split(":")
                     user = "unknown"
                     
@@ -341,7 +342,7 @@ class TeamWatch():
                         self._log("after movie search")
 
                         if movie:
-                            if DEBUG > 0: self._log("invite received for movie: %s" % movie["title"])
+                            if self.DEBUG > 0: self._log("invite received for movie: %s" % movie["title"])
                             
                             dialog = xbmcgui.Dialog()
                             res = dialog.yesno(localize(32004), localize(32005, (user, movie["title"])))
@@ -355,8 +356,8 @@ class TeamWatch():
                                 else:
                                     self._log('not playing...')
                         else:
-                            if DEBUG > 0: self._log("invite received for non existent movie %s" % invite[1])
-                            self.show_message('TeamWatch', "invite received for non existent movie %s" % invite[1], ICON_SETTING)
+                            if self.DEBUG > 0: self._log("invite received for non existent movie %s" % invite[1])
+                            self.show_message('TeamWatch', "invite received for non existent movie %s" % invite[1], self.ICON_SETTING)
                     elif invite[0] == "e":
                         episode = xbmc_helpers.search_episode(invite[1], invite[2], invite[3])
                         self._log(str(episode))
@@ -365,7 +366,7 @@ class TeamWatch():
                             dialog = xbmcgui.Dialog()
                             s_ep = "S[B]%02d[/B]E[B]%02d[/B]" % (int(episode["season"]), int(episode["episode"]))
                             res = dialog.yesno(localize(32004), localize(32006, (user, episode["showtitle"], s_ep)))
-                            if DEBUG > 0: self._log("invite received for episode id: %d" % episode["episodeid"])
+                            if self.DEBUG > 0: self._log("invite received for episode id: %d" % episode["episodeid"])
                             if res:
                                 player = xbmc.Player()
                                 player.play(xbmc_helpers.get_episode_details(episode["episodeid"])["file"])
@@ -375,14 +376,14 @@ class TeamWatch():
                                 else:
                                     self._log('not playing...')
                         else:
-                            if DEBUG > 0: self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]))
-                            self.show_message('TeamWatch', "invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]), ICON_SETTING)
+                            if self.DEBUG > 0: self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]))
+                            self.show_message('TeamWatch', "invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]), self.ICON_SETTING)
                     else:
-                        if DEBUG > 0: self._log("invite received invalid param %s" % invite[0])
-                        self.show_message('TeamWatch', "invite received invalid param %s" % invite[0], ICON_SETTING)
+                        if self.DEBUG > 0: self._log("invite received invalid param %s" % invite[0])
+                        self.show_message('TeamWatch', "invite received invalid param %s" % invite[0], self.ICON_SETTING)
                 elif param.startswith("#tw:sendlog"):
-                    if DEBUG == 0:
-                        self.show_message('TeamWatch', "Please activate debug log in Kodi settings", ICON_SETTING)
+                    if self.DEBUG == 0:
+                        self.show_message('TeamWatch', "Please activate debug log in Kodi settings", self.ICON_SETTING)
                         continue
                     
                     # API Settings
@@ -431,7 +432,7 @@ class TeamWatch():
                     # Create a Paste
                     t = time.strftime('%H:%M:%S', time.localtime())
                     time_now=int(t[:2])*3600 + int(t[3:5])*60+int(t[6:])
-                    data = "TeamWatch version: %s from: %s\r\n" % (VERSION, self.nickname)
+                    data = "TeamWatch version: %s from: %s\r\n" % (self.VERSION, self.nickname)
                     filepath = log_path.decode("utf-8")
                     with open(filepath) as fp:  
                         line = fp.readline()
@@ -444,50 +445,58 @@ class TeamWatch():
                     result = api.paste(data, guest=False, name='kodi teamwatch log', format='text', private='2', expire='10M')
                     if 'Bad API request' in result: 
                         self._log('[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]))
-                        self.show_message('TeamWatch', '[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]), ICON_SETTING)
+                        self.show_message('TeamWatch', '[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]), self.ICON_SETTING)
                     else:
                         self._log(result)
-                        self.show_message('TeamWatch', result, ICON_SETTING)
+                        self.show_message('TeamWatch', result, self.ICON_SETTING)
                         
                     url = 'https://www.teamwatch.it/add.php?%s' % urllib.urlencode({'user':self.nickname, 'text':result.replace("https://pastebin.com/", ""), 'feed':'#tw:' + ''.join(random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(20))})
                     tmp = urllib.urlopen(url)
                     
     def show_message (self, user, text, icon = ICON_CHAT, id=-1):
-        if DEBUG > 0: 
+        if self.DEBUG > 0: 
             self._log("show_message: {} {} [{}]".format(user, text, icon))
             self._log("bartop: " + str(self.bartop))
             self._log("text_color: " + self.skin['text_color'])
 
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
         
-        try:
-            self.window.removeControl(self.background)
-        except:
-            pass
-            
-        try:
-            self.window.removeControl(self.feedtext)
-        except:
-            pass
-            
-        try:
-            self.window.removeControl(self.icon)
-        except:
-            pass
-        
-        if DEBUG > 0: self._log("adding background")        
-        self.background.setVisible(False)        
-        self.background.setPosition(0, self.bartop)
+        if self.DEBUG > 0: self._log("adding background")               
+        if icon == self.ICON_TWITTER:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_twitter']))
+        elif icon == self.ICON_SETTING:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_settings']))
+        elif icon == self.ICON_CHAT:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_chat']))
+        elif icon == self.ICON_TELEGRAM:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_telegram']))
+        elif icon == self.ICON_RSSFEED:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_rssfeed']))
+        else:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_chat']))
+
         self.window.addControl(self.background)
         
-        if DEBUG > 0: self._log("adding feedtext")
-        self.feedtext.setVisible(False)                       
-        self.feedtext.setPosition(int(self.skin['margin_left']), self.bartop + 5)
-        self.feedtext.reset()
+        icon_top = self.bartop + 4
+        if self.RSS_OFF:
+            self.icon_rss_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(self.__resources__, self.skin['icon_rss_off']))
+            self.window.addControl(self.icon_rss_off)
+            icon_top = self.bartop + 41
+            
+        if self.TWEETS_OFF:
+            self.icon_tweet_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(self.__resources__, self.skin['icon_tweet_off']))
+            self.window.addControl(self.icon_tweet_off)
+        
+        if self.DEBUG > 0: self._log("adding feedtext")        
+        if self.RSS_OFF or self.TWEETS_OFF:
+            self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']) + 50, self.bartop + 5, self.screen_width-140, 75, font=self.skin['font'], textColor=self.skin['text_color'])
+        else:
+            self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']), self.bartop + 5, self.screen_width-90, 75, font=self.skin['font'], textColor=self.skin['text_color'])
+            
         self.window.addControl(self.feedtext)
         
-        if DEBUG > 0: self._log("adding icon")
-        self.icon.setVisible(False)        
+        if self.DEBUG > 0: self._log("adding icon")
+        self.icon = xbmcgui.ControlImage(0, 0, 150, 150, os.path.join(self.__resources__, self.skin['icon']))
         if self.bartop < 50:
             self.icon.setPosition(self.screen_width - 180, self.bartop + 30)
         else:
@@ -495,10 +504,10 @@ class TeamWatch():
         self.icon.setImage(os.path.join(self.__resources__, self.skin['icon']), useCache=True)
         self.window.addControl(self.icon)
         
-        if DEBUG > 0: self._log("looking for url")
+        if self.DEBUG > 0: self._log("looking for url")
         try:
             url = re.findall('\[(https?://.+)\]', text)[0]
-            if DEBUG > 0: self._log("url: " + url)
+            if self.DEBUG > 0: self._log("url: " + url)
         except:
             url = ""
             
@@ -527,41 +536,32 @@ class TeamWatch():
                     
         self.icon.setImage(icon_file, useCache=True)  
         
-        if DEBUG > 0: self._log("icon file: %s" % icon_file)
-        if DEBUG > 0: self._log("icon: %s" % icon)
+        if self.DEBUG > 0: self._log("icon file: %s" % icon_file)
+        if self.DEBUG > 0: self._log("icon: %s" % icon)
         
-        if icon == ICON_TWITTER:
-            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_twitter']))
-        elif icon == ICON_SETTING:
-            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_settings']))
-        elif icon == ICON_CHAT:
-            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_chat']))
-        elif icon == ICON_TELEGRAM:
-            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_telegram']))
-        elif icon == ICON_RSSFEED:
-            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_rssfeed']))
-        else:
-            self.background.setImage(os.path.join(self.__resources__, self.skin['bar_chat']))
-
         if user == 'rss':
             self.feedtext.addLabel(text)
         else:
             self.feedtext.addLabel('[COLOR %s][B]%s[/B][/COLOR]: [B]%s[/B]' % (self.skin['nickname_color'], user, text))
-        
-        time.sleep(2)
-        self.background.setVisible(True)
-        self.feedtext.setVisible(True)
-        self.icon.setVisible(True)
         
         self.feed_is_shown = True
         self.feed_show_time = time.time()
     
     def hide_message(self):
         if self.feed_is_shown:
-            self.background.setVisible(False)
-            self.feedtext.setVisible(False)
-            self.icon.setVisible(False)
             self.window.removeControls([self.background, self.feedtext, self.icon])
+            del self.feedtext
+            del self.background
+            del self.icon               
+            
+            if self.RSS_OFF:
+                self.window.removeControl(self.icon_rss_off)
+                del self.icon_rss_off
+            
+            if self.TWEETS_OFF: 
+                self.window.removeControl(self.icon_tweet_off)
+                del self.icon_tweet_off
+            
             del self.window
             self.feed_is_shown = False
     

@@ -9,3 +9,5 @@ bar_telegram=maxxam_telegram.png
 bar_twitter=maxxam_tweet.png
 bar_rssfeed=maxxam_rss.png
 icon=maxxam_icon.png
+icon_rss_off=maxxam_rss_off.png
+icon_tweet_off=maxxam_tweet_off.png
