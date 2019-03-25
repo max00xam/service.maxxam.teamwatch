@@ -508,7 +508,6 @@ class TeamWatch():
         
             h = hashlib.new('md5')
             h.update(url)
-            
             icon_file = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache', h.hexdigest())
             if not os.path.exists(icon_file):
                 try:                
@@ -563,6 +562,7 @@ class TeamWatch():
             self.feedtext.setVisible(False)
             self.icon.setVisible(False)
             self.window.removeControls([self.background, self.feedtext, self.icon])
+            del self.window
             self.feed_is_shown = False
     
 if __name__ == '__main__':
