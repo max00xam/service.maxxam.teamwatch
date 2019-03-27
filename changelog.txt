@@ -13,5 +13,11 @@ v0.0.8
 
 v0.0.9
 - Profile icon
-- RSS feeds
+- RSS and Twitter feeds
 - Minor bug fix
+
+v0.0.10
+- Email notifications
+- Facebook notifications (email)
+- show_message code rewrite
+- added commands #tw:rss:[on|off] and #tw:tweet:[on|off]

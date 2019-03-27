@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, re
+import os, re, sys
 import time
 import urllib
 import urllib2
@@ -10,12 +10,19 @@ import xbmcgui
 import xbmcaddon
 import pastebin
 import random
-
-from tools.xbmc_helpers import localize
-from tools import xbmc_helpers
-
 from datetime import datetime
-# import web_pdb;
+
+__version__ = "0.0.10"
+__addon__ = xbmcaddon.Addon()
+__resources__ = os.path.join(__addon__.getAddonInfo('path'),'resources')
+__lib__ = os.path.join(__addon__.getAddonInfo('path'),'lib')
+
+sys.path.append(__lib__)
+
+import betterimap
+import xbmc_helpers
+from bs4 import BeautifulSoup
+from xbmc_helpers import localize
 
 error_lines = False
 
@@ -36,23 +43,33 @@ def checkline(line, time_now):
         error_lines = False
     
     return "service.maxxam.teamwatch" in line or error_lines
-        
-class TeamWatch():
-    __addon__ = xbmcaddon.Addon()
-    __resources__ = os.path.join(__addon__.getAddonInfo('path'),'resources')
 
-    VERSION = "0.0.9"
+def fix_unicode (barray, repl = ''):
+    out = ''
+    for c in barray:
+        try:
+            out += str(c)
+        except:
+            out += repl
+            
+    return out
+       
+class TeamWatch():
     WINDOW_FULLSCREEN_VIDEO = 12005
-    DISPLAY_TIME_SECS = 5
+    DISPLAY_TIME_SECS = 8
     REFRESH_TIME_SECS = 2
+    CHECK_EMAIL_SECS = 60
     SOCKET_TIMEOUT = 0.5
     DEBUG = 1 # lasciare a uno!
 
-    ICON_CHAT = 1
-    ICON_TWITTER = 2
-    ICON_SETTING = 3
-    ICON_TELEGRAM = 4
-    ICON_RSSFEED = 5
+    ICON_CHAT = 0
+    ICON_TWITTER = 1
+    ICON_SETTING = 2
+    ICON_TELEGRAM = 3
+    ICON_RSSFEED = 4
+    ICON_FACEBOOK = 5
+    ICON_EMAIL = 6
+    
     SKIN_CONFIG = 'default.skin'
 
     TWEETS_OFF = False
@@ -75,6 +92,12 @@ class TeamWatch():
     twitter_language = __addon__.getSetting('language')
     twitter_language = xbmc.convertLanguage(twitter_language, xbmc.ISO_639_1)
     twitter_result_type = __addon__.getSetting('result_type')
+    
+    email_enabled = __addon__.getSetting('email_enabled')
+    email = __addon__.getSetting('email')
+    email_password = __addon__.getSetting('email_password')
+    email_imap = __addon__.getSetting('email_imap')
+    facebook = __addon__.getSetting('facebook')
     
     show_allways = not (__addon__.getSetting('showallways') == "true")
     
@@ -106,6 +129,8 @@ class TeamWatch():
     skin['bar_telegram'] = 'default_telegram.png'
     skin['bar_twitter'] = 'default_tweet.png'
     skin['bar_rssfeed'] = 'default_rss.png'
+    skin['bar_facebook'] = 'default_chat.png'
+    skin['bar_email'] = 'default_chat.png'    
     skin['icon'] = 'icon.png'
     
     show_enable = True
@@ -114,14 +139,15 @@ class TeamWatch():
     feed_is_shown = False;
     show_disable_after = False
     start_time = time.time()
+    email_time = time.time()
     player = None
     
     log_prog = 1
     
     def __init__(self):
-        self.id_teamwatch = self.__addon__.getSetting('twid')
+        self.id_teamwatch = __addon__.getSetting('twid')
         
-        for feed in self.__addon__.getSetting('feed').split(":"):
+        for feed in __addon__.getSetting('feed').split(":"):
             if feed not in self.feed_name: self.feed_name.append(feed)
     
         self.id_chat = -1
@@ -139,8 +165,8 @@ class TeamWatch():
         self._log(self.show_allways)
         
         try:
-            self.SKIN_CONFIG = self.__addon__.getSetting('skin')
-            f = open(os.path.join(self.__resources__, self.SKIN_CONFIG), 'r')
+            self.SKIN_CONFIG = __addon__.getSetting('skin')
+            f = open(os.path.join(__resources__, self.SKIN_CONFIG), 'r')
             for row in f:
                 if row[0] != '#':
                     d = row.replace(' ','').replace('\r','').replace('\n','').split('=')
@@ -157,8 +183,44 @@ class TeamWatch():
     def _log(self, text):
         xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
         self.log_prog = self.log_prog + 1
+
+    def check_email(self):
+        imap_host = self.email_imap
+        imap_user = self.email
+        imap_pass = self.email_password
+
+        imap = betterimap.IMAPAdapter(imap_user, imap_pass, host=imap_host, ssl=True)            
+        imap.select('INBOX') # [Gmail]/Tutti i messaggi
         
-    def loop(self):        
+        text = ''
+        icon = None
+        for msg in imap.easy_search(other_queries=['unseen'], limit=1):
+            if msg.from_addr == 'notification@facebookmail.com' and self.facebook:
+                body = fix_unicode(msg.html())
+                
+                regex = r"<span style=\"color:#FFFFFF;font-size:1px;\">([^<]+)<\/span>"
+                matches = re.finditer(regex, body, re.MULTILINE)
+                if matches:
+                    text = fix_unicode(msg.subject) + ' ' + [i.group(1) for i in matches][0]
+                    text = text.replace('\n', '').replace('\r', '')
+                    text = re.sub(r"  Mipiace.*$", "", text)
+                    text = re.sub(r"  -  Rispondi.*$", "", text)
+                    text = re.sub(r"^\s*", "", text)
+                    text = re.sub(r"\s*$", "", text)
+                    text = BeautifulSoup(text, features="html.parser")
+                    text = '[B]{}[/B]'.format('', text)
+                else:
+                    text = fix_unicode(msg.subject)
+                    text = '[B]{}[/B]'.format('', fix_unicode(msg.subject))
+                    
+                self.ICON_FACEBOOK
+            else:
+                icon = self.ICON_EMAIL
+                text = '[COLOR {}][B]{}[/B][/COLOR]: [B]{}[/B]'.format(self.skin['nickname_color'], fix_unicode(msg.from_addr), fix_unicode(msg.subject))
+                
+        if text: self.show_message('', text, icon)
+        
+    def loop(self):
         twpath = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', 'tw.ini')
         
         while not self.monitor.abortRequested():
@@ -168,6 +230,10 @@ class TeamWatch():
                 self._log("stop")
                 break
             
+            if self.email_enabled and time.time() - self.email_time > self.CHECK_EMAIL_SECS and not self.feed_is_shown:
+                self.email_time = time.time()
+                self.check_email()
+                
             if self.feed_is_shown and time.time() - self.feed_show_time > self.DISPLAY_TIME_SECS:
                 self.hide_message()
                 
@@ -265,12 +331,12 @@ class TeamWatch():
                 if param.startswith("#tw:addfeed:"):
                     if not param[12:] in self.feed_name: 
                         self.feed_name.append(param[12:].lower())
-                        self.__addon__.setSetting('feed', ":".join(self.feed_name))
+                        __addon__.setSetting('feed', ":".join(self.feed_name))
                         self.show_message('TeamWatch', localize(32000, param[12:]), self.ICON_SETTING)
                 elif param.startswith("#tw:removefeed:"):
                     if param[15:].lower() in self.feed_name:                         
                         self.feed_name.remove(param[15:].lower())
-                        self.__addon__.setSetting('feed', ":".join(self.feed_name))
+                        __addon__.setSetting('feed', ":".join(self.feed_name))
                         self.show_message('TeamWatch', localize(32001, param[15:]), self.ICON_SETTING)
                 elif param == "#tw:off":
                     self.show_message('TeamWatch', localize(32002), self.ICON_SETTING)
@@ -432,7 +498,7 @@ class TeamWatch():
                     # Create a Paste
                     t = time.strftime('%H:%M:%S', time.localtime())
                     time_now=int(t[:2])*3600 + int(t[3:5])*60+int(t[6:])
-                    data = "TeamWatch version: %s from: %s\r\n" % (self.VERSION, self.nickname)
+                    data = "TeamWatch version: %s from: %s\r\n" % (__version__, self.nickname)
                     filepath = log_path.decode("utf-8")
                     with open(filepath) as fp:  
                         line = fp.readline()
@@ -461,30 +527,40 @@ class TeamWatch():
 
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
         
-        if self.DEBUG > 0: self._log("adding background")               
-        if icon == self.ICON_TWITTER:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_twitter']))
-        elif icon == self.ICON_SETTING:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_settings']))
-        elif icon == self.ICON_CHAT:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_chat']))
-        elif icon == self.ICON_TELEGRAM:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_telegram']))
-        elif icon == self.ICON_RSSFEED:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_rssfeed']))
+        if self.DEBUG > 0: self._log("adding background")
+        if icon in range(7):
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin[
+                ['bar_chat', 'bar_twitter', 'bar_settings', 'bar_telegram', 'bar_rssfeed', 'bar_facebook', 'bar_email'][icon]
+            ]))
         else:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(self.__resources__, self.skin['bar_chat']))
-
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_chat']))
+        
+        """
+        if icon == self.ICON_TWITTER:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_twitter']))
+        elif icon == self.ICON_SETTING:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_settings']))
+        elif icon == self.ICON_CHAT:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_chat']))
+        elif icon == self.ICON_TELEGRAM:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_telegram']))
+        elif icon == self.ICON_RSSFEED:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_rssfeed']))
+        elif icon == self.ICON_FACEBOOK:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_facebook']))
+        else:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_chat']))
+        """
         self.window.addControl(self.background)
         
         icon_top = self.bartop + 4
         if self.RSS_OFF:
-            self.icon_rss_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(self.__resources__, self.skin['icon_rss_off']))
+            self.icon_rss_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(__resources__, self.skin['icon_rss_off']))
             self.window.addControl(self.icon_rss_off)
             icon_top = self.bartop + 41
             
         if self.TWEETS_OFF:
-            self.icon_tweet_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(self.__resources__, self.skin['icon_tweet_off']))
+            self.icon_tweet_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(__resources__, self.skin['icon_tweet_off']))
             self.window.addControl(self.icon_tweet_off)
         
         if self.DEBUG > 0: self._log("adding feedtext")        
@@ -492,16 +568,16 @@ class TeamWatch():
             self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']) + 50, self.bartop + 5, self.screen_width-140, 75, font=self.skin['font'], textColor=self.skin['text_color'])
         else:
             self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']), self.bartop + 5, self.screen_width-90, 75, font=self.skin['font'], textColor=self.skin['text_color'])
-            
+        # self.feedtext.autoScroll(1, 2, 1)
         self.window.addControl(self.feedtext)
         
         if self.DEBUG > 0: self._log("adding icon")
-        self.icon = xbmcgui.ControlImage(0, 0, 150, 150, os.path.join(self.__resources__, self.skin['icon']))
+        self.icon = xbmcgui.ControlImage(0, 0, 150, 150, os.path.join(__resources__, self.skin['icon']))
         if self.bartop < 50:
             self.icon.setPosition(self.screen_width - 180, self.bartop + 30)
         else:
             self.icon.setPosition(self.screen_width - 180, self.bartop - 130)        
-        self.icon.setImage(os.path.join(self.__resources__, self.skin['icon']), useCache=True)
+        self.icon.setImage(os.path.join(__resources__, self.skin['icon']), useCache=True)
         self.window.addControl(self.icon)
         
         if self.DEBUG > 0: self._log("looking for url")
@@ -511,7 +587,7 @@ class TeamWatch():
         except:
             url = ""
             
-        icon_file = os.path.join(self.__resources__, self.skin['icon'])
+        icon_file = os.path.join(__resources__, self.skin['icon'])
         if url:
             text = text.replace('[' + url + ']', '').replace('  ',' ')
         

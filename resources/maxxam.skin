@@ -1,13 +1,15 @@
 # -- maxxam.skin --
 text_color=whyte
 nickname_color=0xfff4e842
-margin_left=80
+margin_left=90
 font=font45
 bar_chat=maxxam_chat.png
 bar_settings=maxxam_settings.png
 bar_telegram=maxxam_telegram.png
 bar_twitter=maxxam_tweet.png
 bar_rssfeed=maxxam_rss.png
+bar_facebook=maxxam_facebook.png
+bar_email=maxxam_email.png
 icon=maxxam_icon.png
 icon_rss_off=maxxam_rss_off.png
 icon_tweet_off=maxxam_tweet_off.png

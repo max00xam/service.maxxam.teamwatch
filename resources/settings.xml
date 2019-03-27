@@ -2,20 +2,29 @@
 <settings>
     <category label="32100">
         <setting id="nickname" type="text" label="32150" default="Nick"/>
-        <setting id="feed" type="text" label="32110" default="#teamwatch"/>
         <setting label="32111" type="lsep"/>
+        <setting id="feed" type="text" label="32110" default="#teamwatch"/>
         <setting id="skin" type="text" label="32180" default="default.skin"/>
         <setting id="twid" type="text" label="32120" default=""/>
         <setting id="pcid" type="text" label="32130" default=""/>
         <setting id="showallways" type="bool" label="32140" default="true"/>
+        <setting label="32112" type="lsep"/>
         <setting id="screen_height" type="text" label="32160" default=""/>
         <setting id="screen_width" type="text" label="32170" default=""/>         
     </category>
-    
+
     <category label="32200">
         <setting id="twitter_enabled" type="bool" label="32210" default="true"/>
         <setting id="language" type="select" label="32220" enable="eq(-1,true)" default="English" values="Albanian|Arabic|Belarusian|Bosnian (Latin)|Bulgarian|Catalan|Chinese|Croatian|Czech|Danish|Dutch|English|Estonian|Finnish|French|German|Greek|Hebrew|Hindi|Hungarian|Icelandic|Indonesian|Italian|Japanese|Korean|Latvian|Lithuanian|Macedonian|Norwegian|Polish|Portuguese|Romanian|Russian|SerbianLatin|Slovak|Slovenian|Spanish|Swedish|Thai|Turkish|Ukrainian|Vietnamese|Farsi|Malay" />
-        <setting id="result_type" type="select" label="32240" enable="eq(-2,true)" default="recent" values="recent|mixed|popular"/>
         <setting label="32241" type="lsep"/>
+        <setting id="result_type" type="select" label="32240" enable="eq(-3,true)" default="recent" values="recent|mixed|popular"/>
+    </category>
+
+    <category label="32300">
+        <setting id="email_enabled" type="bool" label="32310" default="false"/>
+        <setting id="email" type="text" label="32320" enable="eq(-1,true)" default="" />
+        <setting id="email_password" type="text" label="32330" enable="eq(-2,true)" default="" />
+        <setting id="email_imap" type="text" label="32340" enable="eq(-3,true)" default="" />
+        <setting id="facebook" type="bool" label="32350" enable="eq(-4,true)" default="true"/>
     </category>
 </settings>

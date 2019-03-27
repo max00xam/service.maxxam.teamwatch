@@ -11,6 +11,7 @@
     <string id="32160">Messagebar top (only for Windows)</string>
     <string id="32170">Messagebar width (only for Windows)</string>
     <string id="32180">Skin</string>
+    <string id="32112">only for Windows</string>
     
     <!-- Twitter -->
     <string id="32200">Twitter</string>
@@ -19,6 +20,14 @@
     <string id="32230">Filter out retweets</string>
     <string id="32240">Result type</string>
     <string id="32241">mixed: Include both popular and real time results in the response.[br]recent: return only the most recent results in the response[br]popular: return only the most popular results in the response.</string>
+    
+    <!-- Email -->
+    <string id="32300">Email</string>
+    <string id="32310">Email enabled</string>
+    <string id="32320">Email address</string>
+    <string id="32330">Password</string>
+    <string id="32340">IMAP server</string>
+    <string id="32350">Enable Facebook notifications</string>
     
     <!-- Addon -->
     <string id="32000">TeamWatch added feed [%s]</string>

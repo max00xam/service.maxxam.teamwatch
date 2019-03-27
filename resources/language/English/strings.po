@@ -25,6 +25,10 @@ msgctxt "#32111"
 msgid "separate feeds with colons"
 msgstr ""
 
+msgctxt "#32112"
+msgid "only for Windows Kodi"
+msgstr ""
+
 msgctxt "#32120"
 msgid "TeamWatch ID"
 msgstr ""
@@ -42,11 +46,11 @@ msgid "Nickname"
 msgstr ""
 
 msgctxt "#32160"
-msgid "Screen height"
+msgid "Messagebar top (only for Windows)"
 msgstr ""
 
 msgctxt "#32170"
-msgid "Screen width"
+msgid "Messagebar width (only for Windows)"
 msgstr ""
 
 msgctxt "#32180"
@@ -77,6 +81,30 @@ msgctxt "#32241"
 msgid "mixed: Include both popular and real time results in the response.[br]recent: return only the most recent results in the response[br]popular: return only the most popular results in the response."
 msgstr ""
 
+msgctxt "#32300"
+msgid "Email"
+msgstr ""
+
+msgctxt "#32310"
+msgid "Email enabled"
+msgstr ""
+
+msgctxt "#32320"
+msgid "Email address"
+msgstr ""
+
+msgctxt "#32330"
+msgid "Password"
+msgstr ""
+
+msgctxt "#32340"
+msgid "IMAP server"
+msgstr ""
+
+msgctxt "#32350"
+msgid "Enable Facebook notifications"
+msgstr ""
+    
 msgctxt "#32000"
 msgid "TeamWatch added feed [%s]"
 msgstr ""

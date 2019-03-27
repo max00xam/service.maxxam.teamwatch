@@ -41,6 +41,10 @@ Commands
 
 ``#tw[pc]:playerctl:stop`` - stop the current playing video
 
+``#tw[pc]:rss:[on|off]`` - enable/disable rss feeds
+
+``#tw[pc]:tweet:[on|off]`` - enable/disable twitter feeds
+
 ``#tw[pc]:playerctl:seek:<hh>:<mm>:<ss>:<cent>`` - seek the current video to the time hh:mm:ss:cent
   
 ``#tw[pc]:playstream:<url>`` - start playing video stream from url
@@ -48,5 +52,7 @@ Commands
 ``#tw[pc]:invite:m:<title>`` - invite other users to watch a movie (all the users must have the movie in the kodi library)
   
 ``#tw[pc]:invite:e:<title>:<season>:<episode>`` - invite other users to watch a tvshow (all the users must have the tvshow episode in the kodi library)
+
+
   
 If the command is used with "``#twpc:``" instead of "``#tw:``" it will be sent to all the users sharing the some "Player control ID" with you.
