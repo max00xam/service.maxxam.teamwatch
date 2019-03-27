@@ -10,7 +10,7 @@ import xbmcgui
 import xbmcaddon
 import pastebin
 import random
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 __version__ = "0.0.10"
 __addon__ = xbmcaddon.Addon()
@@ -194,8 +194,9 @@ class TeamWatch():
         
         text = ''
         icon = None
-        for msg in imap.easy_search(other_queries=['unseen'], limit=1):
-            if msg.from_addr == 'notification@facebookmail.com' and self.facebook:
+        yesterday = date.today() - timedelta(1)
+        for msg in imap.easy_search(since=yesterday, other_queries=['unseen'], limit=1):
+            if msg.from_addr[1] == 'notification@facebookmail.com' and self.facebook:
                 body = fix_unicode(msg.html())
                 
                 regex = r"<span style=\"color:#FFFFFF;font-size:1px;\">([^<]+)<\/span>"
@@ -211,12 +212,12 @@ class TeamWatch():
                     text = '[B]{}[/B]'.format('', text)
                 else:
                     text = fix_unicode(msg.subject)
-                    text = '[B]{}[/B]'.format('', fix_unicode(msg.subject))
+                    text = '[B]{}[/B]'.format(fix_unicode(msg.subject))
                     
                 self.ICON_FACEBOOK
             else:
                 icon = self.ICON_EMAIL
-                text = '[COLOR {}][B]{}[/B][/COLOR]: [B]{}[/B]'.format(self.skin['nickname_color'], fix_unicode(msg.from_addr), fix_unicode(msg.subject))
+                text = '[COLOR {}][B]{}[/B][/COLOR]: [B]{}[/B]'.format(self.skin['nickname_color'], fix_unicode(msg.from_addr[0] if msg.from_addr[0] else msg.from_addr[1]), fix_unicode(msg.subject))
                 
         if text: self.show_message('', text, icon)
         
@@ -534,23 +535,7 @@ class TeamWatch():
             ]))
         else:
             self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_chat']))
-        
-        """
-        if icon == self.ICON_TWITTER:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_twitter']))
-        elif icon == self.ICON_SETTING:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_settings']))
-        elif icon == self.ICON_CHAT:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_chat']))
-        elif icon == self.ICON_TELEGRAM:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_telegram']))
-        elif icon == self.ICON_RSSFEED:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_rssfeed']))
-        elif icon == self.ICON_FACEBOOK:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_facebook']))
-        else:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_chat']))
-        """
+
         self.window.addControl(self.background)
         
         icon_top = self.bartop + 4
@@ -615,7 +600,7 @@ class TeamWatch():
         if self.DEBUG > 0: self._log("icon file: %s" % icon_file)
         if self.DEBUG > 0: self._log("icon: %s" % icon)
         
-        if user == 'rss':
+        if user == 'rss' or user == '':
             self.feedtext.addLabel(text)
         else:
             self.feedtext.addLabel('[COLOR %s][B]%s[/B][/COLOR]: [B]%s[/B]' % (self.skin['nickname_color'], user, text))
