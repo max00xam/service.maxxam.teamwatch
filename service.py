@@ -189,7 +189,11 @@ class TeamWatch():
         imap_user = self.email
         imap_pass = self.email_password
 
-        imap = betterimap.IMAPAdapter(imap_user, imap_pass, host=imap_host, ssl=True)            
+        try:
+            imap = betterimap.IMAPAdapter(imap_user, imap_pass, host=imap_host, ssl=True)
+        except:
+            return
+            
         imap.select('INBOX') # [Gmail]/Tutti i messaggi
         
         text = ''
