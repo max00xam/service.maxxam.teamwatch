@@ -291,13 +291,15 @@ class TeamWatch():
             if tmp == None: 
                 jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
             else:
-                json_response = tmp.replace('\n', ' ').replace('\r', '')
+                json_response = tmp.replace('\n', ' ').replace('\r', '').replace("\\\'","'")
                 if self.DEBUG > 0: self._log("json_response: " + json_response)
                 try:
                     jresult = json.loads(json_response)
                 except:
                     jresult = {"status":"fail", "reason": "error decoding json result %s " % json_response, "time":""}
                     
+                if self.DEBUG > 0: self._log("jresult: " + str(jresult))
+                
                 if 'id' in jresult:
                     if 'is_twitter' in jresult and jresult['is_twitter'] == 1:
                         self.id_twitter = jresult['id']
@@ -318,7 +320,7 @@ class TeamWatch():
                 file.close()
 
                 user = jresult['user'].encode('utf-8')[:15]
-                text = jresult['text'].encode('utf-8')
+                text = jresult['text'].encode('utf-8') 
         
                 self._log('messaggio ricevuto da %s: %s' % (user, text))
                 
