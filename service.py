@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, re, sys
+import base64
 import time
 import urllib
 import urllib2
@@ -60,7 +61,7 @@ class TeamWatch():
     REFRESH_TIME_SECS = 2
     CHECK_EMAIL_SECS = 60
     SOCKET_TIMEOUT = 0.5
-    DEBUG = 1 # lasciare a uno!
+    DEBUG = 2 # 0 = HIGH, 1 = MEDIUM, 2 = LOW lasciare a uno!
 
     ICON_CHAT = 0
     ICON_TWITTER = 1
@@ -69,6 +70,7 @@ class TeamWatch():
     ICON_RSSFEED = 4
     ICON_FACEBOOK = 5
     ICON_EMAIL = 6
+    ICON_ERROR = 7
     
     SKIN_CONFIG = 'default.skin'
 
@@ -117,6 +119,7 @@ class TeamWatch():
     
     id_chat = -1
     id_twitter = -1
+    id_rss = -1
     id_invite = ""
     
     skin = {}
@@ -130,7 +133,8 @@ class TeamWatch():
     skin['bar_twitter'] = 'default_tweet.png'
     skin['bar_rssfeed'] = 'default_rss.png'
     skin['bar_facebook'] = 'default_chat.png'
-    skin['bar_email'] = 'default_chat.png'    
+    skin['bar_email'] = 'default_chat.png'
+    skin['bar_error'] = skin['bar_settings'] # Fare la nuova barra
     skin['icon'] = 'icon.png'
     
     show_enable = True
@@ -161,8 +165,8 @@ class TeamWatch():
         self.bartop = self.screen_height - 75
         
         self.player = xbmc.Player()
-        self._log("start [" + ":".join(self.feed_name) + "]")
-        self._log(self.show_allways)
+        self._log("Teamwatch start [" + ":".join(self.feed_name) + "]")
+        self._log(self.show_allways, 2)
         
         try:
             self.SKIN_CONFIG = __addon__.getSetting('skin')
@@ -172,7 +176,7 @@ class TeamWatch():
                     d = row.replace(' ','').replace('\r','').replace('\n','').split('=')
                     self.skin[d[0]] = d[1]
             f.close()
-            self._log(str(self.skin))
+            self._log(str(self.skin), 2)
         except:
             pass
             
@@ -180,9 +184,10 @@ class TeamWatch():
         directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
         if not os.path.exists(directory): os.makedirs(directory)
 
-    def _log(self, text):
-        xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
-        self.log_prog = self.log_prog + 1
+    def _log(self, text, debug_level=1):
+        if self.DEBUG >= debug_level:
+            xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
+            self.log_prog = self.log_prog + 1
 
     def check_email(self):
         imap_host = self.email_imap
@@ -225,14 +230,35 @@ class TeamWatch():
                 
         if text: self.show_message('', text, icon)
         
-    def loop(self):
-        twpath = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', 'tw.ini')
+    def get_ids(self):
+        directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
+        twpath = os.path.join(directory, 'tw.ini')
+
+        try:
+            file = open(twpath, "r")
+            tmp = file.read().split(":")
+            file.close()
+            while len(tmp) != 3: tmp.append(-1)
+        except:
+            tmp = [-1, -1, -1]
         
+        return tmp
+        
+    def write_ids(self):
+        directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
+        if not os.path.exists(directory): os.makedirs(directory)
+        twpath = os.path.join(directory, 'tw.ini')
+        
+        file = open(twpath, "w+")
+        file.write('{}:{}:{}'.format(self.id_chat, self.id_twitter, self.id_rss))
+        file.close()
+        
+    def loop(self):
         while not self.monitor.abortRequested():
             # after DISPLAY_TIME_SECS elapsed hide the message bar
             if self.monitor.waitForAbort(self.REFRESH_TIME_SECS):
                 self.hide_message()
-                self._log("stop")
+                self._log("stop", 2)
                 break
             
             if self.email_enabled and time.time() - self.email_time > self.CHECK_EMAIL_SECS and not self.feed_is_shown:
@@ -243,7 +269,6 @@ class TeamWatch():
                 self.hide_message()
                 
                 if self.show_disable_after:
-                    self.hide_message()
                     self.show_enable = False
                     self.show_disable_after = False
                     
@@ -252,89 +277,81 @@ class TeamWatch():
             
             self.start_time = time.time()
             
-            if self.id_chat != -1:
-                try:
-                    file = open(twpath, "r")
-                    tmp = file.read().split(":")
-                    self.id_chat = int(tmp[0])
-                    if len(tmp) == 2: self.id_twitter = int(tmp[1])
-                    file.close()
-                except:
-                    self.id_chat = -1
-                    self.id_twitter = -1
+            if self.id_chat != -1: self.id_chat, self.id_twitter, self.id_rss = self.get_ids()
                     
-            params = {'idt':self.id_twitter, 'idc':self.id_chat, 'twid':self.id_teamwatch, 'pcid':self.id_playerctl, 'nickname':self.nickname}
+            params = {'idt':self.id_twitter, 'idc':self.id_chat, 'idr':self.id_rss, 'twid':self.id_teamwatch, 'pcid':self.id_playerctl, 'nickname':self.nickname}
             if self.feed_name: 
                 params['q'] = ":".join(self.feed_name)
             else:
                 params['q'] = "#teamwatch"
                 
             if self.twitter_enabled:
-                params['tqp'] = "&lang=%s&result_type=%s" % (self.twitter_language, self.twitter_result_type)
+                params['tqp'] = self.twitter_result_type
                 params['tl'] = self.twitter_language
             else:
                 params['notweet'] = 1
-                
-            url = 'https://www.teamwatch.it/get.php?%s' % urllib.urlencode(params)
+                    
+            url = 'https://www.teamwatch.it/get.php?p=%s' % base64.urlsafe_b64encode(str(params).replace("'", '"'))
             
             if self.DEBUG > 0: 
-                self._log("id_chat: " + str(self.id_chat))
-                self._log("id_twitter: " + str(self.id_twitter))
-                self._log(url)
+                self._log("id_chat: " + str(self.id_chat), 1)
+                self._log("id_twitter: " + str(self.id_twitter), 1)
+                self._log("id_rss: " + str(self.id_rss), 1)
+                self._log(url, 2)
 
             jresult = {}
             try:
                 tmp = urllib.urlopen(url).read()
             except:
                 tmp = None
-                
+
+            now = datetime.now().strftime("%Y-%m-%d %H:%M")
             if tmp == None: 
-                jresult = {"status":"fail", "reason": "error opening %s" % url, "time":""}
+                jresult = {"status": "error", "params": {"message": "error opening %s" % url, "time": now}, "id": -1}
             else:
                 json_response = tmp.replace('\n', ' ').replace('\r', '').replace("\\\'","'")
-                if self.DEBUG > 0: self._log("json_response: " + json_response)
                 try:
                     jresult = json.loads(json_response)
                 except:
-                    jresult = {"status":"fail", "reason": "error decoding json result %s " % json_response, "time":""}
+                    jresult = {"status": "error", "params": {"message": "error decoding json result %s " % json_response, "time": now}, "id": -1}
                     
-                if self.DEBUG > 0: self._log("jresult: " + str(jresult))
+                if self.DEBUG > 0: self._log("jresult: " + str(jresult), 1)
+                params = jresult['params']
                 
-                if 'id' in jresult:
-                    if 'is_twitter' in jresult and jresult['is_twitter'] == 1:
-                        self.id_twitter = jresult['id']
-                    else:
+                if 'status' in jresult:
+                    if jresult['status'] == 'ok':
+                        if params['is_twitter'] == 1:
+                            self.id_twitter = jresult['id']
+                        elif params['is_rss'] == 1:
+                            self.id_rss = jresult['id']
+                        else:
+                            self.id_chat = jresult['id']
+                    elif jresult['status'] == 'settings':
                         self.id_chat = jresult['id']
+                    else:
+                        self._log(str(params))
+                        if params['show']: self.show_message('Error', params['message'], self.ICON_ERROR)    
+                else:
+                    self.show_message('Error', 'Invalid message received', self.ICON_ERROR)
                     
-                    directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
-                    if not os.path.exists(directory): os.makedirs(directory)
-                    file = open(twpath, "w+")
-                    file.write(str(self.id_chat) + ":" + str(self.id_twitter))
-                    file.close()
-                
             if 'status' in jresult and jresult['status'] == 'ok' and  self.show_enable:
-                directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
-                if not os.path.exists(directory): os.makedirs(directory)
-                file = open(twpath, "w+")
-                file.write(str(self.id_chat) + ":" + str(self.id_twitter))
-                file.close()
+                self.write_ids()
 
-                user = jresult['user'].encode('utf-8')[:15]
-                text = jresult['text'].encode('utf-8') 
+                user = params['user'].encode('utf-8')[:15]
+                text = params['text'].encode('utf-8') 
         
-                self._log('messaggio ricevuto da %s: %s' % (user, text))
-                
                 if self.show_allways or xbmcgui.getCurrentWindowId() == self.WINDOW_FULLSCREEN_VIDEO:
                     if text[:8] == '#tw_send':
                         self.show_message(user, text[9:], self.ICON_TELEGRAM)
-                    elif jresult['is_twitter'] == 1 and not self.TWEETS_OFF:
+                    elif params['is_twitter'] == 1 and not self.TWEETS_OFF:
                         self.show_message(user, text, self.ICON_TWITTER)
-                    elif jresult['is_rss'] == 1 and not self.RSS_OFF:
+                    elif params['is_rss'] == 1 and not self.RSS_OFF:
                         self.show_message(user, text, self.ICON_RSSFEED)
-                    elif jresult['is_rss'] == 0 and jresult['is_twitter'] == 0:
+                    elif params['is_rss'] == 0 and params['is_twitter'] == 0:
                         self.show_message(user, text, self.ICON_CHAT)
+                        
             elif 'status' in jresult and jresult['status'] == 'settings':
-                param = jresult['param'].encode('utf-8')
+                param = params['text']
                 if param.startswith("#tw:addfeed:"):
                     if not param[12:] in self.feed_name: 
                         self.feed_name.append(param[12:].lower())
@@ -374,22 +391,19 @@ class TeamWatch():
                     self.bartop = self.screen_height - 75
                     self.show_message('TeamWatch', "Bar position set to bottom", self.ICON_SETTING)
                 elif param == "#tw:id":
-                    self.id_chat = jresult['idc']
-                    self.id_twitter = jresult['idt']
-
-                    directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
-                    if not os.path.exists(directory): os.makedirs(directory)
-                    file = open(twpath, "w+")
-                    file.write(str(self.id_chat) + ":" + str(self.id_twitter))
-                    file.close()
+                    self.id_chat = params['idc']
+                    self.id_twitter = params['idt']
+                    self.id_rss = params['idr']
+                    
+                    self.write_ids()
                 elif param == "#tw:playerctl:playpause":
-                    if self.DEBUG > 0: self._log('esecuzione #tw:playerctl:playpause')
+                    if self.DEBUG > 0: self._log('esecuzione #tw:playerctl:playpause', 2)
                     xbmc.executebuiltin("Action(PlayPause)")
-                    if self.DEBUG > 0: self._log('playpause terminated id_chat: ' + str(self.id_chat))
+                    if self.DEBUG > 0: self._log('playpause terminated id_chat: ' + str(self.id_chat), 2)
                 elif param == "#tw:playerctl:stop":
-                    if self.DEBUG > 0: self._log('esecuzione #tw:playerctl:stop')
+                    if self.DEBUG > 0: self._log('esecuzione #tw:playerctl:stop', 2)
                     xbmc.executebuiltin("Action(Stop)")
-                    if self.DEBUG > 0: self._log('stop terminated id_chat: ' + str(self.id_chat))
+                    if self.DEBUG > 0: self._log('stop terminated id_chat: ' + str(self.id_chat), 2)
                 elif param == "#tw:playerctl:sshot":
                     xbmc.executebuiltin("TakeScreenshot")
                 elif param.startswith("#tw:playerctl:seek:"):
@@ -399,23 +413,23 @@ class TeamWatch():
                     elif self.DEBUG > 0:
                         self._log('#tw:playerctl:seek invalid time')
                 elif param.startswith("#tw:playstream:"):
-                    self._log('*** playstream received ***')
-                    self._log(param[15:])
+                    self._log('*** playstream received ***', 2)
+                    self._log(param[15:], 2)
                     player = xbmc.Player()
-                    player.play(param[15:])
+                    player.play(param[15:], 2)
                 elif param.startswith("#tw:invite:"):
                     # web_pdb.set_trace()
-                    if self.DEBUG > 0: self._log("#tw:invite")
+                    if self.DEBUG > 0: self._log("#tw:invite", 2)
                     invite = param[11:].split(":")
                     user = "unknown"
                     
                     if invite[0] == "m":
-                        self._log("#tw:invite:m: %s" % invite[1])
-                        movie = xbmc_helpers.search_movie(invite[1])
-                        self._log("after movie search")
+                        self._log("#tw:invite:m: %s" % invite[1], 2)
+                        movie = xbmc_helpers.search_movie(invite[1], 2)
+                        self._log("after movie search", 2)
 
                         if movie:
-                            if self.DEBUG > 0: self._log("invite received for movie: %s" % movie["title"])
+                            if self.DEBUG > 0: self._log("invite received for movie: %s" % movie["title"], 2)
                             
                             dialog = xbmcgui.Dialog()
                             res = dialog.yesno(localize(32004), localize(32005, (user, movie["title"])))
@@ -425,29 +439,29 @@ class TeamWatch():
                                 player.play(movie["file"])
                                 
                                 if player.isPlaying():
-                                    self._log('playing...')
+                                    self._log('playing...', 2)
                                 else:
-                                    self._log('not playing...')
+                                    self._log('not playing...', 2)
                         else:
                             if self.DEBUG > 0: self._log("invite received for non existent movie %s" % invite[1])
                             self.show_message('TeamWatch', "invite received for non existent movie %s" % invite[1], self.ICON_SETTING)
                     elif invite[0] == "e":
                         episode = xbmc_helpers.search_episode(invite[1], invite[2], invite[3])
-                        self._log(str(episode))
+                        self._log(str(episode), 2)
                         
                         if episode:
                             dialog = xbmcgui.Dialog()
                             s_ep = "S[B]%02d[/B]E[B]%02d[/B]" % (int(episode["season"]), int(episode["episode"]))
                             res = dialog.yesno(localize(32004), localize(32006, (user, episode["showtitle"], s_ep)))
-                            if self.DEBUG > 0: self._log("invite received for episode id: %d" % episode["episodeid"])
+                            if self.DEBUG > 0: self._log("invite received for episode id: %d" % episode["episodeid"], 2)
                             if res:
                                 player = xbmc.Player()
                                 player.play(xbmc_helpers.get_episode_details(episode["episodeid"])["file"])
                                 
                                 if player.isPlaying():
-                                    self._log('playing...')
+                                    self._log('playing...', 2)
                                 else:
-                                    self._log('not playing...')
+                                    self._log('not playing...', 2)
                         else:
                             if self.DEBUG > 0: self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]))
                             self.show_message('TeamWatch', "invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]), self.ICON_SETTING)
@@ -520,7 +534,7 @@ class TeamWatch():
                         self._log('[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]))
                         self.show_message('TeamWatch', '[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]), self.ICON_SETTING)
                     else:
-                        self._log(result)
+                        self._log(result, 2)
                         self.show_message('TeamWatch', result, self.ICON_SETTING)
                         
                     url = 'https://www.teamwatch.it/add.php?%s' % urllib.urlencode({'user':self.nickname, 'text':result.replace("https://pastebin.com/", ""), 'feed':'#tw:' + ''.join(random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(20))})
@@ -528,16 +542,16 @@ class TeamWatch():
                     
     def show_message (self, user, text, icon = ICON_CHAT, id=-1):
         if self.DEBUG > 0: 
-            self._log("show_message: {} {} [{}]".format(user, text, icon))
-            self._log("bartop: " + str(self.bartop))
-            self._log("text_color: " + self.skin['text_color'])
+            self._log("show_message: {} {} [{}]".format(user, text, icon), 1)
+            self._log("bartop: " + str(self.bartop), 2)
+            self._log("text_color: " + self.skin['text_color'], 2)
 
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
         
-        if self.DEBUG > 0: self._log("adding background")
+        if self.DEBUG > 0: self._log("adding background", 2)
         if icon in range(7):
             self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin[
-                ['bar_chat', 'bar_twitter', 'bar_settings', 'bar_telegram', 'bar_rssfeed', 'bar_facebook', 'bar_email'][icon]
+                ['bar_chat', 'bar_twitter', 'bar_settings', 'bar_telegram', 'bar_rssfeed', 'bar_facebook', 'bar_email', 'bar_settings'][icon]
             ]))
         else:
             self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_chat']))
@@ -554,15 +568,14 @@ class TeamWatch():
             self.icon_tweet_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(__resources__, self.skin['icon_tweet_off']))
             self.window.addControl(self.icon_tweet_off)
         
-        if self.DEBUG > 0: self._log("adding feedtext")        
+        if self.DEBUG > 0: self._log("adding feedtext", 2)        
         if self.RSS_OFF or self.TWEETS_OFF:
             self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']) + 50, self.bartop + 5, self.screen_width-140, 75, font=self.skin['font'], textColor=self.skin['text_color'])
         else:
             self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']), self.bartop + 5, self.screen_width-90, 75, font=self.skin['font'], textColor=self.skin['text_color'])
-        # self.feedtext.autoScroll(1, 2, 1)
         self.window.addControl(self.feedtext)
         
-        if self.DEBUG > 0: self._log("adding icon")
+        if self.DEBUG > 0: self._log("adding icon", 2)
         self.icon = xbmcgui.ControlImage(0, 0, 150, 150, os.path.join(__resources__, self.skin['icon']))
         if self.bartop < 50:
             self.icon.setPosition(self.screen_width - 180, self.bartop + 30)
@@ -571,10 +584,10 @@ class TeamWatch():
         self.icon.setImage(os.path.join(__resources__, self.skin['icon']), useCache=True)
         self.window.addControl(self.icon)
         
-        if self.DEBUG > 0: self._log("looking for url")
+        if self.DEBUG > 0: self._log("looking for url", 2)
         try:
             url = re.findall('\[(https?://.+)\]', text)[0]
-            if self.DEBUG > 0: self._log("url: " + url)
+            if self.DEBUG > 0: self._log("url: " + url, 2)
         except:
             url = ""
             
@@ -603,8 +616,8 @@ class TeamWatch():
                     
         self.icon.setImage(icon_file, useCache=True)  
         
-        if self.DEBUG > 0: self._log("icon file: %s" % icon_file)
-        if self.DEBUG > 0: self._log("icon: %s" % icon)
+        if self.DEBUG > 0: self._log("icon file: %s" % icon_file, 2)
+        if self.DEBUG > 0: self._log("icon: %s" % icon, 2)
         
         if user == 'rss' or user == '':
             self.feedtext.addLabel(text)
