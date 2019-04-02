@@ -21,3 +21,6 @@ v0.0.10
 - Facebook notifications (email)
 - show_message code rewrite
 - added commands #tw:rss:[on|off] and #tw:tweet:[on|off]
+
+v0.0.11
+- messages encryption

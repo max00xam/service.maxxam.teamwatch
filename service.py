@@ -13,7 +13,7 @@ import pastebin
 import random
 from datetime import datetime, date, timedelta
 
-__version__ = "0.0.10"
+__version__ = "0.0.11"
 __addon__ = xbmcaddon.Addon()
 __resources__ = os.path.join(__addon__.getAddonInfo('path'),'resources')
 __lib__ = os.path.join(__addon__.getAddonInfo('path'),'lib')
@@ -330,7 +330,7 @@ class TeamWatch():
                         self.id_chat = jresult['id']
                     else:
                         self._log(str(params))
-                        if params['show']: self.show_message('Error', params['message'], self.ICON_ERROR)    
+                        if 'show' in params and params['show']: self.show_message('Error', params['message'], self.ICON_ERROR)    
                 else:
                     self.show_message('Error', 'Invalid message received', self.ICON_ERROR)
                     
