@@ -321,7 +321,7 @@ class TeamWatch():
             self._log('Email check enabled: {}'.format(self.email_enabled))
             if self.email_enabled and time.time() - self.email_time > self.CHECK_EMAIL_SECS and not self.feed_is_shown:
                 self.email_time = time.time()
-                self.check_email()
+                # self.check_email()
                 
             if self.feed_is_shown and time.time() - self.feed_show_time > self.DISPLAY_TIME_SECS:
                 self.hide_message()
