@@ -11,19 +11,24 @@ import xbmcgui
 import xbmcaddon
 import pastebin
 import random
+import xml.etree.ElementTree as xml
 from datetime import datetime, date, timedelta
 
 __version__ = "0.0.11"
 __addon__ = xbmcaddon.Addon()
 __resources__ = os.path.join(__addon__.getAddonInfo('path'),'resources')
-__lib__ = os.path.join(__addon__.getAddonInfo('path'),'lib')
+__pylib__ = os.path.join(__addon__.getAddonInfo('path'), 'lib')
 
-sys.path.append(__lib__)
+ADDONID = __addon__.getAddonInfo('id')
+
+sys.path.append(__pylib__)
+sys.path.append('./lib/maxxam_imdb')
 
 import betterimap
 import xbmc_helpers
 from bs4 import BeautifulSoup
 from xbmc_helpers import localize
+import maxxam_imdb as imdb
 
 error_lines = False
 
@@ -54,14 +59,32 @@ def fix_unicode (barray, repl = ''):
             out += repl
             
     return out
-       
+
+class KodiEvents(xbmc.Monitor):    
+    def __init__(self, tw):
+        self.teamwatch = tw
+    
+    def onSettingsChanged(self):
+        xbmc.Monitor.onSettingsChanged(self)
+        xml_path = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', 'settings.xml')
+        root = xml.parse(xml_path).getroot().findall('setting')
+        settings = {}
+        for value in [(x.get('id'),  x.text) for x in root]: settings[value[0]]=value[1]
+        self.teamwatch.settings(settings)
+
+    """    
+    def onNotification(self, sender, method, data):
+        xbmc.Monitor.onNotification(self, sender, method, data)
+        xbmc.log('%s: service.maxxam.teamwatch Notification %s from %s, params: %s' % (ADDONID, method, sender, str(data)))
+    """
+               
 class TeamWatch():
     WINDOW_FULLSCREEN_VIDEO = 12005
     DISPLAY_TIME_SECS = 8
     REFRESH_TIME_SECS = 2
     CHECK_EMAIL_SECS = 60
     SOCKET_TIMEOUT = 0.5
-    DEBUG = 2 # 0 = HIGH, 1 = MEDIUM, 2 = LOW lasciare a uno!
+    DEBUG = 2 # 0 = LOW, 1 = MEDIUM, 2 = HIGH lasciare a uno!
 
     ICON_CHAT = 0
     ICON_TWITTER = 1
@@ -77,8 +100,8 @@ class TeamWatch():
     TWEETS_OFF = False
     RSS_OFF = False
 
-    monitor = xbmc.Monitor()
-
+    monitor = None
+    
     window = None
     background = None
     icon = None
@@ -147,8 +170,9 @@ class TeamWatch():
     player = None
     
     log_prog = 1
-    
+
     def __init__(self):
+        self.monitor = KodiEvents(self)
         self.id_teamwatch = __addon__.getSetting('twid')
         
         for feed in __addon__.getSetting('feed').split(":"):
@@ -189,45 +213,77 @@ class TeamWatch():
             xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
             self.log_prog = self.log_prog + 1
 
+    def settings(self, settings):
+        self.id_teamwatch = settings['twid']
+        self.id_playerctl = settings['pcid']
+        self.nickname = settings['nickname']
+        
+        self.twitter_enabled = settings['twitter_enabled']
+        self.twitter_language = settings['language']
+        self.twitter_language = xbmc.convertLanguage(self.twitter_language, xbmc.ISO_639_1)
+        self.twitter_result_type = settings['result_type']
+        
+        self.email_enabled = settings['email_enabled']
+        self.email = settings['email']
+        self.email_password = settings['email_password']
+        self.email_imap = settings['email_imap']
+        self.facebook = settings['facebook']
+        
+        self.show_allways = not (settings['showallways'] == "true")
+        
+        self.screen_height = settings['screen_height']
+        if self.screen_height == "" or self.screen_height == None: 
+            self.screen_height = xbmcgui.getScreenHeight()
+        else:
+            self.screen_height = int(settings['screen_height'])
+            
+        self.screen_width = settings['screen_width']
+        if self.screen_width == "" or self.screen_width == None: 
+            self.screen_width = xbmcgui.getScreenWidth()
+        else:
+            self.screen_width = int(settings['screen_width'])
+        
+        self.bartop = self.screen_height - 75
+        
     def check_email(self):
         imap_host = self.email_imap
         imap_user = self.email
         imap_pass = self.email_password
 
+        text = ''
         try:
-            imap = betterimap.IMAPAdapter(imap_user, imap_pass, host=imap_host, ssl=True)
+            imap = betterimap.IMAPAdapter(imap_user, imap_pass, host=imap_host, ssl=True)            
+            imap.select('INBOX') # [Gmail]/Tutti i messaggi
+            
+            icon = None
+            yesterday = date.today() - timedelta(1)
+            for msg in imap.easy_search(since=yesterday, other_queries=['unseen'], limit=1):
+                if msg.from_addr[1] == 'notification@facebookmail.com' and self.facebook:
+                    body = fix_unicode(msg.html())
+                    
+                    regex = r"<span style=\"color:#FFFFFF;font-size:1px;\">([^<]+)<\/span>"
+                    matches = re.finditer(regex, body, re.MULTILINE)
+                    if matches:
+                        text = fix_unicode(msg.subject) + ' ' + [i.group(1) for i in matches][0]
+                        text = text.replace('\n', '').replace('\r', '')
+                        text = re.sub(r"  Mipiace.*$", "", text)
+                        text = re.sub(r"  -  Rispondi.*$", "", text)
+                        text = re.sub(r"^\s*", "", text)
+                        text = re.sub(r"\s*$", "", text)
+                        text = BeautifulSoup(text, features="html.parser")
+                        text = '[B]{}[/B]'.format('', text)
+                    else:
+                        text = fix_unicode(msg.subject)
+                        text = '[B]{}[/B]'.format(fix_unicode(msg.subject))
+                        
+                    self.ICON_FACEBOOK
+                else:
+                    icon = self.ICON_EMAIL
+                    text = '[COLOR {}][B]{}[/B][/COLOR]: [B]{}[/B]'.format(self.skin['nickname_color'], fix_unicode(msg.from_addr[0] if msg.from_addr[0] else msg.from_addr[1]), fix_unicode(msg.subject))
         except:
+            self.show_message('', 'Error fetching email.', self.ICON_ERROR)
             return
             
-        imap.select('INBOX') # [Gmail]/Tutti i messaggi
-        
-        text = ''
-        icon = None
-        yesterday = date.today() - timedelta(1)
-        for msg in imap.easy_search(since=yesterday, other_queries=['unseen'], limit=1):
-            if msg.from_addr[1] == 'notification@facebookmail.com' and self.facebook:
-                body = fix_unicode(msg.html())
-                
-                regex = r"<span style=\"color:#FFFFFF;font-size:1px;\">([^<]+)<\/span>"
-                matches = re.finditer(regex, body, re.MULTILINE)
-                if matches:
-                    text = fix_unicode(msg.subject) + ' ' + [i.group(1) for i in matches][0]
-                    text = text.replace('\n', '').replace('\r', '')
-                    text = re.sub(r"  Mipiace.*$", "", text)
-                    text = re.sub(r"  -  Rispondi.*$", "", text)
-                    text = re.sub(r"^\s*", "", text)
-                    text = re.sub(r"\s*$", "", text)
-                    text = BeautifulSoup(text, features="html.parser")
-                    text = '[B]{}[/B]'.format('', text)
-                else:
-                    text = fix_unicode(msg.subject)
-                    text = '[B]{}[/B]'.format(fix_unicode(msg.subject))
-                    
-                self.ICON_FACEBOOK
-            else:
-                icon = self.ICON_EMAIL
-                text = '[COLOR {}][B]{}[/B][/COLOR]: [B]{}[/B]'.format(self.skin['nickname_color'], fix_unicode(msg.from_addr[0] if msg.from_addr[0] else msg.from_addr[1]), fix_unicode(msg.subject))
-                
         if text: self.show_message('', text, icon)
         
     def get_ids(self):
@@ -261,6 +317,7 @@ class TeamWatch():
                 self._log("stop", 2)
                 break
             
+            self._log('Email check enabled: {}'.format(self.email_enabled))
             if self.email_enabled and time.time() - self.email_time > self.CHECK_EMAIL_SECS and not self.feed_is_shown:
                 self.email_time = time.time()
                 self.check_email()
@@ -329,14 +386,15 @@ class TeamWatch():
                     elif jresult['status'] == 'settings':
                         self.id_chat = jresult['id']
                     else:
-                        self._log(str(params))
-                        if 'show' in params and params['show']: self.show_message('Error', params['message'], self.ICON_ERROR)    
+                        self._log('Error in json message: {}'.format(params))
+                        if 'show' in params and params['show']: self.show_message('Error', params['message'], self.ICON_ERROR)
+                        
+                    self.write_ids()
                 else:
+                    self._log('Error invalid json message: {}'.format(params))
                     self.show_message('Error', 'Invalid message received', self.ICON_ERROR)
-                    
+                
             if 'status' in jresult and jresult['status'] == 'ok' and  self.show_enable:
-                self.write_ids()
-
                 user = params['user'].encode('utf-8')[:15]
                 text = params['text'].encode('utf-8') 
         
@@ -414,9 +472,23 @@ class TeamWatch():
                         self._log('#tw:playerctl:seek invalid time')
                 elif param.startswith("#tw:playstream:"):
                     self._log('*** playstream received ***', 2)
-                    self._log(param[15:], 2)
+                    params = param[15:].split('&m_title=')
+                    
                     player = xbmc.Player()
-                    player.play(param[15:], 2)
+                    
+                    if len(params) == 2:
+                        url, m_title = params
+                        movie = imdb.search(m_title)
+                        
+                        listitem = xbmcgui.ListItem(path=url, thumbnailImage=movie['image_url'])
+                        
+                        listitem.setInfo('video', imdb._kodiJson(movie))
+                        if 'image_url' in movie: listitem.setArt({'cover': movie['image_url']})
+                        
+                        self._log(url, 2)
+                        player.play(url, listitem)
+                    else:
+                        player.play(url)
                 elif param.startswith("#tw:invite:"):
                     # web_pdb.set_trace()
                     if self.DEBUG > 0: self._log("#tw:invite", 2)
@@ -425,7 +497,7 @@ class TeamWatch():
                     
                     if invite[0] == "m":
                         self._log("#tw:invite:m: %s" % invite[1], 2)
-                        movie = xbmc_helpers.search_movie(invite[1], 2)
+                        movie = xbmc_helpers.search_movie(invite[1])
                         self._log("after movie search", 2)
 
                         if movie:
@@ -619,6 +691,7 @@ class TeamWatch():
         if self.DEBUG > 0: self._log("icon file: %s" % icon_file, 2)
         if self.DEBUG > 0: self._log("icon: %s" % icon, 2)
         
+        text = text.replace('\n', ' ').replace('\r', '').replace('  ', ' ')
         if user == 'rss' or user == '':
             self.feedtext.addLabel(text)
         else:
