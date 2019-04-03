@@ -11,6 +11,7 @@ import xbmcgui
 import xbmcaddon
 import pastebin
 import random
+import HTMLParser
 import xml.etree.ElementTree as xml
 from datetime import datetime, date, timedelta
 
@@ -465,7 +466,7 @@ class TeamWatch():
                 elif param == "#tw:playerctl:sshot":
                     xbmc.executebuiltin("TakeScreenshot")
                 elif param.startswith("#tw:playerctl:seek:"):
-                    t = [int("0"+filter(str.isdigit, x)) for x in param[19:].split(":")]
+                    t = [int(x) for x in param[19:].split(":")]
                     if len(t) == 4:
                         xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "method": "Player.Seek", "params": {"playerid":1, "value": {"hours":%d, "minutes":%d, "seconds":%d, "milliseconds":%d}}, "id": 1 }' % tuple(t))
                     elif self.DEBUG > 0:
