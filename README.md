@@ -31,8 +31,6 @@ Commands
 
 ``#tw:bar:bottom`` - the bar will be displayed in the bottom of the screen
 
-``#tw:sendlog`` - send a log to pastebin
-
 ``#tw[pc]:addfeed:<feed>`` - add a new feed to follow
   
 ``#tw[pc]:removefeed:<feed>`` - remove a feed from your followed feeds
@@ -47,7 +45,10 @@ Commands
 
 ``#tw[pc]:playerctl:seek:<hh>:<mm>:<ss>:<cent>`` - seek the current video to the time hh:mm:ss:cent
   
-``#tw[pc]:playstream:<url>`` - start playing video stream from url
+``#tw[pc]:playstream:<url>[&m_title=<title>|<title>#wstream|backin|openload|akstream`` - start playing video stream
+
+url can be an open stream url or an url from wstream, backin, openload, akstream
+playstream by title at the moment scrape urls only from one italian website, so the language is italian
   
 ``#tw[pc]:invite:m:<title>`` - invite other users to watch a movie (all the users must have the movie in the kodi library)
   
