@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os, re, sys
 import base64
+import sha
 import time
 import urllib
 import urllib2
@@ -15,7 +16,7 @@ import HTMLParser
 import xml.etree.ElementTree as xml
 from datetime import datetime, date, timedelta
 
-__version__ = "0.0.11"
+__version__ = "0.0.12"
 __addon__ = xbmcaddon.Addon()
 __resources__ = os.path.join(__addon__.getAddonInfo('path'),'resources')
 __pylib__ = os.path.join(__addon__.getAddonInfo('path'), 'lib')
@@ -23,43 +24,17 @@ __pylib__ = os.path.join(__addon__.getAddonInfo('path'), 'lib')
 ADDONID = __addon__.getAddonInfo('id')
 
 sys.path.append(__pylib__)
-sys.path.append('./lib/maxxam_imdb')
+sys.path.append(os.path.join(__pylib__, 'maxxam_imdb'))
+sys.path.append(os.path.join(__addon__.getAddonInfo('path'), 'scrapers'))
+sys.path.append(os.path.join(__addon__.getAddonInfo('path'), 'scrapers', 'requests'))
 
 import betterimap
 import xbmc_helpers
 from bs4 import BeautifulSoup
 from xbmc_helpers import localize
 import maxxam_imdb as imdb
-
-error_lines = False
-
-def checkline(line, time_now):
-    global error_lines
-    
-    try:
-        time_line=int(line[:2])*3600 + int(line[3:5])*60+int(line[6:8])
-    except:
-        return False
-        
-    if (time_now-time_line) > 5*60: 
-        return False
-        
-    if "ERROR: EXCEPTION Thrown (PythonToCppException)" in line:
-        error_lines = True
-    elif "-->End of Python script error report<--" in line:
-        error_lines = False
-    
-    return "service.maxxam.teamwatch" in line or error_lines
-
-def fix_unicode (barray, repl = ''):
-    out = ''
-    for c in barray:
-        try:
-            out += str(c)
-        except:
-            out += repl
-            
-    return out
+import maxxam_scraper as scraper
+import cineblog
 
 class KodiEvents(xbmc.Monitor):    
     def __init__(self, tw):
@@ -85,7 +60,7 @@ class TeamWatch():
     REFRESH_TIME_SECS = 2
     CHECK_EMAIL_SECS = 60
     SOCKET_TIMEOUT = 0.5
-    DEBUG = 2 # 0 = LOW, 1 = MEDIUM, 2 = HIGH lasciare a uno!
+    DEBUG = 2 # 0 = HIGH, 1 = MEDIUM, 2 = LOW lasciare a uno! (solo _log <= DEBUG vengono visualizzti)
 
     ICON_CHAT = 0
     ICON_TWITTER = 1
@@ -141,10 +116,9 @@ class TeamWatch():
     
     bartop = screen_height - 75
     
-    id_chat = -1
-    id_twitter = -1
-    id_rss = -1
-    id_invite = ""
+    session_id = list('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') # !#$%&+-*=@^_|~
+    random.shuffle(session_id)
+    session_id = ''.join(session_id)[:15]
     
     skin = {}
     skin['text_color'] = '0xff000000'
@@ -169,9 +143,9 @@ class TeamWatch():
     start_time = time.time()
     email_time = time.time()
     player = None
-    
+    sha_key = '' 
     log_prog = 1
-
+    
     def __init__(self):
         self.monitor = KodiEvents(self)
         self.id_teamwatch = __addon__.getSetting('twid')
@@ -179,10 +153,6 @@ class TeamWatch():
         for feed in __addon__.getSetting('feed').split(":"):
             if feed not in self.feed_name: self.feed_name.append(feed)
     
-        self.id_chat = -1
-        self.id_twitter = -1
-        self.id_invite = ""
-        
         self.show_enable = True
         self.feed_show_time = time.time()
         self.feed_is_shown = False;
@@ -190,7 +160,12 @@ class TeamWatch():
         self.bartop = self.screen_height - 75
         
         self.player = xbmc.Player()
-        self._log("Teamwatch start [" + ":".join(self.feed_name) + "]")
+        
+        fin = open(os.path.join(__addon__.getAddonInfo('path'), 'service.py'), 'r')
+        self.sha_key = base64.b64encode(sha.new(fin.read()).digest())
+        fin.close()    
+
+        self._log("Teamwatch start [" + ":".join(self.feed_name) + "]", 0)
         self._log(self.show_allways, 2)
         
         try:
@@ -204,15 +179,91 @@ class TeamWatch():
             self._log(str(self.skin), 2)
         except:
             pass
-            
+
+        settings = xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "method": "Settings.GetSettings", "params": {"level": "advanced"}, "id":1 }')
+        settings = unicode(settings, 'utf-8', errors='ignore')
+        settings = json.loads(settings)
+
+        f_set = ''
+        skin_name = ''
+        for s in settings['result']['settings']:
+            if s['id'] == 'lookandfeel.font':
+                f_set = s['value']
+            elif s['id'] == 'lookandfeel.skin':
+                skin_name = s['value']
+            elif f_set and skin_name:
+                break
+
+        size_diff = 255
+        f = None
+        
+        self._log('fontname in skin: ' + self.skin['font'])
+        
+        f_list = self.font_list(f_set, skin_name)
+        for font in f_list:
+            # self._log('found font {} comparing to {} result: {}'.format(font['name'], self.skin['font'], self.skin['font'] == font['name']))
+            if self.skin['font'] == font['name']:
+                break
+            elif abs(int(font['size'])-45) < size_diff:
+                size_diff = abs(int(font['size'])-45)
+                f = font
+                
+        if not self.skin['font'] == font['name']:
+            self.skin['font'] = f['name']
+            self._log('font in skin is not available new fontname: {} size: {}'.format(self.skin['font'], f['size']))
+        
         self.bartop = self.screen_height - 75        
         directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
         if not os.path.exists(directory): os.makedirs(directory)
-
-    def _log(self, text, debug_level=1):
+        
+    def _log(self, text, debug_level=2):
         if self.DEBUG >= debug_level:
+            if debug_level == 0: 
+                xbmc.log ('%d service.maxxam.teamwatch: [version %s]' % (self.log_prog, self.sha_key))
+                self.log_prog = self.log_prog + 1
+                
             xbmc.log ('%d service.maxxam.teamwatch: %s' % (self.log_prog, text))
             self.log_prog = self.log_prog + 1
+
+    def fix_unicode (self, barray, repl = ''):
+        out = ''
+        for c in barray:
+            try:
+                out += str(c)
+            except:
+                out += repl
+                
+        return out
+
+    def font_list(self, f_set, skin):        
+        fonts_list = []
+        skindir = xbmc.translatePath('special://skin')
+        
+        for dirpath, dirnames, filenames in os.walk(skindir):
+            if 'Font.xml' in filenames:
+                xml_path = os.path.join(dirpath, 'Font.xml')
+                xml_fontsets = xml.parse(xml_path).getroot().findall('fontset')
+                
+                fontsets =  []
+                for i in [f.items() for f in xml_fontsets]: 
+                    for k in i: 
+                        if k[0] == 'id': fontsets.append(k[1])
+                        
+                idx = 0
+                for i in range(0,len(fontsets)):
+                    if fontsets[i] == f_set:
+                        idx = i
+                        break
+                
+                fonts = [f for f in xml_fontsets[idx]]
+                for font in fonts:
+                    if font is not None:
+                        try:
+                            fonts_list.append({'name': font.find('name').text, 'size': font.find('size').text, 'filename': font.find('filename').text})
+                        except:
+                            pass
+                            
+        return fonts_list
 
     def settings(self, settings):
         self.id_teamwatch = settings['twid']
@@ -260,12 +311,12 @@ class TeamWatch():
             yesterday = date.today() - timedelta(1)
             for msg in imap.easy_search(since=yesterday, other_queries=['unseen'], limit=1):
                 if msg.from_addr[1] == 'notification@facebookmail.com' and self.facebook:
-                    body = fix_unicode(msg.html())
+                    body = self.fix_unicode(msg.html())
                     
                     regex = r"<span style=\"color:#FFFFFF;font-size:1px;\">([^<]+)<\/span>"
                     matches = re.finditer(regex, body, re.MULTILINE)
                     if matches:
-                        text = fix_unicode(msg.subject) + ' ' + [i.group(1) for i in matches][0]
+                        text = self.fix_unicode(msg.subject) + ' ' + [i.group(1) for i in matches][0]
                         text = text.replace('\n', '').replace('\r', '')
                         text = re.sub(r"  Mipiace.*$", "", text)
                         text = re.sub(r"  -  Rispondi.*$", "", text)
@@ -274,51 +325,28 @@ class TeamWatch():
                         text = BeautifulSoup(text, features="html.parser")
                         text = '[B]{}[/B]'.format('', text)
                     else:
-                        text = fix_unicode(msg.subject)
-                        text = '[B]{}[/B]'.format(fix_unicode(msg.subject))
+                        text = self.fix_unicode(msg.subject)
+                        text = '[B]{}[/B]'.format(self.fix_unicode(msg.subject))
                         
                     self.ICON_FACEBOOK
                 else:
                     icon = self.ICON_EMAIL
-                    text = '[COLOR {}][B]{}[/B][/COLOR]: [B]{}[/B]'.format(self.skin['nickname_color'], fix_unicode(msg.from_addr[0] if msg.from_addr[0] else msg.from_addr[1]), fix_unicode(msg.subject))
+                    text = '[COLOR {}][B]{}[/B][/COLOR]: [B]{}[/B]'.format(self.skin['nickname_color'], self.fix_unicode(msg.from_addr[0] if msg.from_addr[0] else msg.from_addr[1]), self.fix_unicode(msg.subject))
         except:
             self.show_message('', 'Error fetching email.', self.ICON_ERROR)
             return
             
         if text: self.show_message('', text, icon)
-        
-    def get_ids(self):
-        directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
-        twpath = os.path.join(directory, 'tw.ini')
-
-        try:
-            file = open(twpath, "r")
-            tmp = file.read().split(":")
-            file.close()
-            while len(tmp) != 3: tmp.append(-1)
-        except:
-            tmp = [-1, -1, -1]
-        
-        return tmp
-        
-    def write_ids(self):
-        directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch')
-        if not os.path.exists(directory): os.makedirs(directory)
-        twpath = os.path.join(directory, 'tw.ini')
-        
-        file = open(twpath, "w+")
-        file.write('{}:{}:{}'.format(self.id_chat, self.id_twitter, self.id_rss))
-        file.close()
-        
+                
     def loop(self):
         while not self.monitor.abortRequested():
             # after DISPLAY_TIME_SECS elapsed hide the message bar
             if self.monitor.waitForAbort(self.REFRESH_TIME_SECS):
                 self.hide_message()
-                self._log("stop", 2)
+                self._log("stop", 0)
                 break
             
-            self._log('Email check enabled: {}'.format(self.email_enabled))
+            self._log('Email check enabled: {}'.format(self.email_enabled), 1)
             if self.email_enabled and time.time() - self.email_time > self.CHECK_EMAIL_SECS and not self.feed_is_shown:
                 self.email_time = time.time()
                 # self.check_email()
@@ -335,9 +363,7 @@ class TeamWatch():
             
             self.start_time = time.time()
             
-            if self.id_chat != -1: self.id_chat, self.id_twitter, self.id_rss = self.get_ids()
-                    
-            params = {'idt':self.id_twitter, 'idc':self.id_chat, 'idr':self.id_rss, 'twid':self.id_teamwatch, 'pcid':self.id_playerctl, 'nickname':self.nickname}
+            params = {'session_id':self.session_id, 'twid':self.id_teamwatch, 'pcid':self.id_playerctl, 'nickname':self.nickname}
             if self.feed_name: 
                 params['q'] = ":".join(self.feed_name)
             else:
@@ -349,13 +375,8 @@ class TeamWatch():
             else:
                 params['notweet'] = 1
                     
-            url = 'https://www.teamwatch.it/get.php?p=%s' % base64.urlsafe_b64encode(str(params).replace("'", '"'))
-            
-            if self.DEBUG > 0: 
-                self._log("id_chat: " + str(self.id_chat), 1)
-                self._log("id_twitter: " + str(self.id_twitter), 1)
-                self._log("id_rss: " + str(self.id_rss), 1)
-                self._log(url, 2)
+            url = 'https://www.teamwatch.it/get.new.php?p=%s' % base64.urlsafe_b64encode(str(params).replace("'", '"').replace("u\"", '"'))            
+            self._log(url, 2)
 
             jresult = {}
             try:
@@ -371,34 +392,15 @@ class TeamWatch():
                 try:
                     jresult = json.loads(json_response)
                 except:
-                    jresult = {"status": "error", "params": {"message": "error decoding json result %s " % json_response, "time": now}, "id": -1}
-                    
-                if self.DEBUG > 0: self._log("jresult: " + str(jresult), 1)
+                    jresult = {"status": "error", "params": {"message": "error decoding json result %s " % json_response, "request_url": url, "time": now}, "id": -1}
+                
+                if 'params' in jresult and 'show' in jresult['params'] and jresult['params']['show']: self._log("jresult: " + str(jresult), 0)
                 params = jresult['params']
-                
-                if 'status' in jresult:
-                    if jresult['status'] == 'ok':
-                        if params['is_twitter'] == 1:
-                            self.id_twitter = jresult['id']
-                        elif params['is_rss'] == 1:
-                            self.id_rss = jresult['id']
-                        else:
-                            self.id_chat = jresult['id']
-                    elif jresult['status'] == 'settings':
-                        self.id_chat = jresult['id']
-                    else:
-                        self._log('Error in json message: {}'.format(params))
-                        if 'show' in params and params['show']: self.show_message('Error', params['message'], self.ICON_ERROR)
-                        
-                    self.write_ids()
-                else:
-                    self._log('Error invalid json message: {}'.format(params))
-                    self.show_message('Error', 'Invalid message received', self.ICON_ERROR)
-                
+
             if 'status' in jresult and jresult['status'] == 'ok' and  self.show_enable:
-                user = params['user'].encode('utf-8')[:15]
-                text = params['text'].encode('utf-8') 
-        
+                user = params['user'][:15]
+                text = params['text']
+                
                 if self.show_allways or xbmcgui.getCurrentWindowId() == self.WINDOW_FULLSCREEN_VIDEO:
                     if text[:8] == '#tw_send':
                         self.show_message(user, text[9:], self.ICON_TELEGRAM)
@@ -410,7 +412,7 @@ class TeamWatch():
                         self.show_message(user, text, self.ICON_CHAT)
                         
             elif 'status' in jresult and jresult['status'] == 'settings':
-                param = params['text']
+                param = jresult['params']['text']
                 if param.startswith("#tw:addfeed:"):
                     if not param[12:] in self.feed_name: 
                         self.feed_name.append(param[12:].lower())
@@ -449,50 +451,89 @@ class TeamWatch():
                 elif param == "#tw:bar:bottom":
                     self.bartop = self.screen_height - 75
                     self.show_message('TeamWatch', "Bar position set to bottom", self.ICON_SETTING)
-                elif param == "#tw:id":
-                    self.id_chat = params['idc']
-                    self.id_twitter = params['idt']
-                    self.id_rss = params['idr']
-                    
-                    self.write_ids()
                 elif param == "#tw:playerctl:playpause":
-                    if self.DEBUG > 0: self._log('esecuzione #tw:playerctl:playpause', 2)
+                    self._log('esecuzione #tw:playerctl:playpause', 0) # cambiare a 2
                     xbmc.executebuiltin("Action(PlayPause)")
-                    if self.DEBUG > 0: self._log('playpause terminated id_chat: ' + str(self.id_chat), 2)
                 elif param == "#tw:playerctl:stop":
-                    if self.DEBUG > 0: self._log('esecuzione #tw:playerctl:stop', 2)
+                    self._log('esecuzione #tw:playerctl:stop', 2)
                     xbmc.executebuiltin("Action(Stop)")
-                    if self.DEBUG > 0: self._log('stop terminated id_chat: ' + str(self.id_chat), 2)
                 elif param == "#tw:playerctl:sshot":
                     xbmc.executebuiltin("TakeScreenshot")
                 elif param.startswith("#tw:playerctl:seek:"):
                     t = [int(x) for x in param[19:].split(":")]
                     if len(t) == 4:
                         xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "method": "Player.Seek", "params": {"playerid":1, "value": {"hours":%d, "minutes":%d, "seconds":%d, "milliseconds":%d}}, "id": 1 }' % tuple(t))
-                    elif self.DEBUG > 0:
-                        self._log('#tw:playerctl:seek invalid time')
-                elif param.startswith("#tw:playstream:"):
-                    self._log('*** playstream received ***', 2)
-                    params = param[15:].split('&m_title=')
-                    
-                    player = xbmc.Player()
-                    
-                    if len(params) == 2:
-                        url, m_title = params
-                        movie = imdb.search(m_title)
-                        
-                        listitem = xbmcgui.ListItem(path=url, thumbnailImage=movie['image_url'])
-                        
-                        listitem.setInfo('video', imdb._kodiJson(movie))
-                        if 'image_url' in movie: listitem.setArt({'cover': movie['image_url']})
-                        
-                        self._log(url, 2)
-                        player.play(url, listitem)
                     else:
-                        player.play(url)
+                        self._log('#tw:playerctl:seek invalid time', 0)
+                elif param.startswith("#tw:playstream:"):
+                    self._log('*** playstream received ***', 0)
+                    if 'http://' in param[15:] or 'https://' in param[15:]:
+                        params = param[15:].split('&m_title=')
+                        url = params[0]
+                        if len(params) == 2:
+                            title = params[1]
+                        else:
+                            title = ''
+                            
+                        if scraper.test(url):
+                            streams = scraper.scrape(url)
+                            if streams: url = streams[0]['url']
+                    else:
+                        search, sites = param[15:].split('#')
+                        sites = [s.strip() for s in sites.split(',')]
+                        cb01_links = cineblog.search(search)
+                        if cb01_links:
+                            streams = cineblog.getstreams(cb01_links[0]['url'], sites)
+                            if streams:
+                                url = streams[0]['strean_info']['url']
+                                title = cb01_links[0]['title'].encode('utf-8')
+                            else:
+                                url = ''
+                                title = search_str
+                        else:
+                            url = ''
+                            title = search_str
+                    
+                    self._log('received url: {}'.format(url), 0)
+                    self._log('title: {}'.format(title), 0)
+
+                    if url:
+                        if title:
+                            title = re.sub('\(\d{4}\)', '', title)   # remove (year)
+                            title = re.sub('\[[^\]]+\]', '', title)  # remove [HD] [SUB-ITA] ecc.
+                            title = ''.join([x for x in title if ord(x) in range(32,127)]).strip()  # remove unicode
+                            search_str = '+'.join(title.strip().lower().split())
+                            
+                            movie = imdb.search(search_str)
+                            if 'error' in movie:
+                                if '+-+' in search_str:
+                                    movie = imdb.search(search_str[:search_str.find('+-+')])
+                                else:
+                                    movie = imdb.search(search)
+                                
+                            if not 'error' in movie: 
+                                if 'image_url' in movie:
+                                    video_info = xbmcgui.ListItem(path=url, iconImage=movie['image_url'], thumbnailImage=movie['image_url'])
+                                    video_info.setArt({'cover': movie['image_url']})
+                                else:
+                                    video_info = xbmcgui.ListItem(path=url)
+                                    
+                                video_info.setInfo('video', imdb._kodiJson(movie))
+                            else:
+                                video_info = xbmcgui.ListItem(path=url)
+                                video_info.setInfo('video', {'Title': title})
+                        else:
+                            video_info = xbmcgui.ListItem(path=url)
+                            
+                        self._log('start playing url: {}'.format(url), 0)                       
+                        player = xbmc.Player()
+                        player.play(url, video_info)
+                    else:
+                        dialog = xbmcgui.Dialog()
+                        res = dialog.ok('Cineblog search failed', 'The movie you was searching for was not found on cineblog')
                 elif param.startswith("#tw:invite:"):
                     # web_pdb.set_trace()
-                    if self.DEBUG > 0: self._log("#tw:invite", 2)
+                    self._log("#tw:invite", 2)
                     invite = param[11:].split(":")
                     user = "unknown"
                     
@@ -502,7 +543,7 @@ class TeamWatch():
                         self._log("after movie search", 2)
 
                         if movie:
-                            if self.DEBUG > 0: self._log("invite received for movie: %s" % movie["title"], 2)
+                            self._log("invite received for movie: %s" % movie["title"], 2)
                             
                             dialog = xbmcgui.Dialog()
                             res = dialog.yesno(localize(32004), localize(32005, (user, movie["title"])))
@@ -516,7 +557,7 @@ class TeamWatch():
                                 else:
                                     self._log('not playing...', 2)
                         else:
-                            if self.DEBUG > 0: self._log("invite received for non existent movie %s" % invite[1])
+                            self._log("invite received for non existent movie %s" % invite[1], 0)
                             self.show_message('TeamWatch', "invite received for non existent movie %s" % invite[1], self.ICON_SETTING)
                     elif invite[0] == "e":
                         episode = xbmc_helpers.search_episode(invite[1], invite[2], invite[3])
@@ -526,7 +567,7 @@ class TeamWatch():
                             dialog = xbmcgui.Dialog()
                             s_ep = "S[B]%02d[/B]E[B]%02d[/B]" % (int(episode["season"]), int(episode["episode"]))
                             res = dialog.yesno(localize(32004), localize(32006, (user, episode["showtitle"], s_ep)))
-                            if self.DEBUG > 0: self._log("invite received for episode id: %d" % episode["episodeid"], 2)
+                            self._log("invite received for episode id: %d" % episode["episodeid"], 2)
                             if res:
                                 player = xbmc.Player()
                                 player.play(xbmc_helpers.get_episode_details(episode["episodeid"])["file"])
@@ -536,92 +577,24 @@ class TeamWatch():
                                 else:
                                     self._log('not playing...', 2)
                         else:
-                            if self.DEBUG > 0: self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]))
+                            self._log("invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]), 0)
                             self.show_message('TeamWatch', "invite received for non existent episode %s %s %s" % (invite[1], invite[2], invite[3]), self.ICON_SETTING)
                     else:
-                        if self.DEBUG > 0: self._log("invite received invalid param %s" % invite[0])
+                        self._log("invite received invalid param %s" % invite[0], 0)
                         self.show_message('TeamWatch', "invite received invalid param %s" % invite[0], self.ICON_SETTING)
-                elif param.startswith("#tw:sendlog"):
-                    if self.DEBUG == 0:
-                        self.show_message('TeamWatch', "Please activate debug log in Kodi settings", self.ICON_SETTING)
-                        continue
-                    
-                    # API Settings
-                    api_dev_key  = '8ad7b020994f2abf1d8631bf4ea3de6c' # please don't steal these passwords!
-                    api_user_key = '764fa208bd3ab14806273da932daf68e' # make a new account it's for free
 
-                    # Define API
-                    if api_user_key:
-                        api = pastebin.PasteBin(api_dev_key, api_user_key)
-                    else:
-                        api = pastebin.PasteBin(api_dev_key)
-                        api_user_key = api.create_user_key('teamwatch', 'n0DPeu2cuhZY7o5JfdRD')
-                        if 'Bad API request' not in api_user_key:
-                            api = pastebin.PasteBin(api_dev_key, api_user_key)
-                        else:
-                            raise SystemExit('[!] - Failed to create API user key! ({0})'.format(api_user_key.split(', ')[1]))
-                    
-                    version_number = xbmc.getInfoLabel("System.BuildVersion")[0:2]
-                    if version_number < 12:
-                        if xbmc.getCondVisibility("system.platform.osx"):
-                            if xbmc.getCondVisibility("system.platform.atv2"):
-                                log_path = "/var/mobile/Library/Preferences"
-                            else:
-                                log_path = os.path.join(os.path.expanduser("~"), "Library/Logs")
-                        elif xbmc.getCondVisibility("system.platform.ios"):
-                            log_path = "/var/mobile/Library/Preferences"
-                        elif xbmc.getCondVisibility("system.platform.windows"):
-                            log_path = xbmc.translatePath("special://home")
-                        elif xbmc.getCondVisibility("system.platform.linux"):
-                            log_path = xbmc.translatePath("special://home/temp")
-                        else:
-                            log_path = xbmc.translatePath("special://logpath")
-                    else:
-                        log_path = xbmc.translatePath("special://logpath")
-
-                    if version_number < 14:
-                        filename = "xbmc.log"
-                    else:
-                        filename = "kodi.log"
-
-                    if not os.path.exists(os.path.join(log_path, filename)):
-                        if os.path.exists(os.path.join(log_path, "spmc.log")):
-                            filename = "spmc.log"
-
-                    log_path = os.path.join(log_path, filename)
-                    # Create a Paste
-                    t = time.strftime('%H:%M:%S', time.localtime())
-                    time_now=int(t[:2])*3600 + int(t[3:5])*60+int(t[6:])
-                    data = "TeamWatch version: %s from: %s\r\n" % (__version__, self.nickname)
-                    filepath = log_path.decode("utf-8")
-                    with open(filepath) as fp:  
-                        line = fp.readline()
-                        if checkline(line, time_now): data += line
-                        
-                        while line:
-                            line = fp.readline()
-                            if checkline(line, time_now): data += line
-                            
-                    result = api.paste(data, guest=False, name='kodi teamwatch log', format='text', private='2', expire='10M')
-                    if 'Bad API request' in result: 
-                        self._log('[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]))
-                        self.show_message('TeamWatch', '[!] - Failed to create paste! ({0})'.format(api_user_key.split(', ')[1]), self.ICON_SETTING)
-                    else:
-                        self._log(result, 2)
-                        self.show_message('TeamWatch', result, self.ICON_SETTING)
-                        
-                    url = 'https://www.teamwatch.it/add.php?%s' % urllib.urlencode({'user':self.nickname, 'text':result.replace("https://pastebin.com/", ""), 'feed':'#tw:' + ''.join(random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(20))})
-                    tmp = urllib.urlopen(url)
-                    
     def show_message (self, user, text, icon = ICON_CHAT, id=-1):
-        if self.DEBUG > 0: 
+        try:
             self._log("show_message: {} {} [{}]".format(user, text, icon), 1)
-            self._log("bartop: " + str(self.bartop), 2)
-            self._log("text_color: " + self.skin['text_color'], 2)
+        except:
+            pass
+            
+        self._log("bartop: " + str(self.bartop), 2)
+        self._log("text_color: " + self.skin['text_color'], 2)
 
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
         
-        if self.DEBUG > 0: self._log("adding background", 2)
+        self._log("adding background", 2)
         if icon in range(7):
             self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin[
                 ['bar_chat', 'bar_twitter', 'bar_settings', 'bar_telegram', 'bar_rssfeed', 'bar_facebook', 'bar_email', 'bar_settings'][icon]
@@ -641,14 +614,14 @@ class TeamWatch():
             self.icon_tweet_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(__resources__, self.skin['icon_tweet_off']))
             self.window.addControl(self.icon_tweet_off)
         
-        if self.DEBUG > 0: self._log("adding feedtext", 2)        
+        self._log("adding feedtext", 2)        
         if self.RSS_OFF or self.TWEETS_OFF:
             self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']) + 50, self.bartop + 5, self.screen_width-140, 75, font=self.skin['font'], textColor=self.skin['text_color'])
         else:
             self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']), self.bartop + 5, self.screen_width-90, 75, font=self.skin['font'], textColor=self.skin['text_color'])
         self.window.addControl(self.feedtext)
         
-        if self.DEBUG > 0: self._log("adding icon", 2)
+        self._log("adding icon", 2)
         self.icon = xbmcgui.ControlImage(0, 0, 150, 150, os.path.join(__resources__, self.skin['icon']))
         if self.bartop < 50:
             self.icon.setPosition(self.screen_width - 180, self.bartop + 30)
@@ -657,10 +630,10 @@ class TeamWatch():
         self.icon.setImage(os.path.join(__resources__, self.skin['icon']), useCache=True)
         self.window.addControl(self.icon)
         
-        if self.DEBUG > 0: self._log("looking for url", 2)
+        self._log("looking for url", 2)
         try:
             url = re.findall('\[(https?://.+)\]', text)[0]
-            if self.DEBUG > 0: self._log("url: " + url, 2)
+            self._log("url: " + url, 2)
         except:
             url = ""
             
@@ -689,8 +662,8 @@ class TeamWatch():
                     
         self.icon.setImage(icon_file, useCache=True)  
         
-        if self.DEBUG > 0: self._log("icon file: %s" % icon_file, 2)
-        if self.DEBUG > 0: self._log("icon: %s" % icon, 2)
+        self._log("icon file: %s" % icon_file, 2)
+        self._log("icon: %s" % icon, 2)
         
         text = text.replace('\n', ' ').replace('\r', '').replace('  ', ' ')
         if user == 'rss' or user == '':

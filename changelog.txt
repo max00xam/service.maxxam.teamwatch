@@ -24,3 +24,13 @@ v0.0.10
 
 v0.0.11
 - messages encryption
+
+v0.0.12
+- change settings without restarting
+- website update
+- view the title of the film and poster
+- imdb movie info
+- url scrapers for openload, wstream, backin, akstream
+- fixed unicode error
+- bug fix playpause, seek
+- font selection if it does not find the font in the .skin file
