@@ -47,7 +47,7 @@ Commands
   
 ``#tw[pc]:playstream:<url>[&m_title=<title>|<title>#wstream|backin|openload|akstream`` - start playing video stream
 
-**url** can be to open stream url or an url to wstream, backin, openload, akstream
+**url** can be to open stream or to wstream, backin, openload, akstream
 
 playstream by **title** at the moment scrape urls only from one italian website, so the language is italian
   
