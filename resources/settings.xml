@@ -7,10 +7,17 @@
         <setting id="skin" type="text" label="32180" default="default.skin"/>
         <setting id="twid" type="text" label="32120" default=""/>
         <setting id="pcid" type="text" label="32130" default=""/>
+        <setting id="imdb_lang" type="select" label="32190" enable="true" default="English" values="English|Italian|French|German" />
         <setting id="showallways" type="bool" label="32140" default="true"/>
         <setting label="32112" type="lsep"/>
         <setting id="screen_height" type="text" label="32160" default=""/>
         <setting id="screen_width" type="text" label="32170" default=""/>         
+    </category>
+
+    <category label="32400">
+        <setting id="facebook_enabled" type="bool" label="32410" default="true"/>
+        <setting id="facebook_email" type="text" option="hidden" label="32420" enable="eq(-1,true)" default="" />
+        <setting id="facebook_password" type="text" label="32430" enable="eq(-2,true)" default="" />
     </category>
 
     <category label="32200">
@@ -23,8 +30,7 @@
     <category label="32300">
         <setting id="email_enabled" type="bool" label="32310" default="false"/>
         <setting id="email" type="text" label="32320" enable="eq(-1,true)" default="" />
-        <setting id="email_password" type="text" label="32330" enable="eq(-2,true)" default="" />
+        <setting id="email_password" type="text" option="hidden" label="32330" enable="eq(-2,true)" default="" />
         <setting id="email_imap" type="text" label="32340" enable="eq(-3,true)" default="" />
-        <setting id="facebook" type="bool" label="32350" enable="eq(-4,true)" default="true"/>
     </category>
 </settings>

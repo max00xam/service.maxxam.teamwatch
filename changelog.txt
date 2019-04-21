@@ -34,3 +34,10 @@ v0.0.12
 - fixed unicode error
 - bug fix playpause, seek
 - font selection if it does not find the font in the .skin file
+
+v0.0.13
+- added facebook notifications
+- language settings for imdb
+- do not start playstream if there is already a movie in play (pause the movie and dialog) [@Rayquaza89]
+- removed commands #tw:debug, #twpc:invite
+- fixed icon "flashing" bug

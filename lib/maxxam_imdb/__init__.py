@@ -5,11 +5,6 @@ import urllib2
 import urllib
 import HTMLParser
 
-"""
-Here is your key: 5b251ca0 Please append it to all of your API requests, OMDb API: http://www.omdbapi.com/?i=tt3896198&apikey=5b251ca0 Click the following URL to activate your key: http://www.omdbapi.com/apikey.aspx?VERIFYKEY=16ce2f69-8dfe-4937-924c-f17e9e8db0b4 If you did not make this request, please disregard this email. 
-www.omdbapi.com/?apikey=5b251ca0&t=the+matrix&plot=full
-"""
-
 def _request(url):
     headers = {'User-Agent': "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3"}
     headers = {'User-Agent': "Mozilla/4.0 (compatible;MSIE 6.0;Windows NT 5.1;SV1;.NET CLR 1.1.4322;.NET CLR 2.0.50727;.NET CLR 3.0.04506.30)"}
@@ -108,16 +103,16 @@ def get(imdb_id, translate='it'):
 
     if translate:
         if 'description' in result.keys(): 
-            result['description'] = _translate(result['description'])
+            result['description'] = _translate(result['description'], translate)
             
         if 'summary_text' in result.keys(): 
-            result['summary_text'] = _translate(result['summary_text'])
+            result['summary_text'] = _translate(result['summary_text'], translate)
             
         if 'storyline' in result.keys(): 
-            result['storyline'] = _translate(result['storyline'])
+            result['storyline'] = _translate(result['storyline'], translate)
             
         if 'genres' in result.keys(): 
-            result['genres'] = [_translate(x) for x in result['genres']]
+            result['genres'] = [_translate(x, translate) for x in result['genres']]
         
     return result
 

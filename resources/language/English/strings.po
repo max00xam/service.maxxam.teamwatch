@@ -57,6 +57,10 @@ msgctxt "#32180"
 msgid "Skin"
 msgstr ""
 
+msgctxt "#32190"
+msgid "IMDb language"
+msgstr ""
+
 msgctxt "#32200"
 msgid "Twitter"
 msgstr ""
@@ -79,6 +83,22 @@ msgstr ""
 
 msgctxt "#32241"
 msgid "mixed: Include both popular and real time results in the response.[br]recent: return only the most recent results in the response[br]popular: return only the most popular results in the response."
+msgstr ""
+
+msgctxt "#32400"
+msgid "Facebook"
+msgstr ""
+
+msgctxt "#32410"
+msgid "Facebook enabled"
+msgstr ""
+
+msgctxt "#32420"
+msgid "Facebook email"
+msgstr ""
+
+msgctxt "#32430"
+msgid "Password"
 msgstr ""
 
 msgctxt "#32300"

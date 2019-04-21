@@ -11,6 +11,7 @@
     <string id="32160">Messagebar top (only for Windows)</string>
     <string id="32170">Messagebar width (only for Windows)</string>
     <string id="32180">Skin</string>
+    <string id="32190">IMDb language</string>
     <string id="32112">only for Windows</string>
     
     <!-- Twitter -->
@@ -21,6 +22,12 @@
     <string id="32240">Result type</string>
     <string id="32241">mixed: Include both popular and real time results in the response.[br]recent: return only the most recent results in the response[br]popular: return only the most popular results in the response.</string>
     
+    <!-- Facebook -->
+    <string id="32400">Facebook</string>
+    <string id="32410">Facebook enabled</string>
+    <string id="32420">Facebook email</string>
+    <string id="32430">Password</string>
+
     <!-- Email -->
     <string id="32300">Email</string>
     <string id="32310">Email enabled</string>
