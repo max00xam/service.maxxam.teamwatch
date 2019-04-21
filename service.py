@@ -15,6 +15,7 @@ import random
 import HTMLParser
 import xml.etree.ElementTree as xml
 from datetime import datetime, date, timedelta
+from PIL import Image
 
 __version__     = "0.0.13"
 __addon__       = xbmcaddon.Addon()
@@ -74,6 +75,7 @@ class TeamWatch():
     
     SKIN_CONFIG = 'default.skin'
 
+    FACEBOOK_USER_LENGTH = 30
     TWEETS_OFF = False
     RSS_OFF = False
 
@@ -364,41 +366,19 @@ class TeamWatch():
         imap_user = self.email
         imap_pass = self.email_password
 
-        text = ''
         try:
             imap = betterimap.IMAPAdapter(imap_user, imap_pass, host=imap_host, ssl=True)            
             imap.select('INBOX') # [Gmail]/Tutti i messaggi
             
-            icon = None
             yesterday = date.today() - timedelta(1)
             for msg in imap.easy_search(since=yesterday, other_queries=['unseen'], limit=1):
-                if msg.from_addr[1] == 'notification@facebookmail.com' and self.facebook:
-                    body = self.fix_unicode(msg.html())
-                    
-                    regex = r"<span style=\"color:#FFFFFF;font-size:1px;\">([^<]+)<\/span>"
-                    matches = re.finditer(regex, body, re.MULTILINE)
-                    if matches:
-                        text = self.fix_unicode(msg.subject) + ' ' + [i.group(1) for i in matches][0]
-                        text = text.replace('\n', '').replace('\r', '')
-                        text = re.sub(r"  Mipiace.*$", "", text)
-                        text = re.sub(r"  -  Rispondi.*$", "", text)
-                        text = re.sub(r"^\s*", "", text)
-                        text = re.sub(r"\s*$", "", text)
-                        text = BeautifulSoup(text, features="html.parser")
-                        text = '[B]{}[/B]'.format('', text)
-                    else:
-                        text = self.fix_unicode(msg.subject)
-                        text = '[B]{}[/B]'.format(self.fix_unicode(msg.subject))
-                        
-                    self.ICON_FACEBOOK
-                else:
-                    icon = self.ICON_EMAIL
-                    text = '[COLOR {}][B]{}[/B][/COLOR]: [B]{}[/B]'.format(self.skin['nickname_color'], self.fix_unicode(msg.from_addr[0] if msg.from_addr[0] else msg.from_addr[1]), self.fix_unicode(msg.subject))
+                user = self.fix_unicode(msg.from_addr[0] if msg.from_addr[0] else msg.from_addr[1])
+                text = self.fix_unicode(msg.subject)
+                
+                self.show_message(user, text, self.ICON_EMAIL)
         except:
-            self.show_message('', 'Error fetching email.', self.ICON_ERROR)
+            self.show_message('TeamWatch', 'Error fetching email.', self.ICON_ERROR)
             return
-            
-        if text: self.show_message('', text, icon)
                 
     def loop(self):
         while not self.monitor.abortRequested():
@@ -481,7 +461,11 @@ class TeamWatch():
             elif self.facebook_posts:
                 fb_post = self.facebook_posts[0]
                 self.facebook_posts = self.facebook_posts[1:]
-                self.show_message('{} [{}]'.format(fb_post['user'], fb_post['time']), fb_post['text'], self.ICON_FACEBOOK, image = fb_post['image'])
+                if len(fb_post['user']) > self.FACEBOOK_USER_LENGTH:
+                    user = fb_post['user'][:self.FACEBOOK_USER_LENGTH-3] + '...'
+                else:
+                    user = fb_post['user']
+                self.show_message('{} [{}]'.format(user, fb_post['time']), fb_post['text'], self.ICON_FACEBOOK, image = fb_post['image'])
             
             elif 'status' in jresult and jresult['status'] == 'settings':
                 param = jresult['params']['text']
@@ -583,10 +567,10 @@ class TeamWatch():
                                         title = cb01_links[0]['title'].encode('utf-8')
                                     else:
                                         url = ''
-                                        title = search_str
+                                        title = search
                                 else:
                                     url = ''
-                                    title = search_str
+                                    title = search
                             
                             self._log('received url: {}'.format(url), 0)
                             self._log('title: {}'.format(title), 0)
@@ -639,51 +623,7 @@ class TeamWatch():
         self._log("text_color: " + self.skin['text_color'], 2)
 
         self.window = xbmcgui.Window(xbmcgui.getCurrentWindowId())
-        
-        self._log("adding background", 2)
-        if icon in range(7):
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin[
-                ['bar_chat', 'bar_twitter', 'bar_settings', 'bar_telegram', 'bar_rssfeed', 'bar_facebook', 'bar_email', 'bar_settings'][icon]
-            ]))
-        else:
-            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_chat']))
 
-        self.window.addControl(self.background)
-        
-        icon_top = self.bartop + 4
-        if self.RSS_OFF:
-            self.icon_rss_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(__resources__, self.skin['icon_rss_off']))
-            self.window.addControl(self.icon_rss_off)
-            icon_top = self.bartop + 41
-            
-        if self.TWEETS_OFF:
-            self.icon_tweet_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(__resources__, self.skin['icon_tweet_off']))
-            self.window.addControl(self.icon_tweet_off)
-        
-        self._log("adding feedtext", 2)        
-        if self.RSS_OFF or self.TWEETS_OFF:
-            self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']) + 50, self.bartop + 5, self.screen_width-140, 75, font=self.skin['font'], textColor=self.skin['text_color'])
-        else:
-            self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']), self.bartop + 5, self.screen_width-90, 75, font=self.skin['font'], textColor=self.skin['text_color'])
-        self.window.addControl(self.feedtext)
-        
-        if xbmcgui.getCurrentWindowId() == self.WINDOW_FULLSCREEN_VIDEO:
-            icon_width = 150
-            icon_height = 150
-        else:
-            ### https://github.com/shibukawa/imagesize_py/blob/master/imagesize.py
-            icon_width = 250
-            icon_height = 250
-            
-        self._log("adding icon", 2)
-        self.icon = xbmcgui.ControlImage(0, 0, icon_width, icon_height, os.path.join(__resources__, 'no_image.png'))
-        
-        if self.bartop < 50:
-            self.icon.setPosition(self.screen_width - (icon_width + 30), self.bartop + 30)
-        else:
-            self.icon.setPosition(self.screen_width - (icon_width + 30), self.bartop - (icon_height - 30))                
-        self.window.addControl(self.icon)
-        
         self._log("looking for url", 2)
         try:
             url = re.findall('\[(https?://.+)\]', text)[0]
@@ -715,11 +655,58 @@ class TeamWatch():
                     self._log("HTTP Error: %s %s" % (e.code, url))
                 except urllib2.URLError, e:
                     self._log("URL Error: %s %s" % (e.reason, url))
-                    
-        self.icon.setImage(icon_file, useCache=True)  
+
+        if xbmcgui.getCurrentWindowId() == self.WINDOW_FULLSCREEN_VIDEO:
+            icon_height = 150
+        else:
+            icon_height = 350
+
+        im = Image.open(icon_file)
+        icon_width = icon_height*im.width/im.height
+        im.close()
         
+        ICON_YPOS = 15
+        
+        self._log("adding icon", 2)
+        self.icon = xbmcgui.ControlImage(0, 0, icon_width, icon_height, os.path.join(__resources__, 'no_image.png'))
+
+        if self.bartop < 50:
+            self.icon.setPosition(self.screen_width - (icon_width + 30), self.bartop + ICON_YPOS)
+        else:
+            self.icon.setPosition(self.screen_width - (icon_width + 30), self.bartop - (icon_height - ICON_YPOS))                
+        self.window.addControl(self.icon)
+        
+        self.icon.setImage(icon_file, useCache=True)  
+
         self._log("icon file: %s" % icon_file, 2)
         self._log("icon: %s" % icon, 2)
+        
+        self._log("adding background", 2)
+        if icon in range(7):
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin[
+                ['bar_chat', 'bar_twitter', 'bar_settings', 'bar_telegram', 'bar_rssfeed', 'bar_facebook', 'bar_email', 'bar_settings'][icon]
+            ]))
+        else:
+            self.background = xbmcgui.ControlImage(0, self.bartop, self.screen_width, 75, os.path.join(__resources__, self.skin['bar_chat']))
+
+        self.window.addControl(self.background)
+        
+        icon_top = self.bartop + 4
+        if self.RSS_OFF:
+            self.icon_rss_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(__resources__, self.skin['icon_rss_off']))
+            self.window.addControl(self.icon_rss_off)
+            icon_top = self.bartop + 41
+            
+        if self.TWEETS_OFF:
+            self.icon_tweet_off = xbmcgui.ControlImage(85, icon_top, 30, 30, os.path.join(__resources__, self.skin['icon_tweet_off']))
+            self.window.addControl(self.icon_tweet_off)
+        
+        self._log("adding feedtext", 2)        
+        if self.RSS_OFF or self.TWEETS_OFF:
+            self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']) + 50, self.bartop + 5, self.screen_width-140, 75, font=self.skin['font'], textColor=self.skin['text_color'])
+        else:
+            self.feedtext = xbmcgui.ControlFadeLabel(int(self.skin['margin_left']), self.bartop + 5, self.screen_width-90, 75, font=self.skin['font'], textColor=self.skin['text_color'])
+        self.window.addControl(self.feedtext)
         
         text = text.replace('\n', ' ').replace('\r', '').replace('  ', ' ')
         if user == 'rss' or user == '':

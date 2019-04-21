@@ -63,6 +63,27 @@ class facebook():
             if 'src' in el.attrs:
                 self.session.get(self._relative_url(el['src']), headers = self.headers)
 
+    def _time_convert(self, time, months = 'gennaio|febraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre'.split('|')):
+        time_re = re.search(r'^(\d{1,2})\s+([^\s]+).+?(\d{2}):(\d{2})$', time)
+
+        if time_re:
+            time = '{:0d}/{:0>2d}/{} {:0>2d}:{:0>2d}'.format(int(time_re.group(1)), months.index(time_re.group(2))+1, datetime.now().year, int(time_re.group(3)), int(time_re.group(4)))
+            min = (datetime.now()-datetime.strptime(time, '%d/%m/%Y %H:%M')).seconds/60
+            if min > 60:
+                time = '{}h {}m'.format(int(min/60), min-(int(min/60)*60))
+            else:
+                time = '{}m'.format(min)
+        elif re.search(r'^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$', time):
+            min = (datetime.now()-datetime.strptime(time, '%Y-%m-%d %H:%M:%S')).seconds/60
+            if min > 60:
+                time = '{}h {}m'.format(int(min/60), min-(int(min/60)*60))
+            else:
+                time = '{}m'.format(min)
+        else:
+            time = time.replace(' min', 'm').replace(' h', 'h')
+
+        return time
+
     def _get(self, url):
         result = self.session.get(url, headers = self.headers, cookies = self.cookies)
         self.headers['Referer'] = url
@@ -218,7 +239,10 @@ class facebook():
                             post_time = str(datetime.fromtimestamp(int(post_time.group(1))))
                             break
             
-            self._log('post time = ' + str(post_time))
+            if post_time:
+                r_post_time = self._time_convert(post_time)
+                self._log('post time: {} --> {}'.format(post_time, r_post_time))
+                post_time = r_post_time          
             
             if not post.find('h3'): # or not 'dv' in post.find('h3').attrs['class']: 
                 self._log('h3 not found')
@@ -295,6 +319,3 @@ if __name__ == '__main__':
             print 'receiveid {} from facebook'.format(fb.status_code)
             
         fb.close()
-
-
-
