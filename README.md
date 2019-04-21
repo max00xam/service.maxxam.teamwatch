@@ -31,8 +31,6 @@ Commands
 
 ``#tw:bar:bottom`` - the bar will be displayed in the bottom of the screen
 
-``#tw:sendlog`` - send a log to pastebin
-
 ``#tw[pc]:addfeed:<feed>`` - add a new feed to follow
   
 ``#tw[pc]:removefeed:<feed>`` - remove a feed from your followed feeds
@@ -47,11 +45,17 @@ Commands
 
 ``#tw[pc]:playerctl:seek:<hh>:<mm>:<ss>:<cent>`` - seek the current video to the time hh:mm:ss:cent
   
-``#tw[pc]:playstream:<url>`` - start playing video stream from url
+``#tw[pc]:playstream:<url>[&m_title=<title>`` - start playing video stream from url 
+
+**url** can be to open stream or to wstream, backin, openload, akstream
+
+``#tw[pc]:playstream:<title>#<wstream>|<backin>|<openload>|<akstream>`` - search title and start playing
+
+search **title** and scrape urls from one italian website, so the language is __only__ italian at the moment
   
-``#tw[pc]:invite:m:<title>`` - invite other users to watch a movie (all the users must have the movie in the kodi library)
+``#twpc:invite:m:<title>`` - invite other users to watch a movie (all the users must have the movie in the kodi library)
   
-``#tw[pc]:invite:e:<title>:<season>:<episode>`` - invite other users to watch a tvshow (all the users must have the tvshow episode in the kodi library)
+``#twpc:invite:e:<title>:<season>:<episode>`` - invite other users to watch a tvshow (all the users must have the tvshow episode in the kodi library)
 
 
   
