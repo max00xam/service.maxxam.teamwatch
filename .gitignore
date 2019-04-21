@@ -1,13 +1,8 @@
-scrapers/*
-
 release/*
-
 resources/images/*
-
 README.txt
-
 beep.wav
-
 contextmenu.py
-
 resources/maxxam_vuota.png
+*.pyc
+*.pyo
