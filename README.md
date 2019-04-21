@@ -53,10 +53,4 @@ Commands
 
 search **title** and scrape urls from one italian website, so the language is __only__ italian at the moment
   
-``#twpc:invite:m:<title>`` - invite other users to watch a movie (all the users must have the movie in the kodi library)
-  
-``#twpc:invite:e:<title>:<season>:<episode>`` - invite other users to watch a tvshow (all the users must have the tvshow episode in the kodi library)
-
-
-  
 If the command is used with "``#twpc:``" instead of "``#tw:``" it will be sent to all the users sharing the some "Player control ID" with you.
