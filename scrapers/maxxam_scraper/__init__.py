@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 import cfscrape
 import requests
 import re, random, sys
 import jsunpack
 from bs4 import BeautifulSoup
+
+import traceback
 
 try:
     import xbmc
@@ -10,23 +13,24 @@ try:
 except:
     NO_XBMC = True
 
-STATUS = []
+STATUS = ['START']
+DEBUG = False
+
 _vars = {}
 _vars['for_idx'] = -1
 _vars['if_status'] = True
 _vars['headers'] = {}
 _vars['cookies'] = {}
 
-log_enabled = False
-
 def _debug(data):
-    fout = open('debug.out', 'w+')
-    fout.write(_vars[data])
-    fout.close()
+    if DEBUG and NO_XBMC:
+        fout = open('debug.out', 'w+')
+        fout.write(data)
+        fout.close()
     
-def _log(data):    
-    if log_enabled:
-        log_text = 'maxxam_scraper: {}'.format(str(data))
+def _log(tag, data):    
+    if DEBUG:
+        log_text = 'maxxam {}: {}'.format(tag, str(data))
         if NO_XBMC:
             print (log_text)
         else:
@@ -79,84 +83,126 @@ def _get(params):
     p_dict = eval('{}'.format(params[1]))
     for key in p_dict.keys():
         _vars[key] = p_dict[key]
-    
-    if 'Referer' in _vars['headers']:
-        ref = _vars['headers']['Referer']
-    else:
-        ref = None
-        
-    _vars['headers'] = _randomheaders()
-    if ref: _vars['headers']['Referer'] = ref
-    
-    if 'add_headers' in _vars:
-        for key in _vars['add_headers'].keys():
-            _vars['headers'][key] = _vars['add_headers'][key]
 
-    scraper = cfscrape.create_scraper()
-
-    _log(_vars['headers'])
-    _log(_vars['cookies'])
-
-    if 'allow_redirects' in _vars:
-        response = scraper.get(_vars['url'], headers=_vars['headers'], cookies=_vars['cookies'], allow_redirects=_vars['allow_redirects'])
-        # response = requests.get(_vars['url'], proxies='', headers=_vars['headers'], cookies=_vars['cookies'], allow_redirects=False)
-    else:
-        response = scraper.get(_vars['url'], headers=_vars['headers'], cookies=_vars['cookies'])
-    
-    _log(response.headers)
-    _setcookies(response, _vars['cookies'])
-    _vars['headers']['Referer'] = _vars['url']
-    _vars[params[0]] = response.text
-    _vars['get_response'] = response
-    _vars['soup'] = BeautifulSoup(response.text, 'html.parser')
-    
     try:
-        pass
+        _log('_get url', _vars['url'])
+        
+        if 'Referer' in _vars['headers']:
+            ref = _vars['headers']['Referer']
+        else:
+            ref = None
+            
+        _vars['headers'] = _randomheaders()
+        if ref: _vars['headers']['Referer'] = ref
+        
+        if 'add_headers' in _vars:
+            for key in _vars['add_headers'].keys():
+                _vars['headers'][key] = _vars['add_headers'][key]
+
+        scraper = cfscrape.create_scraper()
+
+        _log('_get headers', _vars['headers'])
+        _log('_get cookies', _vars['cookies'])
+
+        if 'allow_redirects' in _vars:
+            response = scraper.get(_vars['url'], headers=_vars['headers'], cookies=_vars['cookies'], allow_redirects=_vars['allow_redirects'])
+            # response = requests.get(_vars['url'], proxies='', headers=_vars['headers'], cookies=_vars['cookies'], allow_redirects=False)
+        else:
+            response = scraper.get(_vars['url'], headers=_vars['headers'], cookies=_vars['cookies'])
+        
+        _log('_get response', str(response))
+        _log('_get response headers', response.headers)
+        _setcookies(response, _vars['cookies'])
+        _vars['headers']['Referer'] = _vars['url']
+        _vars[params[0]] = response.text
+        _vars['get_response'] = response
+        _vars['soup'] = BeautifulSoup(response.text, 'html.parser')
+        
+        _debug(str(response) + '\n' + (response.text).encode('utf8'))
     except:
         global STATUS
-        STATUS = ['ERROR', 'unable to get url "{}"'.format(_vars['url']), '_get', params]
+        STATUS = ['ERROR', '{}'.format(sys.exc_info()), '_get', params]
         
-def _re_findall(params):
+def _re_findall(params): 
+    # params = ['var name', 'regex', 'page' [, 'flags=0']]
+    #
+    # regex flags = 0
+    # The expression’s behaviour can be modified by specifying a flags value. Values can be any of the following variables, 
+    # combined using bitwise OR (the | operator).   
+    #
+    # re.DEBUG
+    # re.I re.IGNORECASE
+    # re.L re.LOCALE
+    # re.M re.MULTILINE
+    # re.S re.DOTALL
+    # re.U re.UNICODE
+    # re.X re.VERBOSE
+    
+    result_var_name, pattern, text_var_name = params[:3]
+    
+    if len(params) == 3:
+        flags = 0
+    else:
+        flags = eval(params[3])
+    
+    
     try:
-        _vars[params[0]] = params[1]
-        _vars[params[0]+'_result'] = [x for x in re.findall(_vars[params[0]], _vars[params[2]])]
-        _log('>>> _re_findall result: {}'.format(_vars[params[0]+'_result']))
+        _vars[result_var_name] = [x for x in re.findall(pattern, _vars[text_var_name], flags=flags)]
+        _log('_re_findall', '>>> _re_findall result: {}'.format(_vars[result_var_name]))
     except:
         global STATUS
-        STATUS = ['ERROR', 'regex error "{}"'.format(params[1]), '_re_findall', params]
+        STATUS = ['ERROR', '{} {}'.format(sys.exc_info()[1][0], traceback.print_stack()), '_re_findall', params]
         
 def _re_search(params):
+    # params = ['var_name', 'regex', 'page' [, 'flags=0']]
+    #
+    # regex flags = 0
+    # The expression’s behaviour can be modified by specifying a flags value. Values can be any of the following variables, 
+    # combined using bitwise OR (the | operator).   
+    #
+    # re.DEBUG
+    # re.I re.IGNORECASE
+    # re.L re.LOCALE
+    # re.M re.MULTILINE
+    # re.S re.DOTALL
+    # re.U re.UNICODE
+    # re.X re.VERBOSE
+    
+    result_var_name, pattern, text_var_name = params[:3]
+    
+    if len(params) == 3:
+        flags = 0
+    else:
+        flags = eval(params[3])
+    
     try:
-        _vars[params[0]] = params[1]
-       
-        match = re.search(_vars[params[0]], _vars[params[2]])
+        match = re.search(pattern, _vars[text_var_name], flags=flags)
         if match:
             if match.groupdict():
                 for key in match.groupdict().keys(): _vars[key] = match.groupdict()[key]
 
-            _vars[params[0]+'_result'] = match.groups()
+            _vars[result_var_name] = match.groups()
         else:
-            _vars[params[0]+'_result'] = None
+            _vars[result_var_name] = None
             
-        _log('>>> _re_search result: {}'.format(_vars[params[0]+'_result']))
+        _log('_re_search', '>>> _re_search result: {}'.format(_vars[result_var_name]))
     except:
         global STATUS
-        STATUS = ['ERROR', 'regex error "{}"'.format(params[1]), '_re_search', params]
+        STATUS = ['ERROR', '{} {}'.format(sys.exc_info()[1][0], traceback.print_stack()), '_re_search', params]
     
 def _python(params):
     try:
         exec('global _vars' + '\n' + params[0])
-    except Exception as err:
+    except:
         global STATUS
-        STATUS = ['ERROR', 'python error: "{}"'.format(err), '_python', params]
-        _log(STATUS)
+        STATUS = ['ERROR', '{} {}'.format(sys.exc_info()[1][0], traceback.print_stack()), '_python', params]
     
 def _eval(params):
     try:
         _vars[params[0]] = eval(params[1])
-    except Exception as err:
+    except:
         global STATUS
-        STATUS = ['ERROR', 'eval error: "{}"'.format(err), '_eval', params]
+        STATUS = ['ERROR', '{} {}'.format(sys.exc_info()[1][0], traceback.print_stack()), '_eval', params]
 
 def _if(params):
     _vars['if_status'] = bool(eval(params))
@@ -165,45 +211,64 @@ def _endif():
     _vars['if_status'] = True
     
 def _for_in(params):
+    _log('for_in params', params)
+    _log('for_in idx', _vars['for_idx'])
+    
     _vars[params[0]] = eval(params[1])[_vars['for_idx']]
+    
+    _log('{}'.format(params[0]), _vars[params[0]])
         
 def _end_for():
     pass
+
+def scrape(params, json = '', log=False):
+    #
+    # params: string --> url
+    #         dict   --> key "scraper": scraper_id 
+    #         dict   --> url (lo scraper viene selezionato con le regex)
+    #
+    # json:   il json con gli scrapers (se non si vuole utilizzare quello di default)
+    #
+    # log:    abilita / disabilita il log di debug
+    #
+    ###############################################################################################################
     
-def scrape(params, json = '', log=False):    
-    global STATUS, log_enabled
-    log_enabled = log
-    _log ('scrape sarted with params = {}'.format(params))
+    global DEBUG, STATUS
     
-    STATUS = []
-    if isinstance(params, basestring):
+    DEBUG = log
+    _log ('scrape', 'scrape sarted with params = {}'.format(params))
+    
+    if isinstance(params, (basestring, str, unicode)):
         _vars['url'] = params
         if 'params' in _vars: _vars.__delitem__('params')
     else:
         if 'url' in _vars: _vars.__delitem__('url')
         _vars['params'] = params
         
-    if json: _vars['json'] = json
-    
+    if json: 
+        _vars['json'] = json
+    elif not 'json' in _vars:
+        return
+            
     _vars['headers'] = {}
-    # _log ('start scraping {}'.format(_vars))
     
     source = None
-    if _vars.has_key('params'):
-        if _vars['params'].has_key('scraper'):
+    if 'params' in _vars:
+        if 'scraper' in _vars['params'] and _vars['params']['scraper'] in _vars['json']['url_scrapers']:
             source = _vars['json']['url_scrapers'][_vars['params']['scraper']]['scrape']
-            _log('found scraper source {}'.format(_vars['params']['scraper']))
-        elif _vars['params'].has_key('url'):
+            scraper = _vars['params']['scraper']
+            _log('scrape', 'found scraper source {}'.format(_vars['params']['scraper']))
+        elif 'url' in _vars['params']:
             _vars['url'] = _vars['params']['url']
-            _log('found url {}'.format(_vars['params']['url']))
+            _log('scrape', 'found url {}'.format(_vars['params']['url']))
             
-    if not source and _vars.has_key('url'):
-        for scr in _vars['json']['url_scrapers']:
-            if 'regex' in _vars['json']['url_scrapers'][scr]:
-                for reg in _vars['json']['url_scrapers'][scr]['regex']:
-                    _log('testing scraper {}'.format(scr))
+    if not source and 'url' in _vars:
+        for scraper in _vars['json']['url_scrapers']:
+            if 'regex' in _vars['json']['url_scrapers'][scraper]:
+                for reg in _vars['json']['url_scrapers'][scraper]['regex']:
+                    _log('scrape', 'testing scraper {}'.format(scraper))
                     if re.search(reg, _vars['url']): 
-                        source = _vars['json']['url_scrapers'][scr]['scrape']
+                        source = _vars['json']['url_scrapers'][scraper]['scrape']
                         break
                     
             if source: break
@@ -212,13 +277,13 @@ def scrape(params, json = '', log=False):
         line = 0
         while True:
             if STATUS and STATUS[0] == 'ERROR':
-                _log(STATUS)
+                _log('scrape.source({}:{})'.format(scraper, line), STATUS)
                 return STATUS
                 
             cmd = source[line]
-            _log ('{} {}'.format(cmd, _vars['if_status']))
-            if cmd[0] == '#':
-                _log(cmd[1:])
+            _log('scrape.source({}:{})'.format(scraper, line), '{} {}'.format(cmd, _vars['if_status']))
+            if cmd[0][0] == '#':
+                _log('scrape.source({}:{})'.format(scraper, line), cmd[1:])
             elif cmd[0] == 'if':
                 _if(cmd[1])
             elif cmd[0] == 'endif':
@@ -234,9 +299,10 @@ def scrape(params, json = '', log=False):
             elif _vars['if_status'] and cmd[0] == 'eval':
                 _eval(cmd[1:])
             elif cmd[0] == 'debug':
-                # _debug(cmd[1])
-                pass
+                print str(cmd[1:])
             elif _vars['if_status'] and cmd[0] == 'for_in':
+                _log('for_idx', _vars['for_idx'])
+            
                 if _vars['for_idx'] == -1: 
                     _vars['for_idx'] = 0
                     _vars['max_idx'] = len(eval(cmd[2]))-1
@@ -250,41 +316,112 @@ def scrape(params, json = '', log=False):
                 else:
                     _vars['for_idx'] = -1
             elif _vars['if_status'] and cmd[0] == 'return':
-                _python(cmd[1:])
-                _log(_vars['result'])
+                _vars['for_idx'] = -1
+                _vars['if_status'] = True
 
-                for idx in range(0, len(_vars['result'])):
-                    if 'url' in _vars['result'][idx] and not 'stop' in _vars['result'][idx]:
-                        if test(_vars['result'][idx]['url']):
-                            save_result = _vars['result'][idx]
-                            tmp = scrape(_vars['result'][idx]['url'], log = True)
-                            _log('result: ' + str(tmp))
-                            if 'url' in tmp:
-                                _vars['result'][idx] = save_result
-                                _vars['result'][idx]['url'] = tmp['url']
+                _python(cmd[1:])
+                _log('scrape.source({}:{})'.format(scraper, line), _vars['result'])
+                
+                for item in _vars['result']:
+                    _log('scrape.source result', item)
+                    
+                    if 'url' in item and 'stop' in item:
+                        _log('scrape.source result', str('url' in item and 'stop' in item)) # True
+                        return _vars['result']
+                    
+                    if test(item['url']):
+                        return scrape(item['url'], log = True)
+                        _log('scrape.source({}:{})'.format(scraper, line), 'result: ' + str(tmp))
                             
-                return _vars['result']
+                return []
             elif _vars['if_status']:
-                _log("Syntax error in {}".format(cmd))
+                _log('scrape.source({}:{})'.format(scraper, line), "Syntax error in {}".format(cmd))
                 break
                 
             line+=1
     else:
-        _log('no source found for: {}'.format(_vars['url']))
-        
-def test(param):
-    for scr in _vars['json']['url_scrapers']:
-        if 'regex' in _vars['json']['url_scrapers'][scr]:
-            for regex in _vars['json']['url_scrapers'][scr]['regex']:
-                _log ('{} {}'.format(regex, param))
-                if re.search(regex, param): return True
-            
-    return False
+        _log('scrape', 'no source found for: {}'.format(params))
 
-try:
-    fin = open('NgnZ2jnfa443f1KOG7Xz', 'r')
-    _vars['json'] = eval(fin.read())
-    fin.close()
-except:
-    _get(['json', "{'url': 'https://www.teamwatch.it/NgnZ2jnfa443f1KOG7Xz'}"])
-    _vars['json'] = eval(_vars['json'])
+def _is_url(param):
+    return param.startswith('http://') or param.startswith('https://')
+    
+def _find_scraper(url):
+    scrapers = _vars['json']['url_scrapers']
+    for scraper in scrapers:
+        regex = _vars['json']['url_scrapers'][scraper]['regex'] if 'regex' in  _vars['json']['url_scrapers'][scraper] else []
+        for r in regex:
+            _log('test scraper', '{} regex {}'.format(scraper, r))
+            if re.search(r, url): return scraper
+    
+    return False
+    
+def get_sites(json = ''):
+    if json: 
+        _vars['json'] = json
+    elif not 'json' in _vars:
+        return
+    
+    return _vars['json']['url_scrapers'].keys()
+    
+def movie_info():
+    res = {}
+    for a in ['title', 'genres', 'runtime', 'country']:
+        if a in _vars: res[a] = _vars[a]
+    return res
+    
+def test(param, json = '', log=False):
+    #
+    # param   <stream_url>                                                     -->  test if url can be scraped
+    #         [<stream_url>, ... ]
+    #         {'url': <stream_url>, ... }
+    #         {'url': [<stream_url>, ...], ... }
+    #
+    #         <site_id>#<search_text>#<stream_site_id>: ... :<stream_site_id>  -->  search site for stream urls
+    #
+    ################################################################################################################
+
+    global DEBUG, STATUS
+    
+    DEBUG = log
+    
+    if json: 
+        _vars['json'] = json
+    elif not 'json' in _vars:
+        return
+    
+    _log('starting test with param: {}'.format(type(param)), param)
+    
+    url = None    
+    if isinstance(param, (str, unicode, basestring)):
+        if _is_url(param): 
+            url = [param]
+        elif '#' in param and len(param.split('#')) == 3:
+            site_id, search_text, stream_sites = param.split('#')
+            stream_sites = stream_sites.split(':')
+        elif '#' in param and len(param.split('#')) == 2:
+            site_id, search_text = param.split('#')
+            stream_sites = get_sites()
+        else:
+            return False
+    elif isinstance(param, dict) and 'url' in param and isinstance(param['url'], str):
+        url = [param['url']]
+    elif isinstance(param, dict) and 'url' in param and isinstance(param['url'], list):
+        url = param['url']
+    elif isinstance(param, list):
+        url = param
+    else:
+        _log('test exit 2', type(param))
+        return False
+
+    if url:        
+        for url_test in url: 
+            test = _find_scraper(url_test)
+            _log('test ({})'.format(url_test), 'result: ' + str(test))
+            return bool(test)
+    else:
+        scrapers = _vars['json']['url_scrapers']
+        test = (site_id in scrapers) and bool([site for site in scrapers if site in stream_sites])
+        _log('test ({})'.format(site_id), 'result: ' + str(test))
+        return test
+        
+    return False

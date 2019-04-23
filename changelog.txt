@@ -1,29 +1,16 @@
-v0.0.1
-- Initial commit
 
-v0.0.5
-- Added command #tw:sendlog
-- Minor bug fix
+v0.0.14
+- cineblog01 and openloadmovie.org scrapers
+- scraper library betatesting and restructuring
+- playstream added command #tw:playstream:<site>#<title>[#<streaming-site>,...]
+- icon image resize if not playing
 
-v0.0.6
-- Added send messages from telegram with feed #tw_send
-
-v0.0.8
-- Added skins support
-
-v0.0.9
-- Profile icon
-- RSS and Twitter feeds
-- Minor bug fix
-
-v0.0.10
-- Email notifications
-- Facebook notifications (email)
-- show_message code rewrite
-- added commands #tw:rss:[on|off] and #tw:tweet:[on|off]
-
-v0.0.11
-- messages encryption
+v0.0.13
+- added facebook notifications
+- language settings for imdb
+- do not start playstream if there is already a movie in play (pause the movie and dialog) [@Rayquaza89]
+- removed commands #tw:debug, #twpc:invite
+- fixed icon "flashing" bug
 
 v0.0.12
 - change settings without restarting
@@ -35,9 +22,29 @@ v0.0.12
 - bug fix playpause, seek
 - font selection if it does not find the font in the .skin file
 
-v0.0.13
-- added facebook notifications
-- language settings for imdb
-- do not start playstream if there is already a movie in play (pause the movie and dialog) [@Rayquaza89]
-- removed commands #tw:debug, #twpc:invite
-- fixed icon "flashing" bug
+v0.0.11
+- messages encryption
+
+v0.0.10
+- Email notifications
+- Facebook notifications (email)
+- show_message code rewrite
+- added commands #tw:rss:[on|off] and #tw:tweet:[on|off]
+
+v0.0.9
+- Profile icon
+- RSS and Twitter feeds
+- Minor bug fix
+
+v0.0.8
+- Added skins support
+
+v0.0.6
+- Added send messages from telegram with feed #tw_send
+
+v0.0.5
+- Added command #tw:sendlog
+- Minor bug fix
+
+v0.0.1
+- Initial commit

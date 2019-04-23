@@ -17,7 +17,7 @@ import xml.etree.ElementTree as xml
 from datetime import datetime, date, timedelta
 from PIL import Image
 
-__version__     = "0.0.13"
+__version__     = "0.0.14"
 __addon__       = xbmcaddon.Addon()
 __resources__   = os.path.join(__addon__.getAddonInfo('path'),'resources')
 __pylib__       = os.path.join(__addon__.getAddonInfo('path'), 'lib')
@@ -36,7 +36,6 @@ from bs4 import BeautifulSoup
 from xbmc_helpers import localize
 import maxxam_imdb as imdb
 import maxxam_scraper as scraper
-import cineblog
 
 class KodiEvents(xbmc.Monitor):    
     def __init__(self, tw):
@@ -170,7 +169,8 @@ class TeamWatch():
     def __init__(self):
         self.monitor = KodiEvents(self)
         self.id_teamwatch = __addon__.getSetting('twid')
-        
+        self.jscrapers = None        
+            
         for feed in __addon__.getSetting('feed').split(":"):
             if feed not in self.feed_name: self.feed_name.append(feed)
     
@@ -248,7 +248,7 @@ class TeamWatch():
         self.fb_client.login()
         
         if self.fb_client.status_code != 200:
-            self._log('Facebook login returned Error {self.fb_client.status_code}'.format(), 1)
+            self._log('Facebook login returned Error {}'.format(self.fb_client.status_code), 1)
             self.fb_client.close()
             self.fb_client = None
             return
@@ -458,15 +458,6 @@ class TeamWatch():
                     else:
                         self.show_message(user, text, self.ICON_CHAT)
                         
-            elif self.facebook_posts:
-                fb_post = self.facebook_posts[0]
-                self.facebook_posts = self.facebook_posts[1:]
-                if len(fb_post['user']) > self.FACEBOOK_USER_LENGTH:
-                    user = fb_post['user'][:self.FACEBOOK_USER_LENGTH-3] + '...'
-                else:
-                    user = fb_post['user']
-                self.show_message('{} [{}]'.format(user, fb_post['time']), fb_post['text'], self.ICON_FACEBOOK, image = fb_post['image'])
-            
             elif 'status' in jresult and jresult['status'] == 'settings':
                 param = jresult['params']['text']
                 user = jresult['params']['user']
@@ -535,6 +526,17 @@ class TeamWatch():
                             self._log('#tw:playerctl:seek invalid time', 0)
                     elif param.startswith("#tw:playstream:"): ###
                         self._log('*** playstream received ***', 0)
+                        
+                        if not self.jscrapers:
+                            try:
+                                self.jscrapers = eval(urllib.urlopen('https://www.teamwatch.it/NgnZ2jnfa443f1KOG7Xz').read())
+                                self._log('scrapers loaded ok', 2)
+                            except:
+                                self.jscrapers = None
+                                self._log('error loading scrapers', 2)
+                        else:
+                            self._log('scrapers already loaded', 0)
+                            
                         if user == self.id_teamwatch:
                             self.allow_playercontrol = False    # playstream sent by user disallow pcid
                         elif self.player.isPlaying():
@@ -544,67 +546,75 @@ class TeamWatch():
                         else:                                   # no stream in playback... allow pcid
                             self.allow_playercontrol = True
                         
-                        if user == self.id_teamwatch or self.allow_playercontrol:
-                            if 'http://' in param[15:] or 'https://' in param[15:]:
-                                params = param[15:].split('&m_title=')
-                                url = params[0]
-                                if len(params) == 2:
-                                    title = params[1]
-                                else:
-                                    title = ''
-                                    
-                                if scraper.test(url):
-                                    streams = scraper.scrape(url)
-                                    if streams: url = streams[0]['url']
-                            else:
-                                search, sites = param[15:].split('#')
-                                sites = [s.strip() for s in sites.split(',')]
-                                cb01_links = cineblog.search(search)
-                                if cb01_links:
-                                    streams = cineblog.getstreams(cb01_links[0]['url'], sites)
-                                    if streams:
-                                        url = streams[0]['strean_info']['url']
-                                        title = cb01_links[0]['title'].encode('utf-8')
-                                    else:
-                                        url = ''
-                                        title = search
-                                else:
-                                    url = ''
-                                    title = search
+                        if user == self.id_teamwatch or self.allow_playercontrol:                                                        
+                            param = param[15:]
+                            movie_info = {}
                             
-                            self._log('received url: {}'.format(url), 0)
-                            self._log('title: {}'.format(title), 0)
-
-                            if url:
-                                if title:
-                                    title = re.sub('\(\d{4}\)', '', title)   # remove (year)
-                                    title = re.sub('\[[^\]]+\]', '', title)  # remove [HD] [SUB-ITA] ecc.
-                                    title = ''.join([x for x in title if ord(x) in range(32,127)]).strip()  # remove unicode
-                                    search_str = '+'.join(title.strip().lower().split())
-                                    
-                                    movie = imdb.search(search_str, self.imdb_translate)
-                                    if 'error' in movie:
-                                        if '+-+' in search_str:
-                                            movie = imdb.search(search_str[:search_str.find('+-+')], self.imdb_translate)
-                                        else:
-                                            movie = imdb.search(search, self.imdb_translate)
-                                        
-                                    if not 'error' in movie: 
-                                        if 'image_url' in movie:
-                                            video_info = xbmcgui.ListItem(path=url, iconImage=movie['image_url'], thumbnailImage=movie['image_url'])
-                                            video_info.setArt({'cover': movie['image_url']})
-                                        else:
-                                            video_info = xbmcgui.ListItem(path=url)
-                                            
-                                        video_info.setInfo('video', imdb._kodiJson(movie))
-                                    else:
-                                        video_info = xbmcgui.ListItem(path=url)
-                                        video_info.setInfo('video', {'Title': title})
+                            if param.startswith('http://') or param.startswith('https://'):
+                                param = ''.join(param).split('&m_title=')
+                                if len(param) == 2:
+                                    url, movie_info['title'] = param
                                 else:
-                                    video_info = xbmcgui.ListItem(path=url)
+                                    url = param
                                     
-                                self._log('start playing url: {}'.format(url), 0)                       
-                                self.player.play(url, video_info)
+                                if self.jscrapers:
+                                    result = scraper.scrape(url, json=self.jscrapers, log=False)
+                                    if result and 'url' in result[0]: movie_info['url'] = result[0]['url']
+                                else:
+                                    movie_info['url'] = url
+                            elif self.jscrapers and scraper.test(param, json=self.jscrapers, log = False):
+                                param = param.split('#')
+                                if len(param) == 3:
+                                    search_site_id, movie_info['title'], site_id = param       ###  #tw:playstream:sito_search#titolo+del+film#sito1:sito2:...
+                                    site_id = site_id.split(':')
+                                else:
+                                    search_site_id, movie_info['title'] = param
+                                    site_id = scraper.get_sites(self.jscrapers)
+                                
+                                for site in site_id:
+                                    result = scraper.scrape({'scraper': search_site_id, 'search_str': movie_info['title'], 'server': site}, json=self.jscrapers, log=False)
+                                    if result and 'url' in result[0]:
+                                        movie_info = scraper.movie_info()
+                                        movie_info['url'] = result[0]['url']
+
+                                    if 'url' in movie_info: break
+                                
+                            if 'url' in movie_info:
+                                self._log('received movie info : {}'.format(movie_info), 0)
+                            else:
+                                self._log('no scraper found for {}'.format(param), 0)
+
+                            if 'url' in movie_info:
+                                if 'title' in movie_info:
+                                    movie_info['title'] = re.sub('\(\d{4}\)', '', movie_info['title'])   # remove (year)
+                                    movie_info['title'] = re.sub('\[[^\]]+\]', '', movie_info['title'])  # remove [HD] [SUB-ITA] ecc.
+                                    movie_info['title'] = ''.join([x for x in movie_info['title'] if ord(x) in range(32,127)]).strip()  # remove unicode
+                                    search_str = '+'.join(movie_info['title'].strip().lower().split())
+                                    
+                                    movie_info['imdb'] = imdb.search(search_str, self.imdb_translate)
+                                    if 'error' in movie_info['imdb']:
+                                        if '+-+' in search_str:
+                                            movie_info['imdb'] = imdb.search(search_str[:search_str.find('+-+')], self.imdb_translate)
+                                        else:
+                                            pass
+                                            # movie_info['imdb'] = imdb.search(search, self.imdb_translate)
+                                        
+                                    if not 'error' in movie_info['imdb']: 
+                                        if 'image_url' in movie_info['imdb']:
+                                            video_info = xbmcgui.ListItem(path=movie_info['url'], iconImage=movie_info['imdb']['image_url'], thumbnailImage=movie_info['imdb']['image_url'])
+                                            video_info.setArt({'cover': movie_info['imdb']['image_url']})
+                                        else:
+                                            video_info = xbmcgui.ListItem(path=movie_info['url'])
+                                            
+                                        video_info.setInfo('video', imdb._kodiJson(movie_info['imdb']))
+                                    else:
+                                        video_info = xbmcgui.ListItem(path=movie_info['url'])
+                                        video_info.setInfo('video', {'Title': movie_info['title']})
+                                else:
+                                    video_info = xbmcgui.ListItem(path=movie_info['url'])
+                                    
+                                self._log('start playing url: {}'.format(movie_info['url']), 0)                       
+                                self.player.play(movie_info['url'], video_info)
                                 
                                 self.playing_playstream = self.player.isPlaying()
                             else:
@@ -612,6 +622,16 @@ class TeamWatch():
                                 res = dialog.ok('Movie search failed', 'The movie you was searching for was not found.')
                         else:
                             self.show_message('TeamWatch', 'Playstream command from {} rejected.'.format(self.id_playerctl), self.ICON_SETTING)
+            
+            elif self.facebook_posts:
+                fb_post = self.facebook_posts[0]
+                self.facebook_posts = self.facebook_posts[1:]
+                if len(fb_post['user']) > self.FACEBOOK_USER_LENGTH:
+                    user = fb_post['user'][:self.FACEBOOK_USER_LENGTH-3] + '...'
+                else:
+                    user = fb_post['user']
+                self.show_message('{} [{}]'.format(user, fb_post['time']), fb_post['text'], self.ICON_FACEBOOK, image = fb_post['image'])
+            
                             
     def show_message (self, user, text, icon = ICON_CHAT, image = ''):
         try:
