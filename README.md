@@ -47,10 +47,14 @@ Commands
   
 ``#tw[pc]:playstream:<url>[&m_title=<title>`` - start playing video stream from url 
 
-**url** can be to open stream or to wstream, backin, openload, akstream
+**url** can be to 'open stream' or to wstream, backin, akvideo, openload, verystream, streamango
 
-``#tw[pc]:playstream:<title>#<wstream>|<backin>|<openload>|<akstream>`` - search title and start playing
+``#tw[pc]:playstream:<site>#<title>[#<streaming-site>, ...]`` - search title and start playing
 
-search **title** and scrape urls from one italian website, so the language is __only__ italian at the moment
-  
+**site** can be 'cb01' (italian language site) or 'olm' (english language site openload dot org)
+
+**title** is a series of search words separated by spaces or plus sign (like 'hunger+games')
+
+**stream-site** (optional) is one ore more of wstream, backin, akvideo, openload, verystream, streamango
+
 If the command is used with "``#twpc:``" instead of "``#tw:``" it will be sent to all the users sharing the some "Player control ID" with you.
