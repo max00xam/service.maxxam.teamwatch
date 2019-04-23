@@ -461,45 +461,45 @@ class TeamWatch():
             elif 'status' in jresult and jresult['status'] == 'settings':
                 param = jresult['params']['text']
                 user = jresult['params']['user']
-                if param.startswith("#tw:addfeed:") and user == id_teamwatch:
+                if param.startswith("#tw:addfeed:") and user == self.id_teamwatch:
                     if not param[12:] in self.feed_name: 
                         self.feed_name.append(param[12:].lower())
                         __addon__.setSetting('feed', ":".join(self.feed_name))
                         self.show_message('TeamWatch', localize(32000, param[12:]), self.ICON_SETTING)
-                elif param.startswith("#tw:removefeed:") and user == id_teamwatch:
+                elif param.startswith("#tw:removefeed:") and user == self.id_teamwatch:
                     if param[15:].lower() in self.feed_name:                         
                         self.feed_name.remove(param[15:].lower())
                         __addon__.setSetting('feed', ":".join(self.feed_name))
                         self.show_message('TeamWatch', localize(32001, param[15:]), self.ICON_SETTING)
-                elif param == "#tw:off" and user == id_teamwatch:
+                elif param == "#tw:off" and user == self.id_teamwatch:
                     self.show_message('TeamWatch', localize(32002), self.ICON_SETTING)
                     self.show_disable_after = True
-                elif param == "#tw:on" and user == id_teamwatch:
+                elif param == "#tw:on" and user == self.id_teamwatch:
                     self.show_enable = True
                     self.show_message('TeamWatch', localize(32003), self.ICON_SETTING)
-                elif param == '#tw:rss:on' and user == id_teamwatch:
+                elif param == '#tw:rss:on' and user == self.id_teamwatch:
                     if self.RSS_OFF:
                         self.RSS_OFF = not self.RSS_OFF
                         self.show_message('TeamWatch', "RSS feeds show set to on", self.ICON_SETTING)
-                elif param == '#tw:rss:off' and user == id_teamwatch:
+                elif param == '#tw:rss:off' and user == self.id_teamwatch:
                     if not self.RSS_OFF:
                         self.RSS_OFF = not self.RSS_OFF
                         self.show_message('TeamWatch', "RSS feeds show set to off", self.ICON_SETTING)
-                elif param == '#tw:tweet:on' and user == id_teamwatch:
+                elif param == '#tw:tweet:on' and user == self.id_teamwatch:
                     if self.TWEETS_OFF:
                         self.TWEETS_OFF = not self.TWEETS_OFF
                         self.show_message('TeamWatch', "Twitter feeds show set to on", self.ICON_SETTING)
-                elif param == '#tw:tweet:off' and user == id_teamwatch:
+                elif param == '#tw:tweet:off' and user == self.id_teamwatch:
                     if not self.TWEETS_OFF:
                         self.TWEETS_OFF = not self.TWEETS_OFF
                         self.show_message('TeamWatch', "Twitter feeds show set to off", self.ICON_SETTING)
-                elif param == "#tw:bar:top" and user == id_teamwatch:
+                elif param == "#tw:bar:top" and user == self.id_teamwatch:
                     self.bartop = 0
                     self.show_message('TeamWatch', "Bar position set to top", self.ICON_SETTING)
-                elif param == "#tw:bar:bottom" and user == id_teamwatch:
+                elif param == "#tw:bar:bottom" and user == self.id_teamwatch:
                     self.bartop = self.screen_height - 75
                     self.show_message('TeamWatch', "Bar position set to bottom", self.ICON_SETTING)
-                elif param == "#tw:playerctl:sshot" and user == id_teamwatch:
+                elif param == "#tw:playerctl:sshot" and user == self.id_teamwatch:
                     xbmc.executebuiltin("TakeScreenshot")                    
                 elif user == self.id_teamwatch or self.allow_playercontrol:
                     """
