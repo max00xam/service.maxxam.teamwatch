@@ -551,7 +551,7 @@ class TeamWatch():
                             movie_info = {}
                             
                             if param.startswith('http://') or param.startswith('https://'):
-                                param = ''.join(param).split('&m_title=')
+                                param = param.split('&m_title=')
                                 if len(param) == 2:
                                     url, movie_info['title'] = param
                                 else:

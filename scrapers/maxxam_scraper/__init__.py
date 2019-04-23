@@ -149,7 +149,7 @@ def _re_findall(params):
         _log('_re_findall', '>>> _re_findall result: {}'.format(_vars[result_var_name]))
     except:
         global STATUS
-        STATUS = ['ERROR', '{} {}'.format(sys.exc_info()), '_re_findall', params]
+        STATUS = ['ERROR', '{}'.format(sys.exc_info()), '_re_findall', params]
         
 def _re_search(params):
     # params = ['var_name', 'regex', 'page' [, 'flags=0']]
@@ -186,21 +186,21 @@ def _re_search(params):
         _log('_re_search', '>>> _re_search result: {}'.format(_vars[result_var_name]))
     except:
         global STATUS
-        STATUS = ['ERROR', '{} {}'.format(sys.exc_info()), '_re_search', params]
+        STATUS = ['ERROR', '{}'.format(sys.exc_info()), '_re_search', params]
     
 def _python(params):
     try:
         exec('global _vars' + '\n' + params[0])
     except:
         global STATUS
-        STATUS = ['ERROR', '{} {}'.format(sys.exc_info()), '_python', params]
+        STATUS = ['ERROR', '{}'.format(sys.exc_info()), '_python', params]
     
 def _eval(params):
     try:
         _vars[params[0]] = eval(params[1])
     except:
         global STATUS
-        STATUS = ['ERROR', '{} {}'.format(sys.exc_info()), '_eval', params]
+        STATUS = ['ERROR', '{}'.format(sys.exc_info()), '_eval', params]
 
 def _if(params):
     _vars['if_status'] = bool(eval(params))

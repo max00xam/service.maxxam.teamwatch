@@ -17,7 +17,7 @@ if len(sys.argv) > 1:
         if len(param) == 2:
             url, movie_info['title'] = param
         else:
-            url = param
+            url = param[0]
             
         if jscrapers:
             result = scraper.scrape(url, json=jscrapers, log=False)
