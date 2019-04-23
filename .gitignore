@@ -6,3 +6,4 @@ contextmenu.py
 resources/maxxam_vuota.png
 *.pyc
 *.pyo
+scrapers/maxxam_scraper/2__init__.py
