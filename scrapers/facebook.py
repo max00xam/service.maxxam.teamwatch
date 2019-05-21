@@ -23,6 +23,16 @@ class facebook():
         self.base_url = ''
         self.scrape_items = False
             
+    def fuck_unicode (self, barray, repl = '?'):
+        out = ''
+        for c in barray:
+            try:
+                out += str(c)
+            except:
+                out += repl
+                
+        return out
+
     def _random_headers(self):
         HEADERS = {
             'User-Agent': 'Mozilla/5.0',
@@ -91,7 +101,7 @@ class facebook():
         self.base_url = url
         self.html = result.text
         self.status_code = result.status_code
-        self._log('_get result: {}, bytes: {}, url: {}'.format(result.status_code, len(self.html), url))
+        self._log('_get result: {}, bytes: {}, url: {}'.format(result.status_code, len(self.html), self.fuck_unicode(url)))
         
         if result.status_code != 200:
             self.soup = None
@@ -105,7 +115,7 @@ class facebook():
         self.base_url = url
         self.html = result.text
         self.status_code = result.status_code
-        self._log('_post result: {}, bytes: {}, url: {}'.format(result.status_code, len(self.html), url))
+        self._log('_post result: {}, bytes: {}, url: {}'.format(result.status_code, len(self.html), self.fuck_unicode(url)))
         
         if result.status_code != 200:
             self.soup = None
@@ -197,6 +207,17 @@ class facebook():
         
         self._scrapehome()
         return self.posts
+        
+    def get_page(self, url, scrape_items = True):
+        self._log('getting page')       
+        self._get(url)
+        if (self.status_code != 200) or (self.soup == None): return None
+
+        if scrape_items:
+            self._img_scrape()
+            self._iframe_scrape()
+
+        return self.soup
     
     def close(self):
         self.session.close()
@@ -249,6 +270,8 @@ class facebook():
                 continue
             
             if post.find('h3'):
+                user_home = post.find('a')
+                
                 user = post.find('h3').text.strip()
                 user = re.sub('[\n\r\t]',' ', user)
                 user = re.sub('\s+',' ', user)
@@ -256,7 +279,7 @@ class facebook():
             else:
                 user = '__unknown__'
             
-            self._log('user = ' + str(user))
+            self._log('user = ' + self.fuck_unicode(user))
             
             paragraph = post.find('p')
             if paragraph: 
@@ -267,18 +290,31 @@ class facebook():
             else:
                 paragraph = ''
 
-            self._log('paragraph = ' + str(paragraph))
+            self._log('paragraph = ' + self.fuck_unicode(paragraph))
             
             image = ''
-            for img in post.findAll(
-                        lambda tag:tag.name == "img" and re.search('scontent', tag.attrs['src'])):
+            for img in post.findAll(lambda tag:tag.name == "img" and re.search('scontent', tag.attrs['src'])):
                 try:
                     image = img.attrs['src'].encode('utf8')
                     break
                 except:
                     pass
             
-            self._log('image = ' + str(image))
+            if not image:                
+                profile = self.soup.select("h3 a:nth-child(1)")
+                if profile and 'href' in profile[0].attrs:
+                    self._log('loading profile page = ' + self.fuck_unicode(profile[0].text))                    
+                    self.get_page(self._relative_url(profile[0].attrs['href']))
+                    photo = self.soup.findAll(lambda tag:tag.name == 'a' and 'href' in tag.attrs and 'photo.php' in tag.attrs['href'])
+
+                    for a in photo:
+                        if a.img: 
+                            image = a.img.attrs['src'].encode('utf8')
+                            if 'alt' in a.img.attrs.keys(): 
+                                self._log('found profile image alt = ' + self.fuck_unicode(a.img.attrs['alt']))
+                                break
+                                
+            self._log('image = ' + self.fuck_unicode(image))
             
             _hash = hashlib.md5(paragraph + image).hexdigest()
             if (paragraph or image) and not _hash in [h['hash'] for h in self.posts]:

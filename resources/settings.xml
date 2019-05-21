@@ -16,8 +16,8 @@
 
     <category label="32400">
         <setting id="facebook_enabled" type="bool" label="32410" default="true"/>
-        <setting id="facebook_email" type="text" option="hidden" label="32420" enable="eq(-1,true)" default="" />
-        <setting id="facebook_password" type="text" label="32430" enable="eq(-2,true)" default="" />
+        <setting id="facebook_email" type="text" label="32420" enable="eq(-1,true)" default="" />
+        <setting id="facebook_password" type="text" option="hidden" label="32430" enable="eq(-2,true)" default="" />
     </category>
 
     <category label="32200">

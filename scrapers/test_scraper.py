@@ -35,6 +35,14 @@ if len(sys.argv) > 1:
         print 'error loading scrapers'
         sys.exit()
 
+    if len(sys.argv[1:]) == 1: 
+        params = sys.argv[1:][0]
+    else:
+        params = sys.argv[1:]
+        
+    scraper.scrape(params, json=jscrapers, log=True)
+    sys.exit()
+    
     param = ' '.join(sys.argv[1:])
     movie_info = {}
     

@@ -1,3 +1,10 @@
+v0.0.15
+- added command #tw[pc]:netflix:<movie title> (needs plugin.video.netflix)
+- added commands #tw:fb:[on|off]
+- added commands #tw:allowrc:[on|off]
+- facebook fix bug
+- fixed playstrem 
+- minor bug fixes
 
 v0.0.14
 - cineblog01 and openloadmovie.org scrapers
