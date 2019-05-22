@@ -138,13 +138,19 @@ class TeamWatch():
     
     screen_height = __addon__.getSetting('screen_height')
     if screen_height == "": 
-        screen_height = xbmcgui.getScreenHeight()
+        try:
+            screen_height = xbmcgui.getScreenHeight()
+        except:
+            screen_height = 75
     else:
         screen_height = int(__addon__.getSetting('screen_height'))
         
     screen_width = __addon__.getSetting('screen_width')
-    if screen_width == "": 
-        screen_width = xbmcgui.getScreenWidth()
+    if screen_width == "":
+        try:
+            screen_width = xbmcgui.getScreenWidth()
+        except:
+            screen_width = 800
     else:
         screen_width = int(__addon__.getSetting('screen_width'))
     
@@ -433,14 +439,20 @@ class TeamWatch():
         self.show_allways = not (settings['showallways'] == "true")
         
         self.screen_height = settings['screen_height']
-        if self.screen_height == "" or self.screen_height == None: 
-            self.screen_height = xbmcgui.getScreenHeight()
+        if self.screen_height == "" or self.screen_height == None:
+            try:
+                self.screen_height = xbmcgui.getScreenHeight()
+            except:
+                self.screen_height = 75
         else:
             self.screen_height = int(settings['screen_height'])
             
         self.screen_width = settings['screen_width']
         if self.screen_width == "" or self.screen_width == None: 
-            self.screen_width = xbmcgui.getScreenWidth()
+            try:
+                self.screen_width = xbmcgui.getScreenWidth()
+            except:
+                self.screen_width = 800
         else:
             self.screen_width = int(settings['screen_width'])
         
