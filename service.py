@@ -554,8 +554,6 @@ class TeamWatch():
             except:
                 tmp = None
                 
-            if not (self.allow_playercontrol or self.player.isPlaying()): self.allow_playercontrol = True
-
             now = datetime.now().strftime("%Y-%m-%d %H:%M")
             if tmp == None: 
                 jresult = {"status": "error", "params": {"message": "error opening %s" % url, "time": now}, "id": -1}
@@ -568,6 +566,9 @@ class TeamWatch():
                 
                 if 'params' in jresult and 'show' in jresult['params'] and jresult['params']['show']: self._log("jresult: " + str(jresult), 1)
                 params = jresult['params']
+
+
+             playercontrol_enabled = (user == self.id_teamwatch or self.allow_playercontrol)
 
             if jresult['status'] == 'settings' and 'params' in jresult and jresult['params']:
                 self._log('\'settings\': user = {}'.format(jresult['params']['user']), 1) 
@@ -684,7 +685,7 @@ class TeamWatch():
                 elif param == "#tw:allowpc:on" or param == "#tw:allowpc:off":
                     self.allow_playercontrol = (param[12:] == 'on')
                     self._log('playercontrol enabled:   {}'.format(self.allow_playercontrol) ,0)                
-                elif user == self.id_teamwatch or self.allow_playercontrol:
+                elif playercontrol_enabled:
                     if param == "#tw:playerctl:playpause":
                         self._log('esecuzione #tw:playerctl:playpause', 2)
                         xbmc.executebuiltin("Action(PlayPause)")
@@ -698,6 +699,8 @@ class TeamWatch():
                         else:
                             self._log('#tw:playerctl:seek invalid time', 2)
                     elif param.startswith("#tw:playstream:"):
+                        self.allow_playercontrol = not (user == self.id_teamwatch)
+                        
                         self._log('\'settings\': *** playstream received ***', 0)
                         
                         if not self.jscrapers:
