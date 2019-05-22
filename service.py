@@ -568,13 +568,12 @@ class TeamWatch():
                 params = jresult['params']
 
 
-             playercontrol_enabled = (user == self.id_teamwatch or self.allow_playercontrol)
-
             if jresult['status'] == 'settings' and 'params' in jresult and jresult['params']:
                 self._log('\'settings\': user = {}'.format(jresult['params']['user']), 1) 
                 self._log('\'settings\': id_teamwatch = {}'.format(self.id_teamwatch), 1)
                 self._log('\'settings\': allow_playercontrol = {}'.format(self.allow_playercontrol), 1)
-                        
+                playercontrol_enabled = (jresult['params']['user'] == self.id_teamwatch or self.allow_playercontrol)
+                
             if 'status' in jresult and jresult['status'] == 'ok' and  self.show_enable:
                 self._log('\'ok\': id_teamwatch = {}'.format(self.id_teamwatch), 1)
                 user = params['user'][:15]
