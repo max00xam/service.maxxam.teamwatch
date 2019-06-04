@@ -13,6 +13,7 @@ import xbmcaddon
 import pastebin
 import random
 import HTMLParser
+from messenger import SockClient
 import xml.etree.ElementTree as xml
 from datetime import datetime, date, timedelta
 
@@ -195,6 +196,9 @@ class TeamWatch():
     player = None
     sha_key = ''
     log_prog = 1
+
+
+    SocketClient = None
 
     def __init__(self):
         self.monitor = KodiEvents(self)
@@ -1009,4 +1013,7 @@ class TeamWatch():
 
 if __name__ == '__main__':
     tw = TeamWatch()
-    tw.loop()
+    # tw.loop()
+    self.SocketClient = SockClient(self.login_email, self.login_password, {feed_channel: self.feed_channel})
+    self.SocketClient.connect()
+    self.SocketClient.wait_before_exit()

@@ -9,7 +9,7 @@ class SockClient():
     DEBUG = 2 # 0 = HIGH, 1 = MEDIUM, 2 = LOW lasciare a uno! (solo _log <= DEBUG vengono visualizzati)
 
     SERVER_NAME = '51.15.43.20' # teamwatch.it
-    SERVER_URL = 'http://{}:3000'.format(self.SERVER_NAME)
+    SERVER_URL = 'http://51.15.43.20:3000'
 
     SocketIO = None
 
@@ -30,6 +30,11 @@ class SockClient():
             randomization_factor: 0.5
         })
 
+        self.SocketIO.on('connect', self._on_connect)
+        self.SocketIO.on('disconnect', self._on_disconnect)
+        self.SocketIO.on('new_message', self._got_message)
+
+
 
     def _log(self, text, debug_level=2):
         if self.DEBUG >= debug_level:
@@ -37,10 +42,10 @@ class SockClient():
                 xbmc.log ('{} [{}] {}'.format(LOG_NAME, self.DEBUG, text))
             except:
                 xbmc.log ('{}: exception in _log {}'.format(LOG_NAME, sys.exc_info() )  )
-                
-                
-                
-                
+
+
+
+
 
 
     def _convertToBase64(self, text):
@@ -65,12 +70,10 @@ class SockClient():
         self.SocketIO.wait()
 
 
-    @SocketIO.on('connect')
-    def on_connect(self, data):
+    def _on_connect(self, data):
         self._log('socket connected: sid {}'.format(self.SocketIO.sid), 1)
 
-    @SocketIO.on('disconnect')
-    def on_disconnect(self, data):
+    def _on_disconnect(self, data):
         self._log('socket diconnected', 1)
 
         '''
@@ -82,7 +85,6 @@ class SockClient():
             self._log('reconnection limit reached. Socket won\'t be reconnecting', 1)
         '''
 
-    @SocketIO.on('new_message')
-    def got_message(self, data):
+    def _got_message(self, data):
         # parse message
         self._log( 'Got message: {}'.format(self, data), 0 )
