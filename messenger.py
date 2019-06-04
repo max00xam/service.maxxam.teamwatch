@@ -39,9 +39,10 @@ class SockClient():
     def _log(self, text, debug_level=2):
         if self.DEBUG >= debug_level:
             try:
+                import xbmc
                 xbmc.log ('{} [{}] {}'.format(LOG_NAME, self.DEBUG, text))
             except:
-                xbmc.log ('{}: exception in _log {}'.format(LOG_NAME, sys.exc_info() )  )
+                print '{}: exception in _log {}'.format(LOG_NAME, sys.exc_info() )
 
 
 
