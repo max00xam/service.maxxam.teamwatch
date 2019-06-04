@@ -17,32 +17,11 @@ class SockClient():
 
         self.login_email = email
         self.login_password = password
-
-        # paramvalue = kwargs.get(key, default) ###################
-        self.feed_channel = kwargs.get('feed_channel', 'teamwatch')
+        self.feed_channel = kwargs.get('feed_channel', ['teamwatch'])
         self.reconnect_on_disconnect = kwargs.get('reconnect_on_disconnect', True)
         self.reconnect_on_error = kwargs.get('reconnect_on_error', True)
         self.current_reconnection_times = kwargs.get('current_reconnection_times', 0)
 
-        '''
-        self.options = opts
-
-        self.login_email = self.options.login_email
-        self.login_password = self.options.login_password
-        self.feed_channel = self.options.feed_channel
-
-        # reconnect in case of disconnection
-        self.reconnect_on_disconnect = True # self.options.reconnect_on_disconnect
-
-        # reconnect in case of error
-        self.reconnect_on_error = True # self.options.reconnect_on_error
-
-        # reconnection limit to 5 times
-        self.attempt_reconnection_limit = 5 # self.options.attempt_reconnection_limit
-        self.current_reconnection_times = 0
-        '''
-
-        # non dovrebbero esserci i parametri passati al constructor?
         self.SocketIO = socketio.Client({
             reconnection: self.reconnect_on_disconnect,
             reconnection_attempts: self.current_reconnection_times,
@@ -50,8 +29,6 @@ class SockClient():
             reconnection_delay_max: 5,
             randomization_factor: 0.5
         })
-
-
 
     def _log(self, text, debug_level=2):
         if self.DEBUG >= debug_level:
@@ -62,8 +39,10 @@ class SockClient():
 
 
 
+
     def _convertToBase64(user, pwd):
         return base64.b64encode( bytes('{}:{}'.format( user, pwd) , 'utf-8') )
+
 
     def connect():
         self._log('try to connect to {}'.format(self.SERVER_NAME), 1)
@@ -82,16 +61,12 @@ class SockClient():
         SocketIO.wait()
 
 
-    '''
-    Socket IO event management
-    '''
-
     @SocketIO.on('connect')
-    def on_connect(data):
-        self._log('socket connected: sid {}'.format(SocketIO.sid), 1)
+    def on_connect(self, data):
+        self._log('socket connected: sid {}'.format(self.SocketIO.sid), 1)
 
     @SocketIO.on('disconnect')
-    def on_disconnect(data):
+    def on_disconnect(self, data):
         self._log('socket diconnected', 1)
 
         '''
@@ -103,10 +78,7 @@ class SockClient():
             self._log('reconnection limit reached. Socket won\'t be reconnecting', 1)
         '''
 
-
-
-
     @SocketIO.on('new_message')
-    def got_message(data):
+    def got_message(self, data):
         # parse message
-        self._log( 'Got message: {}'.format(data), 0 )
+        self._log( 'Got message: {}'.format(self, data), 0 )
