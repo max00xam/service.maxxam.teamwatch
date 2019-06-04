@@ -32,6 +32,7 @@ class SockClient():
 
         self.SocketIO.on('connect', self._on_connect)
         self.SocketIO.on('disconnect', self._on_disconnect)
+        # self.SocketIO.on('message', self._got_message)
         self.SocketIO.on('new_message', self._got_message)
 
 
@@ -43,8 +44,6 @@ class SockClient():
             print ('{} [{}] {}'.format(self.LOG_NAME, self.DEBUG, text))
         except:
             print '{}: exception in _log {}'.format(self.LOG_NAME, sys.exc_info() )
-
-
 
 
 
@@ -68,7 +67,6 @@ class SockClient():
 
     def disconnect(self):
         self._log('try to disconnect to {}'.format(self.SERVER_NAME), 1)
-        
         self.SocketIO.disconnect()
 
     def wait_before_exit(self):

@@ -1,5 +1,5 @@
 import time
-from lib.messenger import SockClient
+from messenger import SockClient
 
 client = SockClient('user1@test.com', 'password')
 
@@ -9,5 +9,6 @@ def new_message(data):
 
 if __name__ == '__main__':
     client.connect()
-    time.sleep(3)
-    client.disconnect()
+    # client.wait_before_exit()
+    # time.sleep(3)
+    # client.disconnect()
