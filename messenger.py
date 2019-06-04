@@ -22,15 +22,13 @@ class SockClient():
         self.reconnect_on_error = kwargs.get('reconnect_on_error', True)
         self.current_reconnection_times = kwargs.get('current_reconnection_times', 0)
 
-        # _opts = {
-        #     reconnection: self.reconnect_on_disconnect,
-        #     reconnection_attempts: self.current_reconnection_times,
-        #     reconnection_delay: 1,
-        #     reconnection_delay_max: 5,
-        #     randomization_factor: 0.5
-        # }
-
-        self.SocketIO = socketio.Client()
+        self.SocketIO = socketio.Client({
+            'reconnection': self.reconnect_on_disconnect,
+            'reconnection_attempts': self.current_reconnection_times,
+            'reconnection_delay': 1,
+            'reconnection_delay_max': 5,
+            'randomization_factor': 0.5
+        })
 
         self.SocketIO.on('connect', self._on_connect)
         self.SocketIO.on('disconnect', self._on_disconnect)
@@ -40,11 +38,11 @@ class SockClient():
 
     def _log(self, text, debug_level=2):
         # if self.DEBUG >= debug_level:
-        #     try:
-        #         xbmc.log ('{} [{}] {}'.format(self.LOG_NAME, self.DEBUG, text))
-        #     except:
-        #         xbmc.log ('{}: exception in _log {}'.format(self.LOG_NAME, sys.exc_info() )  )
-        print ('{} [{}] {}'.format(self.LOG_NAME, self.DEBUG, text))
+        try:
+            # import xbmc
+            print ('{} [{}] {}'.format(self.LOG_NAME, self.DEBUG, text))
+        except:
+            print '{}: exception in _log {}'.format(self.LOG_NAME, sys.exc_info() )
 
 
 
