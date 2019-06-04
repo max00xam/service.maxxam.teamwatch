@@ -29,8 +29,6 @@ class SockClient():
             randomization_factor: 0.5
         })
 
-
-
     def _log(self, text, debug_level=2):
         if self.DEBUG >= debug_level:
             try:
@@ -38,29 +36,24 @@ class SockClient():
             except:
                 xbmc.log ('{}: exception in _log {}'.format(LOG_NAME, sys.exc_info() )  )
 
-
-
-    def connect():
+    def connect(self):
         self._log('try to connect to {}'.format(self.SERVER_NAME), 1)
 
-        SocketIO.connect( self.SERVER_URL )
+        self.SocketIO.connect( self.SERVER_URL )
 
-
-    def wait_before_exit():
-        SocketIO.wait()
-
-
+    def wait_before_exit(self):
+        self.SocketIO.wait()
 
     """
     Socket IO event management
     """
 
     @SocketIO.on('connect')
-    def on_connect(data):
-        self._log('socket connected: sid {}'.format(SocketIO.sid), 1)
+    def on_connect(self, data):
+        self._log('socket connected: sid {}'.format(self.SocketIO.sid), 1)
 
     @SocketIO.on('disconnect')
-    def on_disconnect(data):
+    def on_disconnect(self, data):
         self._log('socket diconnected', 1)
 
         # non ci sta un delay?
@@ -70,10 +63,7 @@ class SockClient():
         else:
             self._log('reconnection limit reached. Socket won\'t be reconnecting', 1)
 
-
-
-
     @SocketIO.on('new_message')
-    def got_message(data):
+    def got_message(self, data):
         # parse message
-        self._log( 'Got message: {}'.format(data), 0 )
+        self._log( 'Got message: {}'.format(self, data), 0 )
