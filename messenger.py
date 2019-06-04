@@ -37,6 +37,10 @@ class SockClient():
                 xbmc.log ('{} [{}] {}'.format(LOG_NAME, self.DEBUG, text))
             except:
                 xbmc.log ('{}: exception in _log {}'.format(LOG_NAME, sys.exc_info() )  )
+                
+                
+                
+                
 
 
     def _convertToBase64(self, text):
