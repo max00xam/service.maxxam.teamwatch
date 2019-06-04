@@ -51,7 +51,8 @@ class SockClient():
         }
 
         url = self.SERVER_URL
-        url = url + '?feed={}'.format(self.feed_channel[0])  # per ora usa solo il primo canale
+        # in alpha version just use the teamwatch feed
+        url = url + '?feed={}'.format(self.feed_channel[0])
 
         self.SocketIO.connect( url, headers )
 
