@@ -30,6 +30,7 @@ class SockClient():
             randomization_factor: 0.5
         })
 
+
     def _log(self, text, debug_level=2):
         if self.DEBUG >= debug_level:
             try:
@@ -38,27 +39,25 @@ class SockClient():
                 xbmc.log ('{}: exception in _log {}'.format(LOG_NAME, sys.exc_info() )  )
 
 
+    def _convertToBase64(self, text):
+        return base64.b64encode( bytes(text, 'utf-8') )
 
 
-    def _convertToBase64(user, pwd):
-        return base64.b64encode( bytes('{}:{}'.format( user, pwd) , 'utf-8') )
-
-
-    def connect():
+    def connect(self):
         self._log('try to connect to {}'.format(self.SERVER_NAME), 1)
 
         headers = {
-            'Authorization': self.convertToBase64(self.login_email, self.login_password)
+            'Authorization': self.convertToBase64('{}:{}'.format(self.login_email, self.login_password))
         }
 
         url = self.SERVER_URL
-        url = url + '?feed={}'.format(feed_channel)
+        url = url + '?feed={}'.format(self.feed_channel[0])  # per ora usa solo il primo canale
 
-        SocketIO.connect( url, headers )
+        self.SocketIO.connect( url, headers )
 
 
-    def wait_before_exit():
-        SocketIO.wait()
+    def wait_before_exit(self):
+        self.SocketIO.wait()
 
 
     @SocketIO.on('connect')
@@ -70,7 +69,7 @@ class SockClient():
         self._log('socket diconnected', 1)
 
         '''
-        DO not handle reconnection: it will be handled by socket-io internally
+        # DO not handle reconnection: it will be handled by socket-io internally
         if self.current_reconnection_times < self.attempt_reconnection_limit:
             self.current_reconnection_times = self.current_reconnection_times + 1
             self.connect()
