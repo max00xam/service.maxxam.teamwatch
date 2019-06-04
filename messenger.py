@@ -64,27 +64,22 @@ class SockClient():
         # in alpha version just use the teamwatch feed
         url = url + '?feed={}'.format(self.feed_channel[0])
 
-        self.SocketIO.connect( url, headers )
+        self.SocketIO.connect( url, headers=headers )
 
+    def disconnect(self):
+        self._log('try to disconnect to {}'.format(self.SERVER_NAME), 1)
+        
+        self.SocketIO.disconnect()
 
     def wait_before_exit(self):
         self.SocketIO.wait()
 
 
-    def _on_connect(self, data):
+    def _on_connect(self):
         self._log('socket connected: sid {}'.format(self.SocketIO.sid), 1)
 
-    def _on_disconnect(self, data):
+    def _on_disconnect(self):
         self._log('socket diconnected', 1)
-
-        '''
-        # DO not handle reconnection: it will be handled by socket-io internally
-        if self.current_reconnection_times < self.attempt_reconnection_limit:
-            self.current_reconnection_times = self.current_reconnection_times + 1
-            self.connect()
-        else:
-            self._log('reconnection limit reached. Socket won\'t be reconnecting', 1)
-        '''
 
     def _got_message(self, data):
         # parse message
