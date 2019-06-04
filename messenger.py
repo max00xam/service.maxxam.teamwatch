@@ -81,4 +81,4 @@ class SockClient():
 
     def _got_message(self, data):
         # parse message
-        self._log( 'Got message: {}'.format(self, data), 0 )
+        self._log( 'Got message: {}'.format(data), 0 )
