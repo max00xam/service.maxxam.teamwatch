@@ -283,7 +283,7 @@ def get_sites(json = '', site = None):
     else:
         return [a for a in _vars['json']['url_scrapers'] if a in _vars['json']['url_scrapers'][site]['servers']]
     
-def scrape(params, json = '', log=False):
+def scrape(params, json = '', log=False, follow=True):
     #
     # params: string --> url (lo scraper viene selezionato con le regex)
     #         dict   --> url (lo scraper viene selezionato con le regex)
@@ -430,7 +430,7 @@ def scrape(params, json = '', log=False):
                     for item in _vars['result']:
                         _log('scrape.source result', item)
                         
-                        if 'url' in item and 'stop' in item:
+                        if 'url' in item and (('stop' in item) or not follow):
                             _log('scrape.source result', str('url' in item and 'stop' in item)) # True
                             return _vars['result']
                         

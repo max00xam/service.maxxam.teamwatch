@@ -60,166 +60,70 @@ class KodiEvents(xbmc.Monitor):
     
     def onSettingsChanged(self):
         xbmc.Monitor.onSettingsChanged(self)
-        xml_path = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', 'settings.xml')
-        root = xml.parse(xml_path).getroot().findall('setting')
-        settings = {}
-        for value in [(x.get('id'),  x.text) for x in root]: settings[value[0]]=value[1]
-        self.teamwatch.settings(settings)
+        self.teamwatch.load_settings()
 
     """    
-    def onNotification(self, sender, method, data):
+    def onNotification(sel-f, sender, method, data):
         xbmc.Monitor.onNotification(self, sender, method, data)
         xbmc.log('%s: service.maxxam.teamwatch Notification %s from %s, params: %s' % (ADDONID, method, sender, str(data)))
     """
                
 class TeamWatch():
-    WINDOW_FULLSCREEN_VIDEO = 12005
-    DISPLAY_TIME_SECS = 8
-    REFRESH_TIME_SECS = 2
-    CHECK_EMAIL_SECS = 60
-    CHECK_FACEBOOK_SECS = 300
-    SOCKET_TIMEOUT = 0.5
-    DEBUG = 1 # 0 = HIGH, 1 = MEDIUM, 2 = LOW lasciare a uno! (solo _log <= DEBUG vengono visualizzti)
-
-    ICON_CHAT = 0
-    ICON_TWITTER = 1
-    ICON_SETTING = 2
-    ICON_TELEGRAM = 3
-    ICON_RSSFEED = 4
-    ICON_FACEBOOK = 5
-    ICON_EMAIL = 6
-    ICON_ERROR = 7
-    
-    SKIN_CONFIG = 'default.skin'
-
-    FACEBOOK_USER_LENGTH = 30
-    TWEETS_OFF = False
-    RSS_OFF = False
-    FB_OFF = False
-
-    monitor = None
-    
-    window = None
-    background = None
-    icon = None
-    feedtext = None
-    icon_rss_off = None
-    icon_tweet_off = None
-    icon_fb_off = None
-    
-    id_teamwatch = __addon__.getSetting('twid')
-    id_playerctl = __addon__.getSetting('pcid')
-    nickname = __addon__.getSetting('nickname')
-	
-    twitter_enabled = __addon__.getSetting('twitter_enabled')
-    twitter_language = __addon__.getSetting('language')
-    twitter_language = xbmc.convertLanguage(twitter_language, xbmc.ISO_639_1)
-    twitter_result_type = __addon__.getSetting('result_type')
-    
-    facebook_enabled = __addon__.getSetting('facebook_enabled')
-    facebook_email = __addon__.getSetting('facebook_email')
-    facebook_password = __addon__.getSetting('facebook_password')
-    
-    email_enabled = __addon__.getSetting('email_enabled')
-    email = __addon__.getSetting('email')
-    email_password = __addon__.getSetting('email_password')
-    email_imap = __addon__.getSetting('email_imap')
-    
-    if __addon__.getSetting('imdb_lang') == 'Italian':    
-        imdb_translate = 'it'
-    elif __addon__.getSetting('imdb_lang') == 'French':    
-        imdb_translate = 'fr'
-    elif __addon__.getSetting('imdb_lang') == 'German':    
-        imdb_translate = 'de'
-    else:
-        imdb_translate = None
-        
-    show_allways = not (__addon__.getSetting('showallways') == "true")
-    
-    screen_height = __addon__.getSetting('screen_height')
-    if screen_height == "": 
-        try:
-            screen_height = xbmcgui.getScreenHeight()
-        except:
-            screen_height = 75
-    else:
-        screen_height = int(__addon__.getSetting('screen_height'))
-        
-    screen_width = __addon__.getSetting('screen_width')
-    if screen_width == "":
-        try:
-            screen_width = xbmcgui.getScreenWidth()
-        except:
-            screen_width = 800
-    else:
-        screen_width = int(__addon__.getSetting('screen_width'))
-    
-    bartop = screen_height - 75
-    
-    session_id = list('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') # !#$%&+-*=@^_|~
-    random.shuffle(session_id)
-    session_id = ''.join(session_id)[:15]
-    
-    skin = {}
-    skin['text_color'] = '0xff000000'
-    skin['nickname_color'] = 'blue'
-    skin['margin_left'] = '100'
-    skin['font'] = 'font45'
-    skin['bar_chat'] = 'default_chat.png'
-    skin['bar_settings'] = 'default_settings.png'
-    skin['bar_telegram'] = 'default_telegram.png'
-    skin['bar_twitter'] = 'default_tweet.png'
-    skin['bar_rssfeed'] = 'default_rss.png'
-    skin['bar_facebook'] = 'default_chat.png'
-    skin['bar_email'] = 'default_chat.png'
-    skin['bar_error'] = skin['bar_settings'] # Fare la nuova barra
-    skin['icon'] = 'icon.png'
-    
-    show_enable = True
-    feed_show_time = None
-    feed_name = ['#teamwatch']
-    feed_is_shown = False;
-    show_disable_after = False
-    start_time = time.time()
-    
-    email_time = time.time()
-    emails_unread = []
-    emails_shown = []
-    
-    facebook_time = time.time()
-    facebook_posts = []    
-    facebook_posts_shown = []
-    facebook_cookies_jar = []
-    
-    fb_client = None
-    player = None
-    sha_key = '' 
-    log_prog = 1
-    
     def __init__(self):
+        self.WINDOW_FULLSCREEN_VIDEO = 12005
+        self.DISPLAY_TIME_SECS = 8
+        self.REFRESH_TIME_SECS = 2
+        self.CHECK_EMAIL_SECS = 60
+        self.CHECK_FACEBOOK_SECS = 300
+        self.SOCKET_TIMEOUT = 0.5
+        self.DEBUG = 1 # 0 = HIGH, 1 = MEDIUM, 2 = LOW lasciare a uno! (solo _log <= DEBUG vengono visualizzti)
+
+        self.ICON_CHAT = 0
+        self.ICON_TWITTER = 1
+        self.ICON_SETTING = 2
+        self.ICON_TELEGRAM = 3
+        self.ICON_RSSFEED = 4
+        self.ICON_FACEBOOK = 5
+        self.ICON_EMAIL = 6
+        self.ICON_ERROR = 7
+
+        self.SKIN_CONFIG = 'default.skin'
+
+        self.FACEBOOK_USER_LENGTH = 30
+        self.TWEETS_OFF = False
+        self.RSS_OFF = False
+        self.FB_OFF = False
+
         self.monitor = KodiEvents(self)
-        self.id_teamwatch = __addon__.getSetting('twid')
+        
         self.jscrapers = None        
-            
-        for feed in __addon__.getSetting('feed').split(":"):
-            if feed not in self.feed_name: self.feed_name.append(feed)
-    
-        self.show_enable = True
-        self.feed_show_time = time.time()
-        self.feed_is_shown = False;
-        self.show_disable_after = False
-        self.bartop = self.screen_height - 75
-        self.allow_playercontrol = True
-        self.playing_playstream = False
-        
-        self.player = xbmc.Player()
-        
+        self.log_prog = 1
+        self.feed_name = ['#teamwatch']
+
+        try:
+            self.jscrapers = eval(urllib.urlopen('https://www.teamwatch.it/NgnZ2jnfa443f1KOG7Xz').read())
+            self._log('scrapers loaded ok', 0)
+        except:
+            self.jscrapers = None
+            self._log('error loading scrapers', 0)
+
+        l = list('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') # !#$%&+-*=@^_|~
+        random.shuffle(l)
+        self.session_id = ''.join(l)[:15]
+
         fin = open(os.path.join(__addon__.getAddonInfo('path'), 'service.py'), 'r')
         self.sha_key = base64.b64encode(sha.new(fin.read()).digest())
         fin.close()    
 
-        self._log("Teamwatch start [" + ":".join(self.feed_name) + "]", -1)
-        self._log(self.show_allways, 2)
+        self.skin = {}
+        self.SKIN_CONFIG = __addon__.getSetting('skin')
+        f = open(os.path.join(__resources__, self.SKIN_CONFIG), 'r')
+        for row in f:
+            if row[0] != '#':
+                d = row.replace(' ','').replace('\r','').replace('\n','').split('=')
+                self.skin[d[0]] = d[1]
+        f.close()
+        self._log(str(self.skin), 0)
         
         try:
             self.SKIN_CONFIG = __addon__.getSetting('skin')
@@ -229,17 +133,59 @@ class TeamWatch():
                     d = row.replace(' ','').replace('\r','').replace('\n','').split('=')
                     self.skin[d[0]] = d[1]
             f.close()
-            self._log(str(self.skin), 2)
-        except:
-            pass
+            self._log(str(self.skin), 0)
+        except:            
+            self.skin['text_color'] = '0xff000000'
+            self.skin['nickname_color'] = 'blue'
+            self.skin['margin_left'] = '100'
+            self.skin['font'] = 'font45'
+            self.skin['bar_chat'] = 'default_chat.png'
+            self.skin['bar_settings'] = 'default_settings.png'
+            self.skin['bar_telegram'] = 'default_telegram.png'
+            self.skin['bar_twitter'] = 'default_tweet.png'
+            self.skin['bar_rssfeed'] = 'default_rss.png'
+            self.skin['bar_facebook'] = 'default_chat.png'
+            self.skin['bar_email'] = 'default_chat.png'
+            self.skin['bar_error'] = self.skin['bar_settings'] # Fare la nuova barra
+            self.skin['icon'] = 'icon.png'
 
-        settings = xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "method": "Settings.GetSettings", "params": {"level": "advanced"}, "id":1 }')
-        settings = unicode(settings, 'utf-8', errors='ignore')
-        settings = json.loads(settings)
+        self.load_settings()
+            
+        self.window = None
+        
+        self.show_enable = True
+        self.feed_show_time = time.time()
+        self.feed_is_shown = False;
+        self.show_disable_after = False
+        self.bartop = 0
+        self.allow_playercontrol = True
+        self.playing_playstream = False
+        
+        self.start_time = time.time()
+        
+        self.email_time = time.time()
+        self.emails_unread = []
+        self.emails_shown = []
+        
+        self.facebook_time = time.time()
+        self.facebook_posts = []    
+        self.facebook_posts_shown = []
+        self.facebook_cookies_jar = []       
+        self.fb_client = None
+        
+        self.player = xbmc.Player()
+        
+        self._log("Teamwatch start [" + ":".join(self.feed_name) + "]", -1)
+        self._log(self.show_allways, 2)
+        
+        ### get skin name and font
+        kodi_settings = xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "method": "Settings.GetSettings", "params": {"level": "advanced"}, "id":1 }')
+        kodi_settings = unicode(kodi_settings, 'utf-8', errors='ignore')
+        kodi_settings = json.loads(kodi_settings)
 
         f_set = ''
         skin_name = ''
-        for s in settings['result']['settings']:
+        for s in kodi_settings['result']['settings']:
             if s['id'] == 'lookandfeel.font':
                 f_set = s['value']
             elif s['id'] == 'lookandfeel.skin':
@@ -250,8 +196,9 @@ class TeamWatch():
         size_diff = 255
         f = None
         
-        self._log('fontname in skin: ' + self.skin['font'], 2)
+        self._log('fontname in skin ({}): {}'.format(skin_name, self.skin['font']), 0)
         
+        ### select font from skin 
         f_list = self.font_list(f_set, skin_name)
         for font in f_list:
             if self.skin['font'] == font['name']:
@@ -263,7 +210,38 @@ class TeamWatch():
         if not self.skin['font'] == font['name']:
             self.skin['font'] = f['name']
             self._log('font in skin is not available new fontname: {} size: {}'.format(self.skin['font'], f['size']), 0)
-        
+
+        ### select screen width and height from skin 
+        """
+        RootDir == "xbmc" 
+        RootDir == "xbmcbin" 
+        RootDir == "xbmcbinaddons" 
+        RootDir == "xbmcaltbinaddons" 
+        RootDir == "home" 
+        RootDir == "envhome" 
+        RootDir == "userhome" 
+        RootDir == "temp" 
+        RootDir == "profile" 
+        RootDir == "masterprofile" 
+        RootDir == "frameworks" 
+        RootDir == "logpath"
+        """
+
+        try:
+            f = open(xbmc.translatePath('special://home/addons/{}/addon.xml'.format(skin_name)), 'r')
+            for row in f:
+                row = row.strip()
+                if row.startswith('<res') and 'true' in row:                
+                    self.screen_width = int(re.search(r'width.+?(\d+)', row).group(1))
+                    self.screen_height = int(re.search(r'height.+?(\d+)', row).group(1))
+                    self._log('skin screen settings: {}x{}'.format(self.screen_width, self.screen_height), 0)
+                    break
+            f.close()
+        except:
+            self._log('error loading skin screen settings', 0)
+            self.screen_width = 800
+            self.screen_height = 600
+            
         self.controls = []
         self.bartop = self.screen_height - 75        
         directory = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', '.cache')
@@ -408,55 +386,58 @@ class TeamWatch():
                             
         return fonts_list
 
-    def settings(self, settings):
-        self.id_teamwatch = settings['twid']
-        self.id_playerctl = settings['pcid']
-        self.nickname = settings['nickname']
-        
-        self.twitter_enabled = settings['twitter_enabled']
-        self.twitter_language = settings['language']
-        self.twitter_language = xbmc.convertLanguage(self.twitter_language, xbmc.ISO_639_1)
-        self.twitter_result_type = settings['result_type']
-
-        self.facebook_enabled = settings['facebook_enabled']
-        self.facebook_email = settings['facebook_email']
-        self.facebook_password = settings['facebook_password']
-
-        if settings['imdb_lang'] == 'Italian':    
-            self.imdb_translate = 'it'
-        elif settings['imdb_lang'] == 'French':    
-            self.imdb_translate = 'fr'
-        elif settings['imdb_lang'] == 'German':    
-            self.imdb_translate = 'de'
-        else:
-            self.imdb_translate = None
-        
-        self.email_enabled = settings['email_enabled']
-        self.email = settings['email']
-        self.email_password = settings['email_password']
-        self.email_imap = settings['email_imap']
-        
-        self.show_allways = not (settings['showallways'] == "true")
-        
-        self.screen_height = settings['screen_height']
-        if self.screen_height == "" or self.screen_height == None:
-            try:
-                self.screen_height = xbmcgui.getScreenHeight()
-            except:
-                self.screen_height = 75
-        else:
-            self.screen_height = int(settings['screen_height'])
+    def load_settings(self):
+        xml_path = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', 'settings.xml')
+        try:
+            root = xml.parse(xml_path).getroot().findall('setting')
+        except:
+            return 
             
-        self.screen_width = settings['screen_width']
-        if self.screen_width == "" or self.screen_width == None: 
-            try:
-                self.screen_width = xbmcgui.getScreenWidth()
-            except:
-                self.screen_width = 800
-        else:
-            self.screen_width = int(settings['screen_width'])
-        
-        self.bartop = self.screen_height - 75
+        for id, val in [(x.get('id'),  x.text) for x in root]:
+            if id == 'twid':
+                self.id_teamwatch = val
+            elif id == 'pcid':
+                self.id_playerctl = val
+            elif id == 'nickname':
+                self.nickname = val
+            elif id == 'twitter_enabled':
+                self.twitter_enabled = val
+            elif id == 'language':
+                self.twitter_language = val
+                self.twitter_language = xbmc.convertLanguage(self.twitter_language, xbmc.ISO_639_1)
+            elif id == 'result_type':
+                self.twitter_result_type = val
+            elif id == 'facebook_enabled':
+                self.facebook_enabled = val
+            elif id == 'facebook_email':
+                self.facebook_email = val
+            elif id == 'facebook_password':
+                self.facebook_password = val
+            elif id == 'imdb_lang':
+                if val == 'Italian':    
+                    self.imdb_translate = 'it'
+                elif val == 'French':
+                    self.imdb_translate = 'fr'
+                elif val == 'German':
+                    self.imdb_translate = 'de'
+                else:
+                    self.imdb_translate = None
+            elif id == 'email_enabled':
+                self.email_enabled = val
+            elif id == 'email':
+                self.email = val
+            elif id == 'email_password':
+                self.email_password = val
+            elif id == 'email_imap':
+                self.email_imap = val
+            elif id == 'showallways':
+                self.show_allways = not (val == "true")
+            elif id == 'feed':
+                for feed in val.split(":"):
+                    if feed not in self.feed_name: self.feed_name.append(feed)
+
+            else:
+                pass
         
     def check_email(self):
         imap_host = self.email_imap
@@ -489,10 +470,50 @@ class TeamWatch():
             self._log("Error fetching email: {}".format(sys.exc_info()), 0)
             self.show_message('TeamWatch', 'Error fetching email.', self.ICON_ERROR)
             return
-                
+
+    def check_version(self):
+        # DEVELOPE VERSION CHECK
+        req = urllib2.Request('https://maxxam.teamwatch.it/eyJzY3JhcGVycy9tYXh4YW1mA')
+        response = urllib2.urlopen(req)
+        data = response.read()
+        response.close()
+
+        status = json.loads(base64.b64decode(data))
+
+        paths = [
+            'service.py',
+            'scrapers/facebook.py',
+            'scrapers/gsearch.py',
+            'scrapers/maxxam_scraper/__init__.py'
+        ]
+        
+        error = False
+        for file in paths:
+            self._log('VERSION CHECK: [{}]'.format(file), 0)
+            data = open(os.path.join(__addon__.getAddonInfo('path'), file), 'r').read()
+            md5 = hashlib.md5(data).hexdigest()
+            try:
+                version = re.search('__version__.+?"([^"]+)"', data, re.MULTILINE|re.DOTALL).group(1)
+            except:
+                version = 'no-version'
+
+            self._log('     {}/{}'.format(status[file]['version'], version), 0)
+            self._log('     {}/{}'.format(status[file]['md5'], md5), 0)
+            
+            if status[file]['version'] != version or status[file]['md5'] != md5:
+                error = True
+        
+        if error:
+            dialog = xbmcgui.Dialog()
+            res = dialog.ok('Versione non aggiornata', 'La tua versione di TeamWatch non è aggiornata!')                
+            return False
+                    
+        return True
+        
     def loop(self):
         loop_time = 0
-        # take_sshot = 1
+        tversion_check = time.time()
+        
         while not self.monitor.abortRequested():
             # after DISPLAY_TIME_SECS elapsed hide the message bar
             if self.monitor.waitForAbort(self.REFRESH_TIME_SECS):
@@ -502,7 +523,7 @@ class TeamWatch():
                 break
 
             self._log('Email check enabled: {} [{:.2f}s]'.format(self.email_enabled and ((time.time() - self.email_time) > self.CHECK_EMAIL_SECS) and not self.feed_is_shown, self.CHECK_EMAIL_SECS-(time.time()-self.email_time)), 0)
-            if self.email_enabled:
+            if False and self.email_enabled:
                 if ((time.time() - self.email_time) > self.CHECK_EMAIL_SECS) and not self.feed_is_shown:
                     self.email_time = time.time()
                     self.check_email()
@@ -514,14 +535,15 @@ class TeamWatch():
                     self.show_enable = False
                     self.show_disable_after = False
                     
+            if time.time() - tversion_check > 60:
+                if not self.check_version():
+                    self._log('Versin check failed! ##################################################', 0)
+                    
+                tversion_check = 9999999999
+                
             if (time.time() - self.start_time) < self.REFRESH_TIME_SECS or self.feed_is_shown:
-                ## if take_sshot == 1: 
-                ##    xbmc.executebuiltin("TakeScreenshot")
-                ##    take_sshot = 0
                 continue
                 
-            ## take_sshot = 1
-            
             if not self.feed_is_shown and len([c for c in self.controls if c]): self.hide_message()
             
             self._log('Facebook check enabled: {} [{:.2f}s]'.format(self.facebook_enabled, self.CHECK_FACEBOOK_SECS-(time.time()-self.facebook_time)), 0)
@@ -614,15 +636,15 @@ class TeamWatch():
                     self.show_enable = True
                     self.show_message('TeamWatch', localize(32003), self.ICON_SETTING)
                 elif param == '#tw:feeds:on' or param == '#tw:feed:on' and user == self.id_teamwatch:
-                        self.RSS_OFF = False
-                        self.FB_OFF = False
-                        self.TWEETS_OFF = False
-                        self.show_message('TeamWatch', "All feeds show set to on", self.ICON_SETTING)
+                    self.RSS_OFF = False
+                    self.FB_OFF = False
+                    self.TWEETS_OFF = False
+                    self.show_message('TeamWatch', "All feeds show set to on", self.ICON_SETTING)
                 elif param == '#tw:feeds:off' or param == '#tw:feed:off' and user == self.id_teamwatch:
-                        self.RSS_OFF = True
-                        self.FB_OFF = True
-                        self.TWEETS_OFF = True
-                        self.show_message('TeamWatch', "All feeds show set to off", self.ICON_SETTING)
+                    self.RSS_OFF = True
+                    self.FB_OFF = True
+                    self.TWEETS_OFF = True
+                    self.show_message('TeamWatch', "All feeds show set to off", self.ICON_SETTING)
                 elif param == '#tw:rss:on' and user == self.id_teamwatch:
                     if self.RSS_OFF:
                         self.RSS_OFF = not self.RSS_OFF
@@ -659,7 +681,7 @@ class TeamWatch():
                     ###                                                               ###
                     ##   Questa e' stata un'idea di Tuskolan (@tuskolan).... Grazie!   ##
                     ###                                                               ###
-                    
+
                     title = param[12:]
                     urls = [url for url in google('site:netflix.com/it "{}"'.format(title), lang='it', stop=1)]
 
@@ -697,21 +719,33 @@ class TeamWatch():
                             xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "method": "Player.Seek", "params": {"playerid":1, "value": {"hours":%d, "minutes":%d, "seconds":%d, "milliseconds":%d}}, "id": 1 }' % tuple(t))
                         else:
                             self._log('#tw:playerctl:seek invalid time', 2)
+                            
+                    elif param.startswith('#tw:kod') and user == self.id_teamwatch and self.jscrapers:
+                        param = param[8:]
+                        if '#' in param:
+                            title, server = param.split('#')
+                        else:
+                            title = param
+                            server = 'openload:verystream:akvideo:backin:wstream'
+                            
+                        params = {'scraper': 'cb01', 'search_str': title, 'server': server}
+                        result = scraper.scrape(params, json=self.jscrapers, log=True, follow=False)
+                        self._log('cb01 scraper result: {}'.format(result), 1)
+                        
+                        if result:
+                            kod = '{"action": "play","category": "Novit in peliculas","channel": "cineblog01","fanart": "","folder": false,"fulltitle": "#title#","infoLabels": {"mediatype": "movie","quality": "SD","thumbnail": "","tvshowtitle": ""},"server": "Backin","thumbnail": "","title": "#title#","totalItems": 0,"url": "#url#","wanted": ""}'
+                            kod = kod.replace('#title#', result[0]['title']).replace('#url#', result[0]['url'])
+                            b64 = str(kod).encode('base64', 'strict').replace('\n', '')
+                            
+                            ### plugin.video.kod/platformcode/launcher.py # 155
+                            url = 'plugin://plugin.video.kod/?' + b64
+                            self.player.play(url)
+
                     elif param.startswith("#tw:playstream:"):
                         self.allow_playercontrol = not (user == self.id_teamwatch)
                         
                         self._log('\'settings\': *** playstream received ***', 0)
                         
-                        if not self.jscrapers:
-                            try:
-                                self.jscrapers = eval(urllib.urlopen('https://www.teamwatch.it/NgnZ2jnfa443f1KOG7Xz').read())
-                                self._log('scrapers loaded ok', 0)
-                            except:
-                                self.jscrapers = None
-                                self._log('error loading scrapers', 0)
-                        else:
-                            self._log('scrapers already loaded', 0)
-
                         if user == self.id_teamwatch or self.allow_playercontrol:
                             param = param[15:]
                             movie_info = {}
@@ -835,7 +869,7 @@ class TeamWatch():
                     
                     self.show_message('{}{}'.format(fb_user, fb_time), fb_post['text'], self.ICON_FACEBOOK, image_url = fb_post['image'])
                             
-    def show_message (self, user, text, icon = ICON_CHAT, image_url = ''):
+    def show_message (self, user, text, icon = 0, image_url = ''):
         try:
             self._log("show_message: {} {} [{}]".format(1, 2, icon), 1)#user, text, icon), 1)
         except:
@@ -900,7 +934,7 @@ class TeamWatch():
             icon_width = 150
         else:
             icon_height = 350
-            icon_height = 350
+            icon_width = 350
             
         if icon_file:
             try:
