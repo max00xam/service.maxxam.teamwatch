@@ -12,8 +12,16 @@ class SockClient():
 
     SocketIO = None
 
-    def __init__(self, opts):
-
+    def __init__(self, email, password, **kwargs):
+        
+        self.login_email = email
+        self.login_password = password
+        self.feed_channel = kwargs.get('feed_channel', ['teamwatch'])
+        self.reconnect_on_disconnect = kwargs.get('reconnect_on_disconnect', True)
+        self.reconnect_on_error = kwargs.get('reconnect_on_error', True)
+        self.current_reconnection_times = kwargs.get('current_reconnection_times', 0)
+        
+        ```
         self.options = opts
 
         self.login_email = self.options.login_email
@@ -29,7 +37,9 @@ class SockClient():
         # reconnection limit to 5 times
         self.attempt_reconnection_limit = 5 # self.options.attempt_reconnection_limit
         self.current_reconnection_times = 0
+        ```
 
+        # non dovrebbero esserci i parametri passati al constructor?
         self.SocketIO = socketio.Client({
             reconnection: True,
             reconnection_attempts: 0,
@@ -72,10 +82,9 @@ class SockClient():
     def on_disconnect(data):
         self._log('socket diconnected', 1)
 
-
+        # non ci sta un delay?
         if self.current_reconnection_times < self.attempt_reconnection_limit:
             self.current_reconnection_times = self.current_reconnection_times + 1
-
             self.connect()
         else:
             self._log('reconnection limit reached. Socket won\'t be reconnecting', 1)
