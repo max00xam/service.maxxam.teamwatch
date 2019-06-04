@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
     <category label="32100">
+
+        <setting label="32090" type="lsep"/>
+        <setting id="login_email" type="text" label="32091" default=""/>
+        <setting id="login_password" type="text" label="32092" default=""/>
+        <setting id="feed_channel" type="text" label="32093" default="#teamwatch"/>
+
+
         <setting id="nickname" type="text" label="32150" default="Nick"/>
         <setting label="32111" type="lsep"/>
         <setting id="feed" type="text" label="32110" default="#teamwatch"/>
@@ -11,7 +18,7 @@
         <setting id="showallways" type="bool" label="32140" default="true"/>
         <setting label="32112" type="lsep"/>
         <setting id="screen_height" type="text" label="32160" default=""/>
-        <setting id="screen_width" type="text" label="32170" default=""/>         
+        <setting id="screen_width" type="text" label="32170" default=""/>
     </category>
 
     <category label="32400">
