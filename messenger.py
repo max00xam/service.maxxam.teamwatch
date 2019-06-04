@@ -17,6 +17,8 @@ class SockClient():
         self.login_email = email
         self.login_password = password
         self.feed_channel = kwargs.get('feed_channel', ['teamwatch'])
+        
+        # kwargs.get(key, default) ###################
         self.reconnect_on_disconnect = kwargs.get('reconnect_on_disconnect', True)
         self.reconnect_on_error = kwargs.get('reconnect_on_error', True)
         self.current_reconnection_times = kwargs.get('current_reconnection_times', 0)
