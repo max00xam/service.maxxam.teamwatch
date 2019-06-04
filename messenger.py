@@ -16,32 +16,11 @@ class SockClient():
         
         self.login_email = email
         self.login_password = password
-        
-        # paramvalue = kwargs.get(key, default) ###################
         self.feed_channel = kwargs.get('feed_channel', ['teamwatch'])                
         self.reconnect_on_disconnect = kwargs.get('reconnect_on_disconnect', True)
         self.reconnect_on_error = kwargs.get('reconnect_on_error', True)
         self.current_reconnection_times = kwargs.get('current_reconnection_times', 0)
         
-        ```
-        self.options = opts
-
-        self.login_email = self.options.login_email
-        self.login_password = self.options.login_password
-        self.feed_channel = self.options.feed_channel
-
-        # reconnect in case of disconnection
-        self.reconnect_on_disconnect = True # self.options.reconnect_on_disconnect
-
-        # reconnect in case of error
-        self.reconnect_on_error = True # self.options.reconnect_on_error
-
-        # reconnection limit to 5 times
-        self.attempt_reconnection_limit = 5 # self.options.attempt_reconnection_limit
-        self.current_reconnection_times = 0
-        ```
-
-        # non dovrebbero esserci i parametri passati al constructor?
         self.SocketIO = socketio.Client({
             reconnection: True,
             reconnection_attempts: 0,
