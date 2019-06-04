@@ -22,13 +22,15 @@ class SockClient():
         self.reconnect_on_error = kwargs.get('reconnect_on_error', True)
         self.current_reconnection_times = kwargs.get('current_reconnection_times', 0)
 
-        self.SocketIO = socketio.Client({
-            reconnection: self.reconnect_on_disconnect,
-            reconnection_attempts: self.current_reconnection_times,
-            reconnection_delay: 1,
-            reconnection_delay_max: 5,
-            randomization_factor: 0.5
-        })
+        # _opts = {
+        #     reconnection: self.reconnect_on_disconnect,
+        #     reconnection_attempts: self.current_reconnection_times,
+        #     reconnection_delay: 1,
+        #     reconnection_delay_max: 5,
+        #     randomization_factor: 0.5
+        # }
+
+        self.SocketIO = socketio.Client()
 
         self.SocketIO.on('connect', self._on_connect)
         self.SocketIO.on('disconnect', self._on_disconnect)
@@ -37,11 +39,12 @@ class SockClient():
 
 
     def _log(self, text, debug_level=2):
-        if self.DEBUG >= debug_level:
-            try:
-                xbmc.log ('{} [{}] {}'.format(LOG_NAME, self.DEBUG, text))
-            except:
-                xbmc.log ('{}: exception in _log {}'.format(LOG_NAME, sys.exc_info() )  )
+        # if self.DEBUG >= debug_level:
+        #     try:
+        #         xbmc.log ('{} [{}] {}'.format(self.LOG_NAME, self.DEBUG, text))
+        #     except:
+        #         xbmc.log ('{}: exception in _log {}'.format(self.LOG_NAME, sys.exc_info() )  )
+        print ('{} [{}] {}'.format(self.LOG_NAME, self.DEBUG, text))
 
 
 
@@ -49,14 +52,14 @@ class SockClient():
 
 
     def _convertToBase64(self, text):
-        return base64.b64encode( bytes(text, 'utf-8') )
+        return base64.b64encode( text )
 
 
     def connect(self):
         self._log('try to connect to {}'.format(self.SERVER_NAME), 1)
 
         headers = {
-            'Authorization': self.convertToBase64('{}:{}'.format(self.login_email, self.login_password))
+            'Authorization': self._convertToBase64('{}:{}'.format(self.login_email, self.login_password))
         }
 
         url = self.SERVER_URL
