@@ -9,7 +9,7 @@ class SockClient():
     DEBUG = 2 # 0 = HIGH, 1 = MEDIUM, 2 = LOW lasciare a uno! (solo _log <= DEBUG vengono visualizzati)
 
     SERVER_NAME = '51.15.43.20' # teamwatch.it
-    SERVER_URL = 'http://51.15.43.20:3000'
+    SERVER_URL = 'http://{}:3000'.format(SERVER_NAME)
 
     SocketIO = None
 
