@@ -1,4 +1,5 @@
 import socketio
+import base64
 
 
 class SockClient():
@@ -13,17 +14,17 @@ class SockClient():
     SocketIO = None
 
     def __init__(self, email, password, **kwargs):
-        
+
         self.login_email = email
         self.login_password = password
-        
+
         # paramvalue = kwargs.get(key, default) ###################
-        self.feed_channel = kwargs.get('feed_channel', ['teamwatch'])                
+        self.feed_channel = kwargs.get('feed_channel', 'teamwatch')
         self.reconnect_on_disconnect = kwargs.get('reconnect_on_disconnect', True)
         self.reconnect_on_error = kwargs.get('reconnect_on_error', True)
         self.current_reconnection_times = kwargs.get('current_reconnection_times', 0)
-        
-        ```
+
+        '''
         self.options = opts
 
         self.login_email = self.options.login_email
@@ -39,12 +40,12 @@ class SockClient():
         # reconnection limit to 5 times
         self.attempt_reconnection_limit = 5 # self.options.attempt_reconnection_limit
         self.current_reconnection_times = 0
-        ```
+        '''
 
         # non dovrebbero esserci i parametri passati al constructor?
         self.SocketIO = socketio.Client({
-            reconnection: True,
-            reconnection_attempts: 0,
+            reconnection: self.reconnect_on_disconnect,
+            reconnection_attempts: self.current_reconnection_times,
             reconnection_delay: 1,
             reconnection_delay_max: 5,
             randomization_factor: 0.5
@@ -61,20 +62,29 @@ class SockClient():
 
 
 
+    def _convertToBase64(user, pwd):
+        return base64.b64encode( bytes('{}:{}'.format( user, pwd) , 'utf-8') )
+
     def connect():
         self._log('try to connect to {}'.format(self.SERVER_NAME), 1)
 
-        SocketIO.connect( self.SERVER_URL )
+        headers = {
+            'Authorization': self.convertToBase64(self.login_email, self.login_password)
+        }
+
+        url = self.SERVER_URL
+        url = url + '?feed={}'.format(feed_channel)
+
+        SocketIO.connect( url, headers )
 
 
     def wait_before_exit():
         SocketIO.wait()
 
 
-
-    """
+    '''
     Socket IO event management
-    """
+    '''
 
     @SocketIO.on('connect')
     def on_connect(data):
@@ -84,12 +94,14 @@ class SockClient():
     def on_disconnect(data):
         self._log('socket diconnected', 1)
 
-        # non ci sta un delay?
+        '''
+        DO not handle reconnection: it will be handled by socket-io internally
         if self.current_reconnection_times < self.attempt_reconnection_limit:
             self.current_reconnection_times = self.current_reconnection_times + 1
             self.connect()
         else:
             self._log('reconnection limit reached. Socket won\'t be reconnecting', 1)
+        '''
 
 
 
