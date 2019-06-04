@@ -23,11 +23,11 @@ class SockClient():
         self.current_reconnection_times = kwargs.get('current_reconnection_times', 0)
 
         self.SocketIO = socketio.Client({
-            reconnection: self.reconnect_on_disconnect,
-            reconnection_attempts: self.current_reconnection_times,
-            reconnection_delay: 1,
-            reconnection_delay_max: 5,
-            randomization_factor: 0.5
+            'reconnection': self.reconnect_on_disconnect,
+            'reconnection_attempts': self.current_reconnection_times,
+            'reconnection_delay': 1,
+            'reconnection_delay_max': 5,
+            'randomization_factor': 0.5
         })
 
         self.SocketIO.on('connect', self._on_connect)
