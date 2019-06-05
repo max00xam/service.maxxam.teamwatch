@@ -1,5 +1,5 @@
 import time
-from messenger import SockClient, on_new_message
+from lib.messenger import SockClient, on_new_message
 
 client = SockClient('user1@test.com', 'password')
 
