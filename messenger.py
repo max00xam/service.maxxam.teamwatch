@@ -82,3 +82,9 @@ class SockClient():
     def _got_message(self, data):
         # parse message
         self._log( 'Got message: {}'.format(data), 0 )
+
+class on_new_message(SockClient):
+    def __init__(self, func):
+        parent = self.__class__.__bases__[0]
+        parent.target = func
+    
