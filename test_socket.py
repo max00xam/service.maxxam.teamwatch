@@ -1,11 +1,13 @@
 import time
-from messenger import SockClient
+from messenger import SockClient, on_new_message
 
 client = SockClient('user1@test.com', 'password')
 
-@client._got_message
-def new_message(data):
-    print 'on message event fired!'
+@on_new_message
+def new_message(client, data):
+    print 'new message: {}'.format(data)
+    if data['message'] == 'quit':
+        client.disconnect()
 
 if __name__ == '__main__':
     client.connect()
