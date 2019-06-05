@@ -3,7 +3,8 @@ import base64
 
 
 class SockClient():
-
+    _got_message_target = None
+    
     LOG_NAME = 'teamwatch-messenger'
 
     DEBUG = 2 # 0 = HIGH, 1 = MEDIUM, 2 = LOW lasciare a uno! (solo _log <= DEBUG vengono visualizzati)
@@ -81,10 +82,14 @@ class SockClient():
 
     def _got_message(self, data):
         # parse message
-        self._log( 'Got message: {}'.format(data), 0 )
-
+        if self._got_message_target == None:
+            self._log( 'Got message: {}'.format(data), 0 )
+            return
+            
+        self._got_message_target(data)
+        
 class on_new_message(SockClient):
     def __init__(self, func):
         parent = self.__class__.__bases__[0]
-        parent.target = func
+        parent._got_message_target = func
     
