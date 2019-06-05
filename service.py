@@ -53,6 +53,7 @@ from xbmc_helpers import localize
 from gsearch import search as google
 import maxxam_imdb as imdb
 import maxxam_scraper as scraper
+from messenger import SockClient, on_new_message
 
 class KodiEvents(xbmc.Monitor):    
     def __init__(self, tw):
@@ -149,6 +150,22 @@ class TeamWatch():
             self.skin['bar_error'] = self.skin['bar_settings'] # Fare la nuova barra
             self.skin['icon'] = 'icon.png'
 
+        self.id_teamwatch = None
+        self.id_playerctl = None
+        self.nickname = None
+        self.twitter_enabled = False
+        self.twitter_language = 'en'
+        self.twitter_result_type = ''
+        self.facebook_enabled = False
+        self.facebook_email = None
+        self.facebook_password = None
+        self.imdb_translate = None
+        self.email_enabled = False
+        self.email_password = None
+        self.email_imap = None
+        self.show_allways = True
+        self.feed_name = ['#teamwatch']
+
         self.load_settings()
             
         self.window = None
@@ -227,8 +244,9 @@ class TeamWatch():
         RootDir == "logpath"
         """
 
-        try:
-            f = open(xbmc.translatePath('special://home/addons/{}/addon.xml'.format(skin_name)), 'r')
+        skin_path = xbmc.translatePath('special://home/addons/{}/addon.xml'.format(skin_name))
+        try:            
+            f = open(skin_path, 'r')
             for row in f:
                 row = row.strip()
                 if row.startswith('<res') and 'true' in row:                
@@ -238,7 +256,7 @@ class TeamWatch():
                     break
             f.close()
         except:
-            self._log('error loading skin screen settings', 0)
+            self._log('error loading skin screen settings: {}'.format(skin_path), 0)
             self.screen_width = 800
             self.screen_height = 600
             
@@ -248,10 +266,12 @@ class TeamWatch():
         if not os.path.exists(directory): os.makedirs(directory)
 
         # if self.facebook_enabled: self._fb_get()
-        
+    
+        global tw_instance
+        tw_instance = self
         self.client = SockClient('user1@test.com', 'password')
         self.client.connect()
-    
+
     def _json_rpc(self):
         # http://192.168.1.122:8080/jsonrpc?request=<url-encoded>
         # http://192.168.1.122:8080/jsonrpc?request={"jsonrpc": "2.0", "method": "Settings.SetSettingValue", "params": {"setting": "debug.showloginfo", "value": true}, "id": 1}
@@ -395,7 +415,7 @@ class TeamWatch():
             root = xml.parse(xml_path).getroot().findall('setting')
         except:
             return 
-            
+                
         for id, val in [(x.get('id'),  x.text) for x in root]:
             if id == 'twid':
                 self.id_teamwatch = val
@@ -506,18 +526,19 @@ class TeamWatch():
             if status[file]['version'] != version or status[file]['md5'] != md5:
                 error = True
         
-        if error:
+        if False and error:
             dialog = xbmcgui.Dialog()
             res = dialog.ok('Versione non aggiornata', 'La tua versione di TeamWatch non è aggiornata!')                
             return False
                     
         return True
-
+        
     @on_new_message
     def new_message(client, data):
-        self._log('socket message: {}'.format(data)
-        # {u'feed': u'teamwatch', u'message': u'ancora un test', u'from': u'user1@test.com'}
-        self.show_message(data['from'], data['message'], self.ICON_CHAT)
+        global tw_instance
+        tw_instance._log('new_message: {}'.format(client.__class__), 0)
+        # {u'feed': u'teamwatch', u'message': u'just another test', u'from': u'user1@test.com'}
+        tw_instance.show_message(data['from'], data['message'], tw_instance.ICON_CHAT)
         
     def loop(self):
         loop_time = 0
