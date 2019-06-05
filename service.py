@@ -1016,4 +1016,4 @@ if __name__ == '__main__':
     # tw.loop()
     self.SocketClient = SockClient(self.login_email, self.login_password, {feed_channel: self.feed_channel})
     self.SocketClient.connect()
-    self.SocketClient.wait_before_exit()
+    # self.SocketClient.wait_before_exit()
