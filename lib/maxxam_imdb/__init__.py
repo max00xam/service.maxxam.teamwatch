@@ -14,7 +14,7 @@ def _request(url):
     response = urllib2.urlopen(req)
     html = response.read()
     response.close()
-    
+
     return html
 
 
@@ -28,7 +28,7 @@ def unescape(text):
 def _translate(r_text, to_language="it", from_language="en"):
     text = urllib.quote_plus(r_text)
     link = "http://translate.google.com/m?hl={}&sl={}&q={}".format(to_language, from_language, text)
-    
+
     try:
         html = _request(link).decode("utf-8")
     except:
@@ -42,43 +42,43 @@ def _translate(r_text, to_language="it", from_language="en"):
 
 def _kodiJson(movie):
     movie_json = {'Title': movie['title'].replace(' - IMDb','')}
-    
+
     if 'genres' in movie: movie_json['Genre'] = movie['genres']
     if 'description' in movie:
         movie_json['Plot'] = movie['storyline']  # summary_text
         movie_json['PlotOutline'] = movie['description']
     if 'cast' in movie: movie_json['Cast'] = movie['cast']
-    
+
     return movie_json
-    
+
 def search(title, translate='it'):
     imdb = 'https://www.imdb.com/find?q={}&s=all'.format('+'.join(title.split()))
-    
+
     try:
         html = _request(imdb)
     except:
         return {'error': 'error opening imdb find title url.', 'imdb': imdb}
-    
+
     regex = r"result_text.*?(?P<imdb_id>tt[0-9]+)[^>]+>(?P<title>[^<]+)<\/a>\s+(?P<year>\([0-9]+\))"
     search = re.findall(regex, html, re.MULTILINE | re.DOTALL)
-    
+
     if len(search):
         return get(search[0][0], translate)
     else:
         return {'error': 'movie title not found.', 'imdb': imdb}
-        
+
 def get(imdb_id, translate='it'):
     imdb = 'https://www.imdb.com/title/{}/'.format(imdb_id)
-    
+
     try:
         html = _request(imdb)
     except:
         return {'error': 'error opening imdb title url.', 'imdb': imdb}
-        
+
     result = {}
     search = re.search('og:title[\'"].*?[\'"](.*?)[\'"]', html, re.MULTILINE | re.DOTALL)
     if search: result['title'] = search.group(1).strip()
-    
+
     search = re.search('og:description[\'"].*?[\'"](.*?)[\'"]', html, re.MULTILINE | re.DOTALL)
     if search: result['description'] = search.group(1).strip()
 
@@ -92,28 +92,28 @@ def get(imdb_id, translate='it'):
     if search:
         matches = re.finditer("<a.*?>([^<]+)<\/a>", search.group(), re.MULTILINE | re.DOTALL)
         result['cast'] = [m.group(1) for m in matches]
-        
+
     search = re.search('[\'"]genre[\'"]:\s+\[([^\]]+)\]', html, re.MULTILINE | re.DOTALL)
-    if search: 
+    if search:
         genres = search.group(1).strip()
         result['genres'] = [x.strip() for x in genres.replace('\n','').replace('\r','').replace('"','').split(',')]
-        
+
     search = re.search('[\'"]image[\'"]:\s+[\'"](.*?)[\'"]', html, re.MULTILINE | re.DOTALL)
     if search: result['image_url'] = search.group(1).strip()
 
     if translate:
-        if 'description' in result.keys(): 
+        if 'description' in result.keys():
             result['description'] = _translate(result['description'], translate)
-            
-        if 'summary_text' in result.keys(): 
+
+        if 'summary_text' in result.keys():
             result['summary_text'] = _translate(result['summary_text'], translate)
-            
-        if 'storyline' in result.keys(): 
+
+        if 'storyline' in result.keys():
             result['storyline'] = _translate(result['storyline'], translate)
-            
-        if 'genres' in result.keys(): 
+
+        if 'genres' in result.keys():
             result['genres'] = [_translate(x, translate) for x in result['genres']]
-        
+
     return result
 
 if __name__ == '__main__':

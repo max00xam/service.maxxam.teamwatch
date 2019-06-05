@@ -24,7 +24,7 @@ def fix_js_args(func):
 
     return types.FunctionType(code, six.get_function_globals(func), func.__name__, closure=six.get_function_closure(func))
 
-    
+
 def append_arguments(code_obj, new_locals):
     co_varnames = code_obj.co_varnames   # Old locals
     co_names = code_obj.co_names   # Old globals
@@ -78,7 +78,7 @@ def append_arguments(code_obj, new_locals):
             if inst[1] in names_to_varnames:
                 inst[0] = LOAD_FAST
                 inst[1] = names_to_varnames[inst[1]]
-            elif inst[1] in name_translations:    
+            elif inst[1] in name_translations:
                 inst[1] = name_translations[inst[1]]
             else:
                 raise ValueError("a name was lost in translation")

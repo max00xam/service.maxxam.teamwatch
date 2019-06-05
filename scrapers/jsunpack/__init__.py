@@ -14,7 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     Adapted for use in xbmc from:
     https://github.com/einars/js-beautify/blob/master/python/jsbeautifier/unpackers/packer.py
-    
+
     usage:
     if detect(some_string):
         unpacked = unpack(some_string)
@@ -29,7 +29,7 @@ def detect(source):
         return True
     else:
         return False
-        
+
 def unpack(source):
     """Unpacks P.A.C.K.E.R. packed js code."""
     payload, symtab, radix, count = _filterargs(source)
@@ -45,7 +45,7 @@ def unpack(source):
         return symtab[unbase(word)] or word
     source = re.sub(r'\b\w+\b', lookup, payload)
     return _replacestrings(source)
-    
+
 def _filterargs(source):
     """Juice from a source file the four args needed by decoder."""
     juicers = [(r"}\('(.*)', *(\d+), *(\d+), *'(.*)'\.split\('\|'\), *(\d+), *(.*)\)\)"),
@@ -61,7 +61,7 @@ def _filterargs(source):
                 raise UnpackingError('Corrupted p.a.c.k.e.r. data.')
     # could not find a satisfying regex
     raise UnpackingError('Could not make sense of p.a.c.k.e.r data (unexpected code structure)')
-    
+
 def _replacestrings(source):
     """Strip string lookup table (list) and replace values in source."""
     match = re.search(r'var *(_\w+)\=\["(.*?)"\];', source, re.DOTALL)
@@ -74,7 +74,7 @@ def _replacestrings(source):
             source = source.replace(variable % index, '"%s"' % value)
         return source[startpoint:]
     return source
-    
+
 class Unbaser(object):
     """Functor for a given base. Will efficiently convert
     strings to natural numbers."""
@@ -83,7 +83,7 @@ class Unbaser(object):
         95: (' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ'
              '[\]^_`abcdefghijklmnopqrstuvwxyz{|}~')
     }
-    
+
     def __init__(self, base):
         self.base = base
         # If base can be handled by int() builtin, let it do it for us
@@ -100,10 +100,10 @@ class Unbaser(object):
             except KeyError:
                 raise TypeError('Unsupported base encoding.')
             self.unbase = self._dictunbaser
-            
+
     def __call__(self, string):
         return self.unbase(string)
-        
+
     def _dictunbaser(self, string):
         """Decodes a  value to an integer."""
         ret = 0

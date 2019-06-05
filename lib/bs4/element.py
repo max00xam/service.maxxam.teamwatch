@@ -138,7 +138,7 @@ class HTMLAwareEntitySubstitution(EntitySubstitution):
 
 class Formatter(object):
     """Contains information about how to format a parse tree."""
-    
+
     # By default, represent void elements as <tag/> rather than <tag>
     void_element_close_prefix = '/'
 
@@ -155,7 +155,7 @@ class MinimalHTMLFormatter(Formatter):
     """A minimal HTML formatter."""
     def substitute(self, *args, **kwargs):
         return HTMLAwareEntitySubstitution.substitute_xml(*args, **kwargs)
-    
+
 class HTML5Formatter(HTMLFormatter):
     """An HTML formatter that omits the slash in a void tag."""
     void_element_close_prefix = None
@@ -170,7 +170,7 @@ class HTMLXMLFormatter(Formatter):
     def substitute(self, *args, **kwargs):
         return HTMLAwareEntitySubstitution.substitute_html(*args, **kwargs)
 
-    
+
 class PageElement(object):
     """Contains the navigational information for some part of the page
     (either a tag or a piece of text)"""
@@ -478,7 +478,7 @@ class PageElement(object):
                 "Element has no parent, so 'after' has no meaning.")
         if any(x is self for x in args):
             raise ValueError("Can't insert an element after itself.")
-        
+
         offset = 0
         for successor in args:
             # Extract first so that the index won't be screwed up if they
@@ -867,7 +867,7 @@ class Tag(PageElement):
             self.can_be_empty_element = builder.can_be_empty_element(name)
         else:
             self.can_be_empty_element = False
-            
+
     parserClass = _alias("parser_class")  # BS3
 
     def __copy__(self):
@@ -1003,7 +1003,7 @@ class Tag(PageElement):
         if not isinstance(value, list):
             value = [value]
         return value
-    
+
     def has_attr(self, key):
         return key in self.attrs
 
@@ -1365,14 +1365,14 @@ class Tag(PageElement):
         """
         if namespaces is None:
             namespaces = self._namespaces
-        
+
         if limit is None:
             limit = 0
         if soupsieve is None:
             raise NotImplementedError(
                 "Cannot execute CSS selectors because the soupsieve package is not installed."
             )
-            
+
         return soupsieve.select(selector, self, namespaces, limit, **kwargs)
 
     # Old names for backwards compatibility
@@ -1540,7 +1540,7 @@ class SoupStrainer(object):
             if self._matches(' '.join(markup), match_against):
                 return True
             return False
-        
+
         if match_against is True:
             # True matches any non-None value.
             return markup is not None
@@ -1584,11 +1584,11 @@ class SoupStrainer(object):
                         return True
             else:
                 return False
-        
+
         # Beyond this point we might need to run the test twice: once against
         # the tag's name and once against its prefixed name.
         match = False
-        
+
         if not match and isinstance(match_against, unicode):
             # Exact string match
             match = markup == match_against

@@ -1,7 +1,7 @@
 # -*- coding: latin-1 -*-
 
 """
-Imap folder names are encoded using a special version of utf-7 as defined in RFC 
+Imap folder names are encoded using a special version of utf-7 as defined in RFC
 2060 section 5.1.3.
 
 5.1.3.  Mailbox International Naming Convention
@@ -204,4 +204,3 @@ if __name__=='__main__':
     print '#######'
     print '~peter/mail/&ZeVnLIqe-/&U,BTFw-'
     print imapUTF7Decode('~peter/mail/&ZeVnLIqe-/&U,BTFw-').encode('utf-8')
-    

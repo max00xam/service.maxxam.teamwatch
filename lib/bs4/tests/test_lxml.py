@@ -51,7 +51,7 @@ class LXMLTreeBuilderSmokeTest(SoupTest, HTMLTreeBuilderSmokeTest):
         # hear about markup like "&#147;", it's been (incorrectly) converted into
         # a string like u'\x93'
         pass
-        
+
     # In lxml < 2.3.5, an empty doctype causes a segfault. Skip this
     # test if an old version of lxml is installed.
 

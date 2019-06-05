@@ -22,7 +22,7 @@ class facebook():
         self.cookies = cookies
         self.base_url = ''
         self.scrape_items = False
-            
+
     def fuck_unicode (self, barray, repl = '?'):
         out = ''
         for c in barray:
@@ -30,7 +30,7 @@ class facebook():
                 out += str(c)
             except:
                 out += repl
-                
+
         return out
 
     def _random_headers(self):
@@ -53,7 +53,7 @@ class facebook():
             'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1',
             'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; .NET CLR 3.5.30729)'
         ]
-        
+
         HEADERS['User-Agent'] = random.choice(UserAgent)
         return HEADERS
 
@@ -62,7 +62,7 @@ class facebook():
             return urljoin(self.base_url, url)
         else:
             return url
-            
+
     def _img_scrape(self):
         for el in self.soup.find_all('img'):
             if 'src' in el.attrs:
@@ -102,7 +102,7 @@ class facebook():
         self.html = result.text
         self.status_code = result.status_code
         self._log('_get result: {}, bytes: {}, url: {}'.format(result.status_code, len(self.html), self.fuck_unicode(url)))
-        
+
         if result.status_code != 200:
             self.soup = None
         else:
@@ -116,33 +116,33 @@ class facebook():
         self.html = result.text
         self.status_code = result.status_code
         self._log('_post result: {}, bytes: {}, url: {}'.format(result.status_code, len(self.html), self.fuck_unicode(url)))
-        
+
         if result.status_code != 200:
             self.soup = None
         else:
             self.soup = bs(result.text, 'html.parser')
-            
+
     def _debug(self):
         # fout = open('facebook.debug.out', 'w')
         # fout.write(self.html.encode('utf8'))
         # fout.close()
         pass
-        
+
     def _log(self, data, log_enabled = True):
         log_text = 'maxxam facebook: {}'.format(str(data))
         if NO_XBMC:
             print log_text
         else:
             xbmc.log(log_text)
-            
+
     #### FACEBOOK LOGIN ###################################################################################################
     def login(self, scrape_items = True):
         self._log('start login')
-        
-        login_url = "https://m.facebook.com/"    
+
+        login_url = "https://m.facebook.com/"
         self._get(login_url)
         if (self.status_code != 200) or (self.soup == None): return
-        
+
         if self.soup.select('#root > span:nth-child(3) > img:nth-child(1)'):
             img_url = self._relative_url(self.soup.select('#root > span:nth-child(3) > img:nth-child(1)')[0]['src'])
             self.session.get(img_url, headers = self.headers)
@@ -150,12 +150,12 @@ class facebook():
             self.soup = None
             self.status_code = -1
             return
-            
+
         if not self.soup.select('form input'):
             self.soup = None
             self.status_code = -1
             return
-            
+
         payload = {}
         for i in self.soup.select('form input'):
             if i['type'] != 'submit' and not 'noscript' in i['name']:
@@ -171,28 +171,28 @@ class facebook():
             self.soup = None
             self.status_code = -1
             return
-        
+
         form_action = self._relative_url(self.soup.find('form')['action'])
 
         self._log('form submit')
         self._post(form_action, payload)
-        if (self.status_code != 200) or (self.soup == None): return 
-        
+        if (self.status_code != 200) or (self.soup == None): return
+
         if scrape_items:
             self._img_scrape()
             self._iframe_scrape()
-        
+
     #### GET FACEBOOK HOME PAGE ###########################################################################################
     def get_home(self, scrape_items = True):
         if (self.status_code != 200) or (self.soup == None): return []
-        
+
         self._log('getting home page')
-        
+
         if not self.soup.form or not 'action' in self.soup.form.attrs:
             self.soup = None
             self.status_code = -1
             return
-        
+
         payload = {}
         for input in self.soup.form.find_all('input'):
             if input['type'] == 'hidden':
@@ -200,16 +200,16 @@ class facebook():
                     payload[input['name']] = input['value']
                 except:
                     payload[input['name']] = ''
-                
+
         form_action = self._relative_url(self.soup.form['action'])
         self._post(form_action, payload)
         if (self.status_code != 200) or (self.soup == None): return []
-        
+
         self._scrapehome()
         return self.posts
-        
+
     def get_page(self, url, scrape_items = True):
-        self._log('getting page')       
+        self._log('getting page')
         self._get(url)
         if (self.status_code != 200) or (self.soup == None): return None
 
@@ -218,34 +218,34 @@ class facebook():
             self._iframe_scrape()
 
         return self.soup
-    
+
     def close(self):
         self.session.close()
-        
+
     #### SCRAPE FACEBOOK HOME PAGE #######################################################################################
     def _scrapehome(self, scrape_items = True):
         if (self.status_code != 200) or (self.soup == None): return
-        
+
         self._log('start scraping page')
-    
+
         self._log('found {} div role="article"'.format(len(self.soup.findAll('div', {'role': 'article'}))))
         if len(self.soup.findAll('div', {'role': 'article'})) == 0:
             ### self._debug()
             self.status_code = -2
             return
-            
+
         for post in self.soup.findAll('div', {'role': 'article'}):
             self._log('*** start for loop ***')
             if 'data-ft' in post.attrs:
                 mf_story_key = re.search('["\']mf_story_key["\']\s*:\s*["\']([\-0-9]+)["\']', post.attrs['data-ft'])
-                if mf_story_key: 
+                if mf_story_key:
                     mf_story_key = mf_story_key.group(1)
                     self._log('found mf_story_key = ' + mf_story_key)
             else:
                 mf_story_key = '__unknown__'
-                
+
             post_time = ''
-            if post.find('abbr'): 
+            if post.find('abbr'):
                 post_time = post.find('abbr').text
             else:
                 for a in post.findAll('a'):
@@ -259,30 +259,30 @@ class facebook():
                         if post_time:
                             post_time = str(datetime.fromtimestamp(int(post_time.group(1))))
                             break
-            
+
             if post_time:
                 r_post_time = self._time_convert(post_time)
                 self._log('post time: {} --> {}'.format(post_time, r_post_time))
-                post_time = r_post_time          
-            
-            if not post.find('h3'): # or not 'dv' in post.find('h3').attrs['class']: 
+                post_time = r_post_time
+
+            if not post.find('h3'): # or not 'dv' in post.find('h3').attrs['class']:
                 self._log('h3 not found')
                 continue
-            
+
             if post.find('h3'):
                 user_home = post.find('a')
-                
+
                 user = post.find('h3').text.strip()
                 user = re.sub('[\n\r\t]',' ', user)
                 user = re.sub('\s+',' ', user)
                 user = user.encode('utf8')
             else:
                 user = '__unknown__'
-            
+
             self._log('user = ' + self.fuck_unicode(user))
-            
+
             paragraph = post.find('p')
-            if paragraph: 
+            if paragraph:
                 paragraph = paragraph.text
                 paragraph = re.sub('[\r\n\t]+', '', paragraph)
                 paragraph = re.sub('\s+', ' ', paragraph)
@@ -291,7 +291,7 @@ class facebook():
                 paragraph = ''
 
             self._log('paragraph = ' + self.fuck_unicode(paragraph))
-            
+
             image = ''
             for img in post.findAll(lambda tag:tag.name == "img" and re.search('scontent', tag.attrs['src'])):
                 try:
@@ -299,23 +299,23 @@ class facebook():
                     break
                 except:
                     pass
-            
-            if not image:                
+
+            if not image:
                 profile = self.soup.select("h3 a:nth-child(1)")
                 if profile and 'href' in profile[0].attrs:
-                    self._log('loading profile page = ' + self.fuck_unicode(profile[0].text))                    
+                    self._log('loading profile page = ' + self.fuck_unicode(profile[0].text))
                     self.get_page(self._relative_url(profile[0].attrs['href']))
                     photo = self.soup.findAll(lambda tag:tag.name == 'a' and 'href' in tag.attrs and 'photo.php' in tag.attrs['href'])
 
                     for a in photo:
-                        if a.img: 
+                        if a.img:
                             image = a.img.attrs['src'].encode('utf8')
-                            if 'alt' in a.img.attrs.keys(): 
+                            if 'alt' in a.img.attrs.keys():
                                 self._log('found profile image alt = ' + self.fuck_unicode(a.img.attrs['alt']))
                                 break
-                                
+
             self._log('image = ' + self.fuck_unicode(image))
-            
+
             _hash = hashlib.md5(paragraph + image).hexdigest()
             if (paragraph or image) and not _hash in [h['hash'] for h in self.posts]:
                 self.posts.append({
@@ -325,21 +325,21 @@ class facebook():
                     'time': post_time,
                     'text': paragraph,
                     'image': image})
-                
+
         if scrape_items:
             self._img_scrape()
             self._iframe_scrape()
 
 if __name__ == '__main__':
-    fb_email    = '** your email *****'  
+    fb_email    = '** your email *****'
     fb_password = '** your password **'
-    
+
     if fb_email == '** your email *****' or fb_password == '** your password **':
         print 'To test the library you must enter (in the code) your email and password to access facebook'
     else:
         fb = facebook(fb_email, fb_password)
         fb.login()
-        
+
         res_posts = fb.get_home()
         if res_posts:
             for post in res_posts:
@@ -353,5 +353,5 @@ if __name__ == '__main__':
                 print
         else:
             print 'receiveid {} from facebook'.format(fb.status_code)
-            
+
         fb.close()

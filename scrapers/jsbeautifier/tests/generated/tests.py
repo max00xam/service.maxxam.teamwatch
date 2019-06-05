@@ -504,7 +504,7 @@ class TestJSBeautifier(unittest.TestCase):
         self.reset_options();
         #============================================================
         # operator_position option - set to 'before-newline' (default value)
-        
+
         # comprehensive, various newlines
         bt(
             'var res = a + b\n' +
@@ -562,7 +562,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    ab;\n' +
             'ac +\n' +
             '    -ad')
-        
+
         # colon special case
         bt(
             'var a = {\n' +
@@ -585,7 +585,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    h;\n' +
             'var i = j ? k :\n' +
             '    l;')
-        
+
         # catch-all, includes brackets and other various code
         bt(
             'var d = 1;\n' +
@@ -624,7 +624,7 @@ class TestJSBeautifier(unittest.TestCase):
         #============================================================
         # operator_position option - set to 'after_newline'
         self.options.operator_position = 'after-newline'
-        
+
         # comprehensive, various newlines
         bt(
             'var res = a + b\n' +
@@ -681,7 +681,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    < ab;\n' +
             'ac\n' +
             '    + -ad')
-        
+
         # colon special case
         bt(
             'var a = {\n' +
@@ -704,7 +704,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    : h;\n' +
             'var i = j ? k\n' +
             '    : l;')
-        
+
         # catch-all, includes brackets and other various code
         bt(
             'var d = 1;\n' +
@@ -743,7 +743,7 @@ class TestJSBeautifier(unittest.TestCase):
         #============================================================
         # operator_position option - set to 'preserve-newline'
         self.options.operator_position = 'preserve-newline'
-        
+
         # comprehensive, various newlines
         bt(
             'var res = a + b\n' +
@@ -802,7 +802,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    ab;\n' +
             'ac +\n' +
             '    -ad')
-        
+
         # colon special case
         bt(
             'var a = {\n' +
@@ -825,7 +825,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    : h;\n' +
             'var i = j ? k :\n' +
             '    l;')
-        
+
         # catch-all, includes brackets and other various code
         bt(
             'var d = 1;\n' +
@@ -852,10 +852,10 @@ class TestJSBeautifier(unittest.TestCase):
         bt('result = yield pgClient.query_(queryString);')
         bt('yield [1, 2]')
         bt('yield* bar();')
-        
+
         # yield should have no space between yield and star
         bt('yield * bar();', 'yield* bar();')
-        
+
         # yield should have space between star and generator
         bt('yield *bar();', 'yield* bar();')
 
@@ -866,15 +866,15 @@ class TestJSBeautifier(unittest.TestCase):
         bt('async function foo() {}')
         bt('let w = async function foo() {}')
         bt('async function foo() {}\nvar x = await foo();')
-        
+
         # async function as an input to another function
         bt('wrapper(async function foo() {})')
-        
+
         # await on inline anonymous function. should have a space after await
         bt(
             'async function() {\n    var w = await(async function() {\n        return await foo();\n    })();\n}',
             'async function() {\n    var w = await (async function() {\n        return await foo();\n    })();\n}')
-        
+
         # ensure that this doesn't break anyone with the async library
         bt('async.map(function(t) {})')
 
@@ -889,22 +889,22 @@ class TestJSBeautifier(unittest.TestCase):
         bt('<a b="A quote \' inside string."/>')
         bt('<a b=\'A quote " inside string.\'/>')
         bt('<a b=\'Some """ quotes ""  inside string.\'/>')
-        
+
         # Handles inline expressions
         bt('xml=<{a} b="c"><d/><e v={z}>\n foo</e>x</{a}>;', 'xml = <{a} b="c"><d/><e v={z}>\n foo</e>x</{a}>;')
         bt('xml=<{a} b="c">\n    <e v={z}>\n foo</e>x</{a}>;', 'xml = <{a} b="c">\n    <e v={z}>\n foo</e>x</{a}>;')
-        
+
         # xml literals with special characters in elem names - see http://www.w3.org/TR/REC-xml/#NT-NameChar
         bt('xml = <_:.valid.xml- _:.valid.xml-="123"/>;')
-        
+
         # xml literals with attributes without equal sign
         bt('xml = <elem someAttr/>;')
-        
+
         # Handles CDATA
         bt('xml=<![CDATA[ b="c"><d/><e v={z}>\n foo</e>x/]]>;', 'xml = <![CDATA[ b="c"><d/><e v={z}>\n foo</e>x/]]>;')
         bt('xml=<![CDATA[]]>;', 'xml = <![CDATA[]]>;')
         bt('xml=<a b="c"><![CDATA[d/></a></{}]]></a>;', 'xml = <a b="c"><![CDATA[d/></a></{}]]></a>;')
-        
+
         # JSX - working jsx from http://prettydiff.com/unit_tests/beautification_javascript_jsx.txt
         bt(
             'var ListItem = React.createClass({\n' +
@@ -1085,7 +1085,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    }\n' +
             '});\n' +
             'React.render(<MarkdownEditor />, mountNode);')
-        
+
         # JSX - Not quite correct jsx formatting that still works
         bt(
             'var content = (\n' +
@@ -1116,20 +1116,20 @@ class TestJSBeautifier(unittest.TestCase):
             ');\n' +
             'var qwer = <DropDown> A dropdown list <Menu> <MenuItem>Do Something</MenuItem> <MenuItem>Do Something Fun!</MenuItem> <MenuItem>Do Something Else</MenuItem> </Menu> </DropDown>;\n' +
             'render(dropdown);')
-        
+
         # Handles messed up tags, as long as it isn't the same name
         # as the root tag. Also handles tags of same name as root tag
         # as long as nesting matches.
         bt(
             'xml=<a x="jn"><c></b></f><a><d jnj="jnn"><f></a ></nj></a>;',
             'xml = <a x="jn"><c></b></f><a><d jnj="jnn"><f></a ></nj></a>;')
-        
+
         # If xml is not terminated, the remainder of the file is treated
         # as part of the xml-literal (passed through unaltered)
         test_fragment(
             'xml=<a></b>\nc<b;',
             'xml = <a></b>\nc<b;')
-        
+
         # Issue #646 = whitespace is allowed in attribute declarations
         bt(
             'let a = React.createClass({\n' +
@@ -1171,7 +1171,7 @@ class TestJSBeautifier(unittest.TestCase):
             '        );\n' +
             '    }\n' +
             '});')
-        
+
         # Issue #914 - Multiline attribute in root tag
         bt(
             'return (\n' +
@@ -1276,7 +1276,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    ten   : 10\n' +
             '/* beautify preserve:end */\n' +
             '};')
-        
+
         # one space before and after required, only single spaces inside.
         bt(
             'var a = {\n' +
@@ -1323,7 +1323,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    three: 3,\n' +
             '    ten: 10\n' +
             '};')
-        
+
         # Directive: ignore
         bt('/* beautify ignore:start */\n/* beautify ignore:end */')
         bt('/* beautify ignore:start */\n   var a,,,{ 1;\n/* beautify ignore:end */')
@@ -1361,7 +1361,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    ten   : 10\n' +
             '/* beautify ignore:end */\n' +
             '};')
-        
+
         # Directives - multiple and interacting
         bt(
             'var a = {\n' +
@@ -1407,7 +1407,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    ten   : 10\n' +
             '/* beautify ignore:end */\n' +
             '};')
-        
+
         # Starts can occur together, ignore:end must occur alone.
         bt(
             'var a = {\n' +
@@ -1521,7 +1521,7 @@ class TestJSBeautifier(unittest.TestCase):
             'switch(x) {case 0: case 1: a(); break; default: break}',
             'switch (x) {\ncase 0:\ncase 1:\n    a();\n    break;\ndefault:\n    break\n}')
         bt('switch(x){case -1:break;case !y:break;}', 'switch (x) {\ncase -1:\n    break;\ncase !y:\n    break;\n}')
-        
+
         # typical greasemonkey start
         test_fragment('// comment 2\n(function ()')
         bt(
@@ -1554,7 +1554,7 @@ class TestJSBeautifier(unittest.TestCase):
             'switch(x) {case 0: case 1: a(); break; default: break}',
             'switch (x) {\ncase 0:\ncase 1:\n    a();\n    break;\ndefault:\n    break\n}')
         bt('switch(x){case -1:break;case !y:break;}', 'switch (x) {\ncase -1:\n    break;\ncase !y:\n    break;\n}')
-        
+
         # typical greasemonkey start
         test_fragment('// comment 2\n(function ()')
         bt(
@@ -1587,7 +1587,7 @@ class TestJSBeautifier(unittest.TestCase):
             'switch(x) {case 0: case 1: a(); break; default: break}',
             'switch (x) {\n    case 0:\n    case 1:\n        a();\n        break;\n    default:\n        break\n}')
         bt('switch(x){case -1:break;case !y:break;}', 'switch (x) {\n    case -1:\n        break;\n    case !y:\n        break;\n}')
-        
+
         # typical greasemonkey start
         test_fragment('// comment 2\n(function ()')
         bt(
@@ -1621,7 +1621,7 @@ class TestJSBeautifier(unittest.TestCase):
             'switch(x) {case 0: case 1: a(); break; default: break}',
             'switch (x) {\n    case 0:\n    case 1:\n        a();\n        break;\n    default:\n        break\n}')
         bt('switch(x){case -1:break;case !y:break;}', 'switch (x) {\n    case -1:\n        break;\n    case !y:\n        break;\n}')
-        
+
         # typical greasemonkey start
         test_fragment('// comment 2\n(function()')
         bt(
@@ -1640,7 +1640,7 @@ class TestJSBeautifier(unittest.TestCase):
         self.reset_options();
         #============================================================
         # Regression tests
-        
+
         # Issue 241
         bt(
             'obj\n' +
@@ -1661,7 +1661,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    .last(function(err, response) {\n' +
             '        console.log(err);\n' +
             '    });')
-        
+
         # Issue 268 and 275
         bt(
             'obj.last(a, function() {\n' +
@@ -1683,7 +1683,7 @@ class TestJSBeautifier(unittest.TestCase):
             '        };\n' +
             '    });\n' +
             '})();')
-        
+
         # Issue 281
         bt(
             'define(["dojo/_base/declare", "my/Employee", "dijit/form/Button",\n' +
@@ -1718,7 +1718,7 @@ class TestJSBeautifier(unittest.TestCase):
             '            }\n' +
             '        });\n' +
             '    });')
-        
+
         # Issue 459
         bt(
             '(function() {\n' +
@@ -1729,7 +1729,7 @@ class TestJSBeautifier(unittest.TestCase):
             '        bar: ["bar"]\n' +
             '    };\n' +
             '}());')
-        
+
         # Issue 505 - strings should end at newline unless continued by backslash
         bt(
             'var name = "a;\n' +
@@ -1737,11 +1737,11 @@ class TestJSBeautifier(unittest.TestCase):
         bt(
             'var name = "a;\\\n' +
             '    name = b";')
-        
+
         # Issue 514 - some operators require spaces to distinguish them
         bt('var c = "_ACTION_TO_NATIVEAPI_" + ++g++ + +new Date;')
         bt('var c = "_ACTION_TO_NATIVEAPI_" - --g-- - -new Date;')
-        
+
         # Issue 440 - reserved words can be used as object property names
         bt(
             'a = {\n' +
@@ -1763,7 +1763,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    "else": {},\n' +
             '    yay: {}\n' +
             '};')
-        
+
         # Issue 331 - if-else with braces edge case
         bt(
             'if(x){a();}else{b();}if(y){c();}',
@@ -1775,7 +1775,7 @@ class TestJSBeautifier(unittest.TestCase):
             'if (y) {\n' +
             '    c();\n' +
             '}')
-        
+
         # Issue 485 - ensure function declarations behave the same in arrays as elsewhere
         bt(
             'var v = ["a",\n' +
@@ -1791,7 +1791,7 @@ class TestJSBeautifier(unittest.TestCase):
             '}, {\n' +
             '    id: 1\n' +
             '}];')
-        
+
         # Issue 382 - initial totally cursory support for es6 module export
         bt(
             'module "Even" {\n' +
@@ -1806,7 +1806,7 @@ class TestJSBeautifier(unittest.TestCase):
             'module "Even" {\n' +
             '    export default function div(x, y) {}\n' +
             '}')
-        
+
         # Issue 889 - export default { ... }
         bt(
             'export default {\n' +
@@ -1826,7 +1826,7 @@ class TestJSBeautifier(unittest.TestCase):
             '        return 3;\n' +
             '    }\n' +
             '}')
-        
+
         # Issue 508
         bt('set["name"]')
         bt('get["name"]')
@@ -1844,7 +1844,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    c: 1,\n' +
             '    d: function() {}\n' +
             '};')
-        
+
         # Issue 298 - do not under indent if/while/for condtionals experesions
         bt(
             '\'use strict\';\n' +
@@ -1853,7 +1853,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    })) {\n' +
             '    console.log("hello");\n' +
             '}')
-        
+
         # Issue 298 - do not under indent if/while/for condtionals experesions
         bt(
             '\'use strict\';\n' +
@@ -1862,7 +1862,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    })) {\n' +
             '    console.log("hello");\n' +
             '}')
-        
+
         # Issue 552 - Typescript?  Okay... we didn't break it before, so try not to break it now.
         bt(
             'class Test {\n' +
@@ -1884,7 +1884,7 @@ class TestJSBeautifier(unittest.TestCase):
             '        return 0;\n' +
             '    }\n' +
             '}')
-        
+
         # Issue 583 - Functions with comments after them should still indent correctly.
         bt(
             'function exit(code) {\n' +
@@ -1894,13 +1894,13 @@ class TestJSBeautifier(unittest.TestCase):
             '    phantom.onError = function() {};\n' +
             '}\n' +
             '// Comment')
-        
+
         # Issue 806 - newline arrow functions
         bt(
             'a.b("c",\n' +
             '    () => d.e\n' +
             ')')
-        
+
         # Issue 810 - es6 object literal detection
         bt(
             'function badFormatting() {\n' +
@@ -1926,7 +1926,7 @@ class TestJSBeautifier(unittest.TestCase):
             '        j: k\n' +
             '    }\n' +
             '}')
-        
+
         # Issue 602 - ES6 object literal shorthand functions
         bt(
             'return {\n' +
@@ -1999,7 +1999,7 @@ class TestJSBeautifier(unittest.TestCase):
             '        return 1;\n' +
             '    }\n' +
             '}.fn2()')
-        
+
         # Issue 854 - Arrow function with statement block
         bt(
             'test(() => {\n' +
@@ -2011,7 +2011,7 @@ class TestJSBeautifier(unittest.TestCase):
             '        b();\n' +
             '    }\n' +
             '})')
-        
+
         # Issue 406 - Multiline array
         bt(
             'var tempName = [\n' +
@@ -2042,8 +2042,8 @@ class TestJSBeautifier(unittest.TestCase):
         #============================================================
         # Destructured and related
         self.options.brace_style = 'collapse-preserve-inline'
-        
-        # Issue 382 - import destructured 
+
+        # Issue 382 - import destructured
         bt(
             'module "Even" {\n' +
             '    import { odd, oddly } from "Odd";\n' +
@@ -2058,7 +2058,7 @@ class TestJSBeautifier(unittest.TestCase):
             'import defaultMember, { member, member2 } from "module-name";\n' +
             'import defaultMember, * as name from "module-name";\n' +
             'import "module-name";')
-        
+
         # Issue 858 - from is a keyword only after import
         bt(
             'if (from < to) {\n' +
@@ -2066,7 +2066,7 @@ class TestJSBeautifier(unittest.TestCase):
             '} else {\n' +
             '    from--;\n' +
             '}')
-        
+
         # Issue 511 - destrutured
         bt(
             'var { b, c } = require("../stores");\n' +
@@ -2075,7 +2075,7 @@ class TestJSBeautifier(unittest.TestCase):
             'function takeThing({ prop }) {\n' +
             '    console.log("inner prop", prop)\n' +
             '}')
-        
+
         # Issue 315 - Short objects
         bt(
             'var a = { b: { c: { d: e } } };')
@@ -2087,7 +2087,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    },\n' +
             '    b2: { c: { d: e } }\n' +
             '};')
-        
+
         # Issue 370 - Short objects in array
         bt(
             'var methods = [\n' +
@@ -2097,7 +2097,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    { name: "min" },\n' +
             '    { name: "max" }\n' +
             '];')
-        
+
         # Issue 838 - Short objects in array
         bt(
             'function(url, callback) {\n' +
@@ -2107,7 +2107,7 @@ class TestJSBeautifier(unittest.TestCase):
             '    }\n' +
             '    else script.onload = callback;\n' +
             '}')
-        
+
         # Issue 578 - Odd indenting after function
         bt(
             'function bindAuthEvent(eventName) {\n' +
@@ -2116,14 +2116,14 @@ class TestJSBeautifier(unittest.TestCase):
             '    });\n' +
             '}\n' +
             '["logged_in", "logged_out", "signed_up", "updated_user"].forEach(bindAuthEvent);')
-        
+
         # Issue #487 - some short expressions examples
         bt(
             'if (a == 1) { a++; }\n' +
             'a = { a: a };\n' +
             'UserDB.findOne({ username: "xyz" }, function(err, user) {});\n' +
             'import { fs } from "fs";')
-        
+
         # Issue #982 - Fixed return expression collapse-preserve-inline
         bt(
             'function foo(arg) {\n' +
@@ -2132,8 +2132,8 @@ class TestJSBeautifier(unittest.TestCase):
             '    if (!arg) { throw "inline"; }\n' +
             '    return true;\n' +
             '}')
-        
-        # Issue #338 - Short expressions 
+
+        # Issue #338 - Short expressions
         bt(
             'if (someCondition) { return something; }\n' +
             'if (someCondition) {\n' +
@@ -2143,7 +2143,7 @@ class TestJSBeautifier(unittest.TestCase):
             'if (someCondition) {\n' +
             '    return something;\n' +
             '}')
-        
+
         # Issue #996 - Input ends with backslash throws exception
         test_fragment(
             'sd = 1;\n' +
@@ -2190,7 +2190,7 @@ class TestJSBeautifier(unittest.TestCase):
         bt('a <= .5')
         bt('a<.5', 'a < .5')
         bt('a<=.5', 'a <= .5')
-        
+
         # exponent literals
         bt('a = 1e10')
         bt('a = 1.3e10')
@@ -2215,7 +2215,7 @@ class TestJSBeautifier(unittest.TestCase):
         bt('a=0x.g-12345.3e-10', 'a = 0x.g - 12345.3e-10')
         bt('a=0x0.g-12345.3e-10', 'a = 0x0.g - 12345.3e-10')
         bt('a=0x0.0g-12345.3e-10', 'a = 0x0 .0 g - 12345.3e-10')
-        
+
         # Decimal literals
         bt('a = 0123456789;')
         bt('a = 9876543210;')
@@ -2231,7 +2231,7 @@ class TestJSBeautifier(unittest.TestCase):
         bt('a=00B0x0b0', 'a = 00 B0x0b0')
         bt('a=0090x0', 'a = 0090 x0')
         bt('a=0g0b0o0', 'a = 0 g0b0o0')
-        
+
         # Hexadecimal literals
         bt('a = 0x0123456789abcdef;')
         bt('a = 0X0123456789ABCDEF;')
@@ -2248,7 +2248,7 @@ class TestJSBeautifier(unittest.TestCase):
         bt('a=0x0B0x0b0', 'a = 0x0B0 x0b0')
         bt('a=0X090x0', 'a = 0X090 x0')
         bt('a=0Xg0b0o0', 'a = 0X g0b0o0')
-        
+
         # Octal literals
         bt('a = 0o01234567;')
         bt('a = 0O01234567;')
@@ -2264,7 +2264,7 @@ class TestJSBeautifier(unittest.TestCase):
         bt('a=0o0B0x0b0', 'a = 0o0 B0x0b0')
         bt('a=0O090x0', 'a = 0O0 90 x0')
         bt('a=0Og0b0o0', 'a = 0O g0b0o0')
-        
+
         # Binary literals
         bt('a = 0b010011;')
         bt('a = 0B010011;')
@@ -2299,12 +2299,12 @@ class TestJSBeautifier(unittest.TestCase):
         bt('a=~a', 'a = ~a')
         bt('a;/*comment*/b;', 'a; /*comment*/\nb;')
         bt('a;/* comment */b;', 'a; /* comment */\nb;')
-        
+
         # simple comments don't get touched at all
         test_fragment('a;/*\ncomment\n*/b;', 'a;\n/*\ncomment\n*/\nb;')
         bt('a;/**\n* javadoc\n*/b;', 'a;\n/**\n * javadoc\n */\nb;')
         test_fragment('a;/**\n\nno javadoc\n*/b;', 'a;\n/**\n\nno javadoc\n*/\nb;')
-        
+
         # comment blocks detected and reindented even w/o javadoc starter
         bt('a;/*\n* javadoc\n*/b;', 'a;\n/*\n * javadoc\n */\nb;')
         bt('if(a)break;', 'if (a) break;')
@@ -2318,10 +2318,10 @@ class TestJSBeautifier(unittest.TestCase):
         bt('for(;;++i)a', 'for (;; ++i) a')
         bt('return(1)', 'return (1)')
         bt('try{a();}catch(b){c();}finally{d();}', 'try {\n    a();\n} catch (b) {\n    c();\n} finally {\n    d();\n}')
-        
+
         #  magic function call
         bt('(xx)()')
-        
+
         # another magic function call
         bt('a[1]()')
         bt('if(a){b();}else if(c) foo();', 'if (a) {\n    b();\n} else if (c) foo();')
@@ -2329,10 +2329,10 @@ class TestJSBeautifier(unittest.TestCase):
         bt('switch(x){case -1:break;case !y:break;}', 'switch (x) {\n    case -1:\n        break;\n    case !y:\n        break;\n}')
         bt('a !== b')
         bt('if (a) b(); else c();', 'if (a) b();\nelse c();')
-        
+
         # typical greasemonkey start
         bt('// comment\n(function something() {})')
-        
+
         # duplicating newlines
         bt('{\n\n    x();\n\n}')
         bt('if (a in b) foo();')
@@ -2354,20 +2354,20 @@ class TestJSBeautifier(unittest.TestCase):
         bt('a = 1; // comment')
         bt('a = 1;\n // comment', 'a = 1;\n// comment')
         bt('a = [-1, -1, -1]')
-        
+
         # The exact formatting these should have is open for discussion, but they are at least reasonable
         bt('a = [ // comment\n    -1, -1, -1\n]')
         bt('var a = [ // comment\n    -1, -1, -1\n]')
         bt('a = [ // comment\n    -1, // comment\n    -1, -1\n]')
         bt('var a = [ // comment\n    -1, // comment\n    -1, -1\n]')
         bt('o = [{a:b},{c:d}]', 'o = [{\n    a: b\n}, {\n    c: d\n}]')
-        
+
         # was: extra space appended
         bt('if (a) {\n    do();\n}')
-        
+
         # if/else statement with empty body
         bt('if (a) {\n// comment\n}else{\n// comment\n}', 'if (a) {\n    // comment\n} else {\n    // comment\n}')
-        
+
         # multiple comments indentation
         bt('if (a) {\n// comment\n// comment\n}', 'if (a) {\n    // comment\n    // comment\n}')
         bt('if (a) b() else c();', 'if (a) b()\nelse c();')
@@ -2391,7 +2391,7 @@ class TestJSBeautifier(unittest.TestCase):
         bt('(x) => x')
         bt('x => { x }', 'x => {\n    x\n}')
         bt('(x) => { x }', '(x) => {\n    x\n}')
-        
+
         # a common snippet in jQuery plugins
         bt(
             'settings = $.extend({},defaults,settings);',
@@ -2422,17 +2422,17 @@ class TestJSBeautifier(unittest.TestCase):
         test_fragment('`incomplete-template-string')
         test_fragment('{a:1},{a:2}', '{\n    a: 1\n}, {\n    a: 2\n}')
         test_fragment('var ary=[{a:1}, {a:2}];', 'var ary = [{\n    a: 1\n}, {\n    a: 2\n}];')
-        
+
         # incomplete
         test_fragment('{a:#1', '{\n    a: #1')
-        
+
         # incomplete
         test_fragment('{a:#', '{\n    a: #')
-        
+
         # incomplete
         test_fragment('}}}', '}\n}\n}')
         test_fragment('<!--\nvoid();\n// -->')
-        
+
         # incomplete regexp
         test_fragment('a=/regexp', 'a = /regexp')
         bt('{a:#1=[],b:#1#,c:#999999#}', '{\n    a: #1=[],\n    b: #1#,\n    c: #999999#\n}')
@@ -2463,21 +2463,21 @@ class TestJSBeautifier(unittest.TestCase):
         bt('elem-- - elem[array]++;')
         bt('elem-- - -elem[array]++;')
         bt('elem-- - +elem[array]++;')
-        
+
         # Handling of newlines around unary ++ and -- operators
         bt('{foo\n++bar;}', '{\n    foo\n    ++bar;\n}')
         bt('{foo++\nbar;}', '{\n    foo++\n    bar;\n}')
-        
+
         # This is invalid, but harder to guard against. Issue #203.
         bt('{foo\n++\nbar;}', '{\n    foo\n    ++\n    bar;\n}')
-        
+
         # regexps
         bt('a(/abc\\/\\/def/);b()', 'a(/abc\\/\\/def/);\nb()')
         bt('a(/a[b\\[\\]c]d/);b()', 'a(/a[b\\[\\]c]d/);\nb()')
-        
+
         # incomplete char class
         test_fragment('a(/a[b\\[')
-        
+
         # allow unescaped / in char classes
         bt('a(/[a/b]/);b()', 'a(/[a/b]/);\nb()')
         bt('typeof /foo\\//;')
@@ -2510,16 +2510,16 @@ class TestJSBeautifier(unittest.TestCase):
         bt('catch(e)', 'catch (e)')
         bt('var a=1,b={foo:2,bar:3},{baz:4,wham:5},c=4;', 'var a = 1,\n    b = {\n        foo: 2,\n        bar: 3\n    },\n    {\n        baz: 4,\n        wham: 5\n    }, c = 4;')
         bt('var a=1,b={foo:2,bar:3},{baz:4,wham:5},\nc=4;', 'var a = 1,\n    b = {\n        foo: 2,\n        bar: 3\n    },\n    {\n        baz: 4,\n        wham: 5\n    },\n    c = 4;')
-        
+
         # inline comment
         bt(
             'function x(/*int*/ start, /*string*/ foo)',
             'function x( /*int*/ start, /*string*/ foo)')
-        
+
         # javadoc comment
         bt('/**\n* foo\n*/', '/**\n * foo\n */')
         bt('{\n/**\n* foo\n*/\n}', '{\n    /**\n     * foo\n     */\n}')
-        
+
         # starless block comment
         bt('/**\nfoo\n*/')
         bt('/**\nfoo\n**/')
@@ -2539,7 +2539,7 @@ class TestJSBeautifier(unittest.TestCase):
         bt('var a = a,\na;\nb = {\nb\n}', 'var a = a,\n    a;\nb = {\n    b\n}')
         bt('var a = a,\n    /* c */\n    b;')
         bt('var a = a,\n    // c\n    b;')
-        
+
         # weird element referencing
         bt('foo.("bar");')
         bt('if (a) a()\nelse b()\nnewline()')
@@ -2548,7 +2548,7 @@ class TestJSBeautifier(unittest.TestCase):
         bt('var a = function() {\n        return null;\n    },\n    b = false;')
         bt('var a = function() {\n    func1()\n}')
         bt('var a = function() {\n    func1()\n}\nvar b = function() {\n    func2()\n}')
-        
+
         # code with and without semicolons
         bt(
             'var whatever = require("whatever");\nfunction() {\n    a = 6;\n}',

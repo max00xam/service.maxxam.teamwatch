@@ -10,14 +10,14 @@ class BaseNode:
             self.elements = elements
             self.finish()
             return self
-        
+
 
         def finishArrayPattern(self, elements):
             self.type = Syntax.ArrayPattern
             self.elements = elements
             self.finish()
             return self
-        
+
 
         def finishArrowFunctionExpression(self, params, defaults, body, expression):
             self.type = Syntax.ArrowFunctionExpression
@@ -29,7 +29,7 @@ class BaseNode:
             self.expression = expression
             self.finish()
             return self
-        
+
 
         def finishAssignmentExpression(self, operator, left, right):
             self.type = Syntax.AssignmentExpression
@@ -38,7 +38,7 @@ class BaseNode:
             self.right = right
             self.finish()
             return self
-        
+
 
         def finishAssignmentPattern(self, left, right):
             self.type = Syntax.AssignmentPattern
@@ -46,7 +46,7 @@ class BaseNode:
             self.right = right
             self.finish()
             return self
-        
+
 
         def finishBinaryExpression(self, operator, left, right):
             self.type = Syntax.LogicalExpression if (operator == '||' or operator == '&&') else Syntax.BinaryExpression
@@ -55,21 +55,21 @@ class BaseNode:
             self.right = right
             self.finish()
             return self
-        
+
 
         def finishBlockStatement(self, body):
             self.type = Syntax.BlockStatement
             self.body = body
             self.finish()
             return self
-        
+
 
         def finishBreakStatement(self, label):
             self.type = Syntax.BreakStatement
             self.label = label
             self.finish()
             return self
-        
+
 
         def finishCallExpression(self, callee, args):
             self.type = Syntax.CallExpression
@@ -77,7 +77,7 @@ class BaseNode:
             self.arguments = args
             self.finish()
             return self
-        
+
 
         def finishCatchClause(self, param, body):
             self.type = Syntax.CatchClause
@@ -85,14 +85,14 @@ class BaseNode:
             self.body = body
             self.finish()
             return self
-        
+
 
         def finishClassBody(self, body):
             self.type = Syntax.ClassBody
             self.body = body
             self.finish()
             return self
-        
+
 
         def finishClassDeclaration(self, id, superClass, body):
             self.type = Syntax.ClassDeclaration
@@ -101,7 +101,7 @@ class BaseNode:
             self.body = body
             self.finish()
             return self
-        
+
 
         def finishClassExpression(self, id, superClass, body):
             self.type = Syntax.ClassExpression
@@ -110,7 +110,7 @@ class BaseNode:
             self.body = body
             self.finish()
             return self
-        
+
 
         def finishConditionalExpression(self, test, consequent, alternate):
             self.type = Syntax.ConditionalExpression
@@ -119,20 +119,20 @@ class BaseNode:
             self.alternate = alternate
             self.finish()
             return self
-        
+
 
         def finishContinueStatement(self, label):
             self.type = Syntax.ContinueStatement
             self.label = label
             self.finish()
             return self
-        
+
 
         def finishDebuggerStatement(self, ):
             self.type = Syntax.DebuggerStatement
             self.finish()
             return self
-        
+
 
         def finishDoWhileStatement(self, body, test):
             self.type = Syntax.DoWhileStatement
@@ -140,20 +140,20 @@ class BaseNode:
             self.test = test
             self.finish()
             return self
-        
+
 
         def finishEmptyStatement(self, ):
             self.type = Syntax.EmptyStatement
             self.finish()
             return self
-        
+
 
         def finishExpressionStatement(self, expression):
             self.type = Syntax.ExpressionStatement
             self.expression = expression
             self.finish()
             return self
-        
+
 
         def finishForStatement(self, init, test, update, body):
             self.type = Syntax.ForStatement
@@ -163,7 +163,7 @@ class BaseNode:
             self.body = body
             self.finish()
             return self
-        
+
 
         def finishForInStatement(self, left, right, body):
             self.type = Syntax.ForInStatement
@@ -173,7 +173,7 @@ class BaseNode:
             self.each = False
             self.finish()
             return self
-        
+
 
         def finishFunctionDeclaration(self, id, params, defaults, body):
             self.type = Syntax.FunctionDeclaration
@@ -185,7 +185,7 @@ class BaseNode:
             self.expression = False
             self.finish()
             return self
-        
+
 
         def finishFunctionExpression(self, id, params, defaults, body):
             self.type = Syntax.FunctionExpression
@@ -197,14 +197,14 @@ class BaseNode:
             self.expression = False
             self.finish()
             return self
-        
+
 
         def finishIdentifier(self, name):
             self.type = Syntax.Identifier
             self.name = name
             self.finish()
             return self
-        
+
 
         def finishIfStatement(self, test, consequent, alternate):
             self.type = Syntax.IfStatement
@@ -213,7 +213,7 @@ class BaseNode:
             self.alternate = alternate
             self.finish()
             return self
-        
+
 
         def finishLabeledStatement(self, label, body):
             self.type = Syntax.LabeledStatement
@@ -221,7 +221,7 @@ class BaseNode:
             self.body = body
             self.finish()
             return self
-        
+
 
         def finishLiteral(self, token):
             self.type = Syntax.Literal
@@ -231,7 +231,7 @@ class BaseNode:
                 self.regex = token['regex']
             self.finish()
             return self
-        
+
 
         def finishMemberExpression(self, accessor, object, property):
             self.type = Syntax.MemberExpression
@@ -240,7 +240,7 @@ class BaseNode:
             self.property = property
             self.finish()
             return self
-        
+
 
         def finishNewExpression(self, callee, args):
             self.type = Syntax.NewExpression
@@ -248,21 +248,21 @@ class BaseNode:
             self.arguments = args
             self.finish()
             return self
-        
+
 
         def finishObjectExpression(self, properties):
             self.type = Syntax.ObjectExpression
             self.properties = properties
             self.finish()
             return self
-        
+
 
         def finishObjectPattern(self, properties):
             self.type = Syntax.ObjectPattern
             self.properties = properties
             self.finish()
             return self
-        
+
 
         def finishPostfixExpression(self, operator, argument):
             self.type = Syntax.UpdateExpression
@@ -271,7 +271,7 @@ class BaseNode:
             self.prefix = False
             self.finish()
             return self
-        
+
 
         def finishProgram(self, body):
             self.type = Syntax.Program
@@ -284,7 +284,7 @@ class BaseNode:
             self.imp = imp
             self.finish()
             return self
-        
+
 
         def finishProperty(self, kind, key, computed, value, method, shorthand):
             self.type = Syntax.Property
@@ -296,35 +296,35 @@ class BaseNode:
             self.shorthand = shorthand
             self.finish()
             return self
-        
+
 
         def finishRestElement(self, argument):
             self.type = Syntax.RestElement
             self.argument = argument
             self.finish()
             return self
-        
+
 
         def finishReturnStatement(self, argument):
             self.type = Syntax.ReturnStatement
             self.argument = argument
             self.finish()
             return self
-        
+
 
         def finishSequenceExpression(self, expressions):
             self.type = Syntax.SequenceExpression
             self.expressions = expressions
             self.finish()
             return self
-        
+
 
         def finishSpreadElement(self, argument):
             self.type = Syntax.SpreadElement
             self.argument = argument
             self.finish()
             return self
-        
+
 
         def finishSwitchCase(self, test, consequent):
             self.type = Syntax.SwitchCase
@@ -332,13 +332,13 @@ class BaseNode:
             self.consequent = consequent
             self.finish()
             return self
-        
+
 
         def finishSuper(self, ):
             self.type = Syntax.Super
             self.finish()
             return self
-        
+
 
         def finishSwitchStatement(self, discriminant, cases):
             self.type = Syntax.SwitchStatement
@@ -346,7 +346,7 @@ class BaseNode:
             self.cases = cases
             self.finish()
             return self
-        
+
 
         def finishTaggedTemplateExpression(self, tag, quasi):
             self.type = Syntax.TaggedTemplateExpression
@@ -354,7 +354,7 @@ class BaseNode:
             self.quasi = quasi
             self.finish()
             return self
-        
+
 
         def finishTemplateElement(self, value, tail):
             self.type = Syntax.TemplateElement
@@ -362,7 +362,7 @@ class BaseNode:
             self.tail = tail
             self.finish()
             return self
-        
+
 
         def finishTemplateLiteral(self, quasis, expressions):
             self.type = Syntax.TemplateLiteral
@@ -370,20 +370,20 @@ class BaseNode:
             self.expressions = expressions
             self.finish()
             return self
-        
+
 
         def finishThisExpression(self, ):
             self.type = Syntax.ThisExpression
             self.finish()
             return self
-        
+
 
         def finishThrowStatement(self, argument):
             self.type = Syntax.ThrowStatement
             self.argument = argument
             self.finish()
             return self
-        
+
 
         def finishTryStatement(self, block, handler, finalizer):
             self.type = Syntax.TryStatement
@@ -394,7 +394,7 @@ class BaseNode:
             self.finalizer = finalizer
             self.finish()
             return self
-        
+
 
         def finishUnaryExpression(self, operator, argument):
             self.type = Syntax.UpdateExpression if (operator == '++' or operator == '--') else Syntax.UnaryExpression
@@ -403,7 +403,7 @@ class BaseNode:
             self.prefix = True
             self.finish()
             return self
-        
+
 
         def finishVariableDeclaration(self, declarations):
             self.type = Syntax.VariableDeclaration
@@ -411,7 +411,7 @@ class BaseNode:
             self.kind = 'var'
             self.finish()
             return self
-        
+
 
         def finishLexicalDeclaration(self, declarations, kind):
             self.type = Syntax.VariableDeclaration
@@ -419,7 +419,7 @@ class BaseNode:
             self.kind = kind
             self.finish()
             return self
-        
+
 
         def finishVariableDeclarator(self, id, init):
             self.type = Syntax.VariableDeclarator
@@ -427,7 +427,7 @@ class BaseNode:
             self.init = init
             self.finish()
             return self
-        
+
 
         def finishWhileStatement(self, test, body):
             self.type = Syntax.WhileStatement
@@ -435,7 +435,7 @@ class BaseNode:
             self.body = body
             self.finish()
             return self
-        
+
 
         def finishWithStatement(self, object, body):
             self.type = Syntax.WithStatement
@@ -443,7 +443,7 @@ class BaseNode:
             self.body = body
             self.finish()
             return self
-        
+
 
         def finishExportSpecifier(self, local, exported):
             self.type = Syntax.ExportSpecifier
@@ -451,21 +451,21 @@ class BaseNode:
             self.local = local
             self.finish()
             return self
-        
+
 
         def finishImportDefaultSpecifier(self, local):
             self.type = Syntax.ImportDefaultSpecifier
             self.local = local
             self.finish()
             return self
-        
+
 
         def finishImportNamespaceSpecifier(self, local):
             self.type = Syntax.ImportNamespaceSpecifier
             self.local = local
             self.finish()
             return self
-        
+
 
         def finishExportNamedDeclaration(self, declaration, specifiers, src):
             self.type = Syntax.ExportNamedDeclaration
@@ -474,21 +474,21 @@ class BaseNode:
             self.source = src
             self.finish()
             return self
-        
+
 
         def finishExportDefaultDeclaration(self, declaration):
             self.type = Syntax.ExportDefaultDeclaration
             self.declaration = declaration
             self.finish()
             return self
-        
+
 
         def finishExportAllDeclaration(self, src):
             self.type = Syntax.ExportAllDeclaration
             self.source = src
             self.finish()
             return self
-        
+
 
         def finishImportSpecifier(self, local, imported):
             self.type = Syntax.ImportSpecifier
@@ -496,7 +496,7 @@ class BaseNode:
             self.imported = imported
             self.finish()
             return self
-        
+
 
         def finishImportDeclaration(self, specifiers, src):
             self.type = Syntax.ImportDeclaration

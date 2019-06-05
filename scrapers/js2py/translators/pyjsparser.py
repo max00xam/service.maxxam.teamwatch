@@ -1988,7 +1988,7 @@ class PyJsParser:
         n.finishPyimport(self.parseVariableIdentifier())
         self.consumeSemicolon()
         return n
-    
+
     def parseStatementList(self):
         list = [];
         while (self.startIndex < self.length):

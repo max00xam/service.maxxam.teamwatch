@@ -110,7 +110,7 @@ class HTML5LibBuilderSmokeTest(SoupTest, HTML5TreeBuilderSmokeTest):
         # (second) 'aftermath' string.
         self.assertEqual(final_aftermath, target.next_element)
         self.assertEqual(target, final_aftermath.previous_element)
-        
+
     def test_processing_instruction(self):
         """Processing instructions become comments."""
         markup = b"""<?PITarget PIContent?>"""

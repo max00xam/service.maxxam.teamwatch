@@ -232,7 +232,7 @@ class HTMLTreeBuilderSmokeTest(object):
             soup = self.soup("")
             new_tag = soup.new_tag(name)
             self.assertEqual(True, new_tag.is_empty_element)
-    
+
     def test_pickle_and_unpickle_identity(self):
         # Pickling a tree, then unpickling it, yields a tree identical
         # to the original.
@@ -309,7 +309,7 @@ class HTMLTreeBuilderSmokeTest(object):
         markup = b"""<ns1:foo>content</ns1:foo><ns1:foo/><ns2:foo/>"""
         soup = self.soup(markup)
         self.assertEqual(2, len(soup.find_all("ns1:foo")))
-        
+
     def test_processing_instruction(self):
         # We test both Unicode and bytestring to verify that
         # process_markup correctly sets processing_instruction_class
@@ -463,7 +463,7 @@ Hello, world!
         # If you search by the literal name of the class it's like the whitespace
         # wasn't there.
         self.assertEqual(soup.div, soup.find('div', class_="foo bar"))
-        
+
     def test_deeply_nested_multivalued_attribute(self):
         # html5lib can set the attributes of the same tag many times
         # as it rearranges the tree. This has caused problems with
@@ -502,7 +502,7 @@ Hello, world!
         markup = "<p>&#147;Hello&#148; &#45;&#9731;</p>"
         soup = self.soup(markup)
         self.assertEquals(u"“Hello” -☃", soup.p.string)
-        
+
     def test_entities_in_attributes_converted_to_unicode(self):
         expect = u'<p id="pi\N{LATIN SMALL LETTER N WITH TILDE}ata"></p>'
         self.assertSoupEquals('<p id="pi&#241;ata"></p>', expect)
@@ -526,7 +526,7 @@ Hello, world!
         self.assertSoupEquals("&#10000000000000;", expect)
         self.assertSoupEquals("&#x10000000000000;", expect)
         self.assertSoupEquals("&#1000000000;", expect)
-        
+
     def test_multipart_strings(self):
         "Mostly to prevent a recurrence of a bug in the html5lib treebuilder."
         soup = self.soup("<html><h2>\nfoo</h2><p></p></html>")
@@ -540,7 +540,7 @@ Hello, world!
         """
         self.assertSoupEquals('<br/><br/><br/>', "<br/><br/><br/>")
         self.assertSoupEquals('<br /><br /><br />', "<br/><br/><br/>")
-        
+
     def test_head_tag_between_head_and_body(self):
         "Prevent recurrence of a bug in the html5lib treebuilder."
         content = """<html><head></head>
@@ -833,7 +833,7 @@ class XMLTreeBuilderSmokeTest(object):
 </parent>"""
         soup = self.soup(doc)
         self.assertEqual(doc, soup.encode())
-        
+
     def test_formatter_processes_script_tag_for_xml_documents(self):
         doc = """
   <script type="text/javascript">
@@ -916,14 +916,14 @@ class XMLTreeBuilderSmokeTest(object):
         # But two of them are ns1:tag and one of them is ns2:tag.
         self.assertEqual(2, len(soup.find_all('ns1:tag')))
         self.assertEqual(1, len(soup.find_all('ns2:tag')))
-        
+
         self.assertEqual(1, len(soup.find_all('ns2:tag', key='value')))
         self.assertEqual(3, len(soup.find_all(['ns1:tag', 'ns2:tag'])))
-        
+
     def test_copy_tag_preserves_namespace(self):
         xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://example.com/ns0"/>"""
-    
+
         soup = self.soup(xml)
         tag = soup.document
         duplicate = copy.copy(tag)

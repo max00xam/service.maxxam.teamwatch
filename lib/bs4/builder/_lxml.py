@@ -103,7 +103,7 @@ class LXMLTreeBuilderForXML(TreeBuilder):
             self.empty_element_tags = set(empty_element_tags)
         self.soup = None
         self.nsmaps = [self.DEFAULT_NSMAPS_INVERTED]
-        
+
     def _getNsTag(self, tag):
         # Split the namespace URL out of a fully-qualified lxml tag
         # name. Copied from lxml's src/lxml/sax.py.

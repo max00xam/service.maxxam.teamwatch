@@ -10,8 +10,8 @@ try:
     is_execjs_imported = True
 except:
     is_execjs_imported = False
-    
-if not is_execjs_imported:    
+
+if not is_execjs_imported:
     try:
         """
         Name: Js2Py
@@ -23,12 +23,12 @@ if not is_execjs_imported:
         License: MIT
         Description: Translates JavaScript to Python code. Js2Py is able to translate and execute virtually any JavaScript code.
         """
-        
+
         sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__) , ".." )))
         import js2py
     except:
         raise
-    
+
 try:
     from urlparse import urlparse
 except ImportError:
@@ -56,7 +56,7 @@ class CloudflareScraper(Session):
 
     def request(self, method, url, *args, **kwargs):
         resp = super(CloudflareScraper, self).request(method, url, *args, **kwargs)
-        
+
         # Check if Cloudflare anti-bot is on
         if (resp.headers.get("Server", "") == "cloudflare-nginx" and
                  ( "URL=/cdn-cgi/" in resp.headers.get("Refresh", "") or

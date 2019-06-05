@@ -35,34 +35,34 @@ if len(sys.argv) > 1:
         print 'error loading scrapers'
         sys.exit()
 
-    if len(sys.argv[1:]) == 1: 
+    if len(sys.argv[1:]) == 1:
         params = sys.argv[1:][0]
     else:
         params = sys.argv[1:]
-        
+
     scraper.scrape(params, json=jscrapers, log=True)
     sys.exit()
-    
+
     param = ' '.join(sys.argv[1:])
     movie_info = {}
-    
+
     # print param
     # print scraper.test(param, json=jscrapers, log = True)
-    
+
     if param.startswith('http://') or param.startswith('https://'):
         param = ''.join(param).split('&m_title=')
         if len(param) == 2:
             url, movie_info['title'] = param
         else:
             url = param[0]
-            
+
         if jscrapers:
             result = scraper.scrape(url, json=jscrapers, log=True)
             if result and 'url' in result[0]: movie_info['url'] = result[0]['url']
         else:
             movie_info['url'] = url
     elif jscrapers and scraper.test(param, json=jscrapers, log = True):
-        
+
         param = param.split('#')
         if len(param) == 3:
             search_site_id, movie_info['title'], site_id = param       ###  #tw:playstream:sito_search#titolo+del+film#sito1:sito2:...
@@ -70,7 +70,7 @@ if len(sys.argv) > 1:
         else:
             search_site_id, movie_info['title'] = param
             site_id = scraper.get_sites(jscrapers)
-        
+
         for site in site_id:
             result = scraper.scrape({'scraper': search_site_id, 'search_str': movie_info['title'], 'server': site}, json=jscrapers, log=True)
             if result and 'url' in result[0]:
@@ -78,7 +78,7 @@ if len(sys.argv) > 1:
                 movie_info['url'] = result[0]['url']
 
             if 'url' in movie_info: break
-        
+
     if 'url' in movie_info:
         print 'received movie info : {}'.format(movie_info)
     else:

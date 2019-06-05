@@ -31,7 +31,7 @@ NonZeroDigit = oneOf(['1','2','3','4','5','6','7','8','9'])
 DecimalDigit = oneOf(['0', '1','2','3','4','5','6','7','8','9'])
 HexDigit = oneOf(list('0123456789abcdefABCDEF'))
 DecimalDigits = Word(nums)
-DecimalIntegerLiteral = Combine(NonZeroDigit+Optional(DecimalDigits)) | '0' 
+DecimalIntegerLiteral = Combine(NonZeroDigit+Optional(DecimalDigits)) | '0'
 SignedInteger = Combine('-'+DecimalDigits) | Combine('+'+DecimalDigits) | DecimalDigits
 ExponentPart = Combine(oneOf('e', 'E')+SignedInteger)
 _DecimalLiteral = (Combine(DecimalIntegerLiteral('int')+'.'+Optional(DecimalDigits('float'))+Optional(ExponentPart('exp'))) |
@@ -76,5 +76,5 @@ StringLiteral = Combine('"'+ZeroOrMore(DoubleStringCharacter)+'"') ^ Combine("'"
 
 
 
-                
+
 

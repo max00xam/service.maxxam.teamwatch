@@ -234,7 +234,7 @@ class TestFindAllByName(TreeTest):
         self.assertEqual('1', r3.string)
         self.assertEqual('3', r4.string)
 
-        
+
 class TestFindAllByAttribute(TreeTest):
 
     def test_find_all_by_attribute_name(self):
@@ -707,7 +707,7 @@ class TestTagCreation(SoupTest):
         self.assertEqual("foo", new_tag.name)
         self.assertEqual(dict(bar="baz", name="a name"), new_tag.attrs)
         self.assertEqual(None, new_tag.parent)
-        
+
     def test_tag_inherits_self_closing_rules_from_builder(self):
         if XML_BUILDER_PRESENT:
             xml_soup = BeautifulSoup("", "lxml-xml")
@@ -825,21 +825,21 @@ class TestTreeModification(SoupTest):
         of its children -- you'll never combine BeautifulSoup objects.
         """
         soup = self.soup("<p>And now, a word:</p><p>And we're back.</p>")
-        
+
         text = "<p>p2</p><p>p3</p>"
         to_insert = self.soup(text)
         soup.insert(1, to_insert)
 
         for i in soup.descendants:
             assert not isinstance(i, BeautifulSoup)
-        
+
         p1, p2, p3, p4 = list(soup.children)
         self.assertEquals("And now, a word:", p1.string)
         self.assertEquals("p2", p2.string)
         self.assertEquals("p3", p3.string)
         self.assertEquals("And we're back.", p4.string)
-        
-        
+
+
     def test_replace_with_maintains_next_element_throughout(self):
         soup = self.soup('<p><a>one</a><b>three</b></p>')
         a = soup.a
@@ -975,7 +975,7 @@ class TestTreeModification(SoupTest):
         # Can insert an identical element
         soup = self.soup("<a>")
         soup.a.insert_before(soup.new_tag("a"))
-        
+
     def test_insert_multiple_before(self):
         soup = self.soup("<a>foo</a><b>bar</b>")
         soup.b.insert_before("BAZ", " ", "QUUX")
@@ -1008,7 +1008,7 @@ class TestTreeModification(SoupTest):
         # Can insert an identical element
         soup = self.soup("<a>")
         soup.a.insert_before(soup.new_tag("a"))
-        
+
     def test_insert_multiple_after(self):
         soup = self.soup("<a>foo</a><b>bar</b>")
         soup.b.insert_after("BAZ", " ", "QUUX")
@@ -1360,7 +1360,7 @@ class TestCDAtaListAttributes(SoupTest):
     def test_get_attribute_list(self):
         soup = self.soup("<a id='abc def'>")
         self.assertEqual(['abc def'], soup.a.get_attribute_list('id'))
-        
+
     def test_accept_charset(self):
         soup = self.soup('<form accept-charset="ISO-8859-1 UTF-8">')
         self.assertEqual(['ISO-8859-1', 'UTF-8'], soup.form['accept-charset'])
@@ -1504,7 +1504,7 @@ class TestSubstitutions(SoupTest):
         self.assertEqual(
             decoded,
             self.document_for("<br><b>&lt;&lt;Sacr&eacute; bleu!&gt;&gt;</b>"))
-        
+
     def test_formatter_minimal(self):
         markup = u"<b>&lt;&lt;Sacr\N{LATIN SMALL LETTER E WITH ACUTE} bleu!&gt;&gt;</b>"
         soup = self.soup(markup)
