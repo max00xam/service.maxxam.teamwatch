@@ -3,7 +3,7 @@
 # edit from https://github.com/bettercap/bettercap/blob/master/release.sh
 
 TO_UPDATE=(
-    core/banner.go
+    service.py
 )
 
 echo -n "Select current version: "
