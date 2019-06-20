@@ -12,5 +12,7 @@
         <description lang="en">TeamWatch is a Kodi add-on that will change the way you watch TV, TV becomes 'social' allowing you to comment live with friends what you see on the screen. TeamWatch also gives you the opportunity to display on the TV screen tweets regarding the program you are watching!</description>
         <disclaimer lang="en">GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</disclaimer>
         <platform>all</platform>
+        <website>https://www.teamwatch.online/</website>
+        <source>https://github.com/max00xam/service.maxxam.teamwatch</source>
     </extension>
 </addon>
