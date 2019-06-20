@@ -6,55 +6,56 @@ la TV diventa 'social' consentendoti di commentare in diretta con i tuoi amici
 quello che guardi in TV. TeamWatch ti permette anche di vedere
 sullo schermo della TV tweets riguardando il programma che stai guardando!
 
-Configuration options
+Opzioni di configurazione
 ---------------------
 
-- **Feed**: feeds you want to follow separated by colon.
-- **TeamWatch ID**: identifies your addon, allowing you to send commands to it via the web page. (you should keep this secret)
+- **Feed**: il feed che vuoi seguire separato da virgola.
+- **TeamWatch ID**: identifica il tuo addon, consentendoti di inviargli messaggi attraverso la
+pagina web. (devi tenerlo segreto)
 - **Player control ID**: allows to send commands (play, pause, seek) to the player of all the addons that share the some id.
 
-Send message and manage
+Invia messaggi e gestisci
 -----------------------
 
-You can send message and commands throught the web page at www.teamwatch.it
+Puoi inviare messaggi e comandi attraverso la pagina web www.teamwatch.it
 
-Commands
+Commandi
 --------
 
-``#tw:off`` - stop displaying messages
+``#tw:off`` - ferma la visualizzazione dei messaggi
 
-``#tw:on`` - restart displaying messages
+``#tw:on`` - riprendi la visualizzazione dei messaggi
 
-``#tw:playerctl:sshot`` - take a screenshot
+``#tw:playerctl:sshot`` - scatta uno screenshot
 
-``#tw:bar:top`` - the bar will be displayed in the top of the screen
+``#tw:bar:top`` - la barra verrà visualizzata in cima allo schermo
 
-``#tw:bar:bottom`` - the bar will be displayed in the bottom of the screen
+``#tw:bar:bottom`` - la barra verrà visualizzata in fondo allo schermo
 
-``#tw[pc]:addfeed:<feed>`` - add a new feed to follow
+``#tw[pc]:addfeed:<feed>`` - aggiunge un nuovo feed da seguire
   
-``#tw[pc]:removefeed:<feed>`` - remove a feed from your followed feeds
+``#tw[pc]:removefeed:<feed>`` - rimuove un feed dai feed seguiti
   
-``#tw[pc]:playerctl:playpause`` - pause/resume the current playing video
+``#tw[pc]:playerctl:playpause`` - metti pausa/fai ripartire il video in riproduzione
 
-``#tw[pc]:playerctl:stop`` - stop the current playing video
+``#tw[pc]:playerctl:stop`` - ferma la riproduzione del video
 
-``#tw[pc]:rss:[on|off]`` - enable/disable rss feeds
+``#tw[pc]:rss:[on|off]`` - abilita/disabilita feed rss
 
-``#tw[pc]:tweet:[on|off]`` - enable/disable twitter feeds
+``#tw[pc]:tweet:[on|off]`` - abilita/disabilita feed twitter
 
-``#tw[pc]:playerctl:seek:<hh>:<mm>:<ss>:<cent>`` - seek the current video to the time hh:mm:ss:cent
+``#tw[pc]:playerctl:seek:<hh>:<mm>:<ss>:<cent>`` - manda il video corrente al tempo hh:mm:ss:cent
   
-``#tw[pc]:playstream:<url>[&m_title=<title>`` - start playing video stream from url 
+``#tw[pc]:playstream:<url>[&m_title=<title>`` - riproduci lo stream video dell' url
 
-**url** can be to 'open stream' or to wstream, backin, akvideo, openload, verystream, streamango
+**url** può essere 'open stream' o wstream, backin, akvideo, openload, verystream, streamango
 
-``#tw[pc]:playstream:<site>#<title>[#<streaming-site>, ...]`` - search title and start playing
+``#tw[pc]:playstream:<site>#<title>[#<streaming-site>, ...]`` - cerca titolo e guarda video
 
-**site** can be 'cb01' (italian language site) or 'olm' (english language site openload dot org)
+**site** può essere 'cb01' (italian language site) o 'olm' (english language site openload dot org)
 
-**title** is a series of search words separated by spaces or plus sign (like 'hunger+games')
+**title** è una serie di parole di ricerca separate da spazio o da segno '+' (come 'hunger+games')
 
-**stream-site** (optional) is one ore more of wstream, backin, akvideo, openload, verystream, streamango
+**stream-site** (optional) può essere wstream, backin, akvideo, openload, verystream, streamango
 
-If the command is used with "``#twpc:``" instead of "``#tw:``" it will be sent to all the users sharing the some "Player control ID" with you.
+Se il comando è usato con "``#twpc:``" invece che "``#tw:``" il comando verrà inviato a tutti gli utenti che condividono alcuni "Player control ID" con te.
