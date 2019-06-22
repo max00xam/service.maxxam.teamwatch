@@ -7,3 +7,6 @@ resources/maxxam_vuota.png
 *.pyc
 *.pyo
 scrapers/maxxam_scraper/2__init__.py
+sftp-config.json
+teamwatch.sublime-project
+teamwatch.sublime-workspace
