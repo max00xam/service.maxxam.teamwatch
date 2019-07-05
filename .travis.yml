@@ -7,7 +7,7 @@ dist: xenial
 # for fast build I used only py 2.7 and 3.6
 # command to install dependencies
 install:
-  - pip install -r tests/requirements.txt
+  - pip install -r test/requirements.txt
 # command to run tests
 script:
   - pytest -vs
