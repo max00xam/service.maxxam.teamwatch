@@ -423,7 +423,7 @@ class TeamWatch():
         except:
             return 
                 
-        for id, val in [(x.get('id'),  x.text) for x in root]:
+        for id, val in [(x.get('id'),  x.get('value')) for x in root]:
             if id == 'twid':
                 self.id_teamwatch = val
             elif id == 'pcid':
@@ -463,10 +463,14 @@ class TeamWatch():
             elif id == 'showallways':
                 self.show_allways = not (val == "true")
             elif id == 'feed':
-                if not val:
+                if val == None or val == '':
                     val = '#teamwatch'
-                for feed in val.split(":"):
-                    if feed not in self.feed_name: self.feed_name.append(feed)
+
+                try:
+                    for feed in val.split(":"):
+                        if not feed in self.feed_name: self.feed_name.append(feed)
+                except:
+                    if not '#teamwatch' in self.feed_name: self.feed_name.append('#teamwatch')
             else:
                 pass
         
