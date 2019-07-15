@@ -417,11 +417,14 @@ class TeamWatch():
         return fonts_list
 
     def load_settings(self):
-        xml_path = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', 'settings.xml')
-        try:
-            root = xml.parse(xml_path).getroot().findall('setting')
-                    
-            for id, val in [(x.get('id'),  x.get('value')) for x in root]:
+        xml_path = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', 'settings.xml')        
+        root = xml.parse(xml_path).getroot().findall('setting')
+                                    
+        for id, val in [(x.get('id'),  x.text) for x in root]:
+            if val == None: val = ''
+            
+            self._log('SETTINGS id: {} val: {}'.format(id, val), 0)
+            try:
                 if id == 'twid':
                     self.id_teamwatch = val
                 elif id == 'pcid':
@@ -470,9 +473,11 @@ class TeamWatch():
                         if not feed in self.feed_name: self.feed_name.append(feed)
                 else:
                     pass
-        except:
-            if not '#teamwatch' in self.feed_name: self.feed_name.append('#teamwatch')
-            return 
+            except:
+                self._log('ERROR loading settings id: {} val: {}'.format(id, val), 0)
+                pass
+
+        if not '#teamwatch' in self.feed_name: self.feed_name.append('#teamwatch')
         
     def check_email(self):
         imap_host = self.email_imap
