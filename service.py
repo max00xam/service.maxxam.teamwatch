@@ -420,59 +420,59 @@ class TeamWatch():
         xml_path = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'addon_data', 'service.maxxam.teamwatch', 'settings.xml')
         try:
             root = xml.parse(xml_path).getroot().findall('setting')
-        except:
-            return 
-                
-        for id, val in [(x.get('id'),  x.get('value')) for x in root]:
-            if id == 'twid':
-                self.id_teamwatch = val
-            elif id == 'pcid':
-                self.id_playerctl = val
-            elif id == 'nickname':
-                self.nickname = val
-            elif id == 'twitter_enabled':
-                self.twitter_enabled = val
-            elif id == 'language':
-                self.twitter_language = val
-                self.twitter_language = xbmc.convertLanguage(self.twitter_language, xbmc.ISO_639_1)
-            elif id == 'result_type':
-                self.twitter_result_type = val
-            elif id == 'facebook_enabled':
-                self.facebook_enabled = val
-            elif id == 'facebook_email':
-                self.facebook_email = val
-            elif id == 'facebook_password':
-                self.facebook_password = val
-            elif id == 'imdb_lang':
-                if val == 'Italian':    
-                    self.imdb_translate = 'it'
-                elif val == 'French':
-                    self.imdb_translate = 'fr'
-                elif val == 'German':
-                    self.imdb_translate = 'de'
-                else:
-                    self.imdb_translate = None
-            elif id == 'email_enabled':
-                self.email_enabled = val
-            elif id == 'email':
-                self.email = val
-            elif id == 'email_password':
-                self.email_password = val
-            elif id == 'email_imap':
-                self.email_imap = val
-            elif id == 'showallways':
-                self.show_allways = not (val == "true")
-            elif id == 'feed':
-                if val == None or val == '':
-                    val = '#teamwatch'
+                    
+            for id, val in [(x.get('id'),  x.get('value')) for x in root]:
+                if id == 'twid':
+                    self.id_teamwatch = val
+                elif id == 'pcid':
+                    self.id_playerctl = val
+                elif id == 'nickname':
+                    self.nickname = val
+                elif id == 'twitter_enabled':
+                    self.twitter_enabled = val
+                elif id == 'language':
+                    self.twitter_language = val
+                    if self.twitter_language:
+                        self.twitter_language = xbmc.convertLanguage(self.twitter_language, xbmc.ISO_639_1)
+                    else:
+                        self.twitter_language = xbmc.convertLanguage('it', xbmc.ISO_639_1)
+                elif id == 'result_type':
+                    self.twitter_result_type = val
+                elif id == 'facebook_enabled':
+                    self.facebook_enabled = val
+                elif id == 'facebook_email':
+                    self.facebook_email = val
+                elif id == 'facebook_password':
+                    self.facebook_password = val
+                elif id == 'imdb_lang':
+                    if val == 'Italian':    
+                        self.imdb_translate = 'it'
+                    elif val == 'French':
+                        self.imdb_translate = 'fr'
+                    elif val == 'German':
+                        self.imdb_translate = 'de'
+                    else:
+                        self.imdb_translate = None
+                elif id == 'email_enabled':
+                    self.email_enabled = val
+                elif id == 'email':
+                    self.email = val
+                elif id == 'email_password':
+                    self.email_password = val
+                elif id == 'email_imap':
+                    self.email_imap = val
+                elif id == 'showallways':
+                    self.show_allways = not (val == "true")
+                elif id == 'feed':
+                    if val == None or val == '': val = '#teamwatch'
 
-                try:
                     for feed in val.split(":"):
                         if not feed in self.feed_name: self.feed_name.append(feed)
-                except:
-                    if not '#teamwatch' in self.feed_name: self.feed_name.append('#teamwatch')
-            else:
-                pass
+                else:
+                    pass
+        except:
+            if not '#teamwatch' in self.feed_name: self.feed_name.append('#teamwatch')
+            return 
         
     def check_email(self):
         imap_host = self.email_imap
